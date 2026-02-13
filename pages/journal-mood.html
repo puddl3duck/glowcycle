@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Journal & Mood - Glow Cycle</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/journal-mood.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-logo">✦ Glow Cycle</div>
+        <div class="nav-links">
+            <a href="../index.html" class="nav-link">Home</a>
+            <a href="../index.html#features" class="nav-link">Features</a>
+            <a href="../index.html#how-it-works" class="nav-link">How it Works</a>
+        </div>
+        <div class="nav-profile">
+            <div class="profile-avatar">S</div>
+            <span class="profile-name">Sofia</span>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="journal-container">
+        <!-- Back Button -->
+        <div class="back-navigation">
+            <a href="../index.html" class="back-link">
+                <span class="back-arrow">←</span>
+                <span>Back to Home</span>
+            </a>
+        </div>
+        
+        <!-- Header -->
+        <div class="page-header">
+            <h1>Daily Journal</h1>
+            <p id="current-date">Saturday, February 14, 2026</p>
+        </div>
+
+        <!-- Mood Selector -->
+        <div class="mood-card">
+            <h3>How are you feeling today?</h3>
+            <div class="mood-options">
+                <div class="mood-option" data-mood="amazing" onclick="selectMood('amazing')">
+                    <div class="mood-emoji">🤩</div>
+                    <span>Amazing</span>
+                </div>
+                <div class="mood-option" data-mood="happy" onclick="selectMood('happy')">
+                    <div class="mood-emoji">😊</div>
+                    <span>Happy</span>
+                </div>
+                <div class="mood-option" data-mood="okay" onclick="selectMood('okay')">
+                    <div class="mood-emoji">😐</div>
+                    <span>Okay</span>
+                </div>
+                <div class="mood-option" data-mood="tired" onclick="selectMood('tired')">
+                    <div class="mood-emoji">😴</div>
+                    <span>Tired</span>
+                </div>
+                <div class="mood-option" data-mood="sad" onclick="selectMood('sad')">
+                    <div class="mood-emoji">😢</div>
+                    <span>Sad</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Energy Level -->
+        <div class="energy-card">
+            <h3>Energy Level</h3>
+            <div class="energy-slider-container">
+                <div class="energy-labels">
+                    <span>Low</span>
+                    <span>Medium</span>
+                    <span>High</span>
+                </div>
+                <input type="range" min="0" max="100" value="70" class="energy-slider" id="energy-level">
+                <div class="energy-value" id="energy-display">70%</div>
+            </div>
+        </div>
+
+        <!-- Journal Entry -->
+        <div class="journal-card">
+            <h3>Today's Thoughts</h3>
+            <textarea 
+                id="journal-entry" 
+                class="journal-textarea" 
+                placeholder="How was your day? What are you grateful for? Any thoughts or feelings you want to remember..."></textarea>
+            <div class="journal-footer">
+                <span class="word-count" id="word-count">0 words</span>
+            </div>
+        </div>
+
+        <!-- Quick Tags -->
+        <div class="tags-card">
+            <h3>Quick Tags</h3>
+            <div class="tags-grid">
+                <button class="tag-btn" onclick="toggleTag(this)">💪 Workout</button>
+                <button class="tag-btn" onclick="toggleTag(this)">🧘 Meditation</button>
+                <button class="tag-btn" onclick="toggleTag(this)">😴 Good Sleep</button>
+                <button class="tag-btn" onclick="toggleTag(this)">🍎 Healthy Eating</button>
+                <button class="tag-btn" onclick="toggleTag(this)">💧 Hydrated</button>
+                <button class="tag-btn" onclick="toggleTag(this)">🎉 Social</button>
+                <button class="tag-btn" onclick="toggleTag(this)">📚 Productive</button>
+                <button class="tag-btn" onclick="toggleTag(this)">🌸 Self-care</button>
+            </div>
+        </div>
+
+        <!-- Save Button -->
+        <button class="save-entry-btn" onclick="saveEntry()">Save Entry</button>
+
+        <!-- Past Entries -->
+        <div class="past-entries-card">
+            <h3>Recent Entries</h3>
+            <div id="entries-list" class="entries-list">
+                <div class="entry-preview">
+                    <div class="entry-header">
+                        <span class="entry-date">Feb 13, 2026</span>
+                        <span class="entry-mood">😊</span>
+                    </div>
+                    <p class="entry-snippet">Had a great day! Feeling energized and my skin is glowing...</p>
+                    <div class="entry-tags">
+                        <span class="entry-tag">💪 Workout</span>
+                        <span class="entry-tag">💧 Hydrated</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/journal-mood.js"></script>
+</body>
+</html>

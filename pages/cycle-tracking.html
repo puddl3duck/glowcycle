@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cycle Tracking - Glow Cycle</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/cycle-tracking.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-logo">✦ Glow Cycle</div>
+        <div class="nav-links">
+            <a href="../index.html" class="nav-link">Home</a>
+            <a href="../index.html#features" class="nav-link">Features</a>
+            <a href="../index.html#how-it-works" class="nav-link">How it Works</a>
+        </div>
+        <div class="nav-profile">
+            <div class="profile-avatar">S</div>
+            <span class="profile-name">Sofia</span>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="cycle-container">
+        <!-- Back Button -->
+        <div class="back-navigation">
+            <a href="../index.html" class="back-link">
+                <span class="back-arrow">←</span>
+                <span>Back to Home</span>
+            </a>
+        </div>
+        
+        <!-- Header -->
+        <div class="page-header">
+            <h1>Your Cycle</h1>
+            <p>Day 14 • Ovulation Phase</p>
+        </div>
+
+        <!-- Cycle Wheel -->
+        <div class="cycle-wheel-container">
+            <div class="cycle-wheel">
+                <svg viewBox="0 0 300 300" class="wheel-svg">
+                    <!-- Menstrual Phase -->
+                    <path d="M 150 150 L 150 30 A 120 120 0 0 1 220 70 Z" fill="#FFB6D9" opacity="0.8"/>
+                    <text x="165" y="60" font-size="12" fill="#4A4A5E" font-weight="600">Menstrual</text>
+                    
+                    <!-- Follicular Phase -->
+                    <path d="M 150 150 L 220 70 A 120 120 0 0 1 270 150 Z" fill="#A8E6CF" opacity="0.8"/>
+                    <text x="230" y="110" font-size="12" fill="#4A4A5E" font-weight="600">Follicular</text>
+                    
+                    <!-- Ovulation Phase -->
+                    <path d="M 150 150 L 270 150 A 120 120 0 0 1 220 230 Z" fill="#FFE0A0" opacity="0.8"/>
+                    <text x="230" y="190" font-size="12" fill="#4A4A5E" font-weight="600">Ovulation</text>
+                    
+                    <!-- Luteal Phase -->
+                    <path d="M 150 150 L 220 230 A 120 120 0 0 1 80 230 Z" fill="#D4C5E8" opacity="0.8"/>
+                    <text x="120" y="240" font-size="12" fill="#4A4A5E" font-weight="600">Luteal</text>
+                    
+                    <!-- Center circle -->
+                    <circle cx="150" cy="150" r="80" fill="#FFFFFF"/>
+                    <circle cx="150" cy="150" r="80" fill="url(#centerGrad)"/>
+                    
+                    <!-- Day indicator -->
+                    <text x="150" y="140" text-anchor="middle" font-size="48" font-weight="700" fill="#9B7EBD">14</text>
+                    <text x="150" y="165" text-anchor="middle" font-size="14" fill="#7A7A8E">Day</text>
+                    
+                    <defs>
+                        <linearGradient id="centerGrad">
+                            <stop offset="0%" stop-color="#FFF5FA" stop-opacity="0.9"/>
+                            <stop offset="100%" stop-color="#F5F0FA" stop-opacity="0.9"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+            </div>
+        </div>
+
+        <!-- Current Phase Info -->
+        <div class="phase-info-card">
+            <div class="phase-header">
+                <h2>✨ Ovulation Phase</h2>
+                <span class="phase-days">Days 13-17</span>
+            </div>
+            <p class="phase-description">You're in your glow phase! Energy and confidence are at their peak. Your skin is radiant and you're feeling your best.</p>
+            
+            <div class="phase-tips">
+                <h3>What to Expect</h3>
+                <div class="tip-grid">
+                    <div class="tip-item">
+                        <span class="tip-icon">💪</span>
+                        <span>High energy</span>
+                    </div>
+                    <div class="tip-item">
+                        <span class="tip-icon">✨</span>
+                        <span>Glowing skin</span>
+                    </div>
+                    <div class="tip-item">
+                        <span class="tip-icon">😊</span>
+                        <span>Positive mood</span>
+                    </div>
+                    <div class="tip-item">
+                        <span class="tip-icon">🎯</span>
+                        <span>Peak focus</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="phase-care">
+                <h3>Skincare Tips</h3>
+                <ul>
+                    <li>Use lighter moisturizers</li>
+                    <li>Add Vitamin C serum for extra glow</li>
+                    <li>Your skin can handle active ingredients</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Quick Log -->
+        <div class="quick-log-card">
+            <h3>Log Your Period</h3>
+            <p>When did your last period start?</p>
+            <input type="date" id="period-date" class="date-input">
+            <button class="save-btn" onclick="savePeriodDate()">Save Date</button>
+        </div>
+
+        <!-- Phase Timeline -->
+        <div class="timeline-card">
+            <h3>Your Cycle Timeline</h3>
+            <div class="timeline">
+                <div class="timeline-phase menstrual">
+                    <div class="phase-bar"></div>
+                    <span class="phase-label">Menstrual<br>Days 1-5</span>
+                </div>
+                <div class="timeline-phase follicular">
+                    <div class="phase-bar"></div>
+                    <span class="phase-label">Follicular<br>Days 6-12</span>
+                </div>
+                <div class="timeline-phase ovulation active">
+                    <div class="phase-bar"></div>
+                    <span class="phase-label">Ovulation<br>Days 13-17</span>
+                </div>
+                <div class="timeline-phase luteal">
+                    <div class="phase-bar"></div>
+                    <span class="phase-label">Luteal<br>Days 18-28</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Predictions -->
+        <div class="predictions-card">
+            <h3>Upcoming</h3>
+            <div class="prediction-item">
+                <div class="prediction-icon">🌸</div>
+                <div class="prediction-content">
+                    <h4>Next Period</h4>
+                    <p>Expected in 14 days • March 1</p>
+                </div>
+            </div>
+            <div class="prediction-item">
+                <div class="prediction-icon">✨</div>
+                <div class="prediction-content">
+                    <h4>Next Ovulation</h4>
+                    <p>Expected in 28 days • March 15</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/cycle-tracking.js"></script>
+</body>
+</html>
