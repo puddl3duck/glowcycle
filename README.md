@@ -63,19 +63,64 @@ glowcycle/
 
 ## 🚀 Getting Started
 
+### For Team Members
+
+**New to the project?** Follow our setup guides:
+
+1. **Quick Start** (5 minutes): See [QUICKSTART.md](QUICKSTART.md)
+2. **Full Setup Guide**: See [SETUP.md](SETUP.md)
+
+### Quick Setup
+
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/puddl3duck/glowcycle.git
    cd glowcycle
    ```
 
-2. **Open in browser**
-   - Simply open `index.html` in your web browser
-   - No build process required - pure HTML, CSS, and JavaScript
+2. **Create Python virtual environment**
+   ```bash
+   # Windows
+   python -m venv .venv
+   .venv\Scripts\Activate.ps1
+   
+   # macOS/Linux
+   python3 -m venv .venv
+   source .venv/bin/activate
+   ```
 
-3. **Development**
-   - Use any code editor (VS Code recommended)
-   - Use Live Server extension for hot reload during development
+3. **Open in VS Code**
+   ```bash
+   code .
+   ```
+
+4. **Run the project**
+   - Install "Live Server" extension in VS Code
+   - Right-click on `index.html` → "Open with Live Server"
+   - Browser opens at `http://localhost:5500`
+
+### Python Dependencies
+
+Currently, this is a pure HTML/CSS/JavaScript project. When Python packages are added:
+
+```bash
+pip install -r requirements.txt
+```
+
+### Verify Your Setup
+
+Run the verification script to ensure everything is configured correctly:
+
+```bash
+# Activate virtual environment first
+.venv\Scripts\Activate.ps1  # Windows
+source .venv/bin/activate    # macOS/Linux
+
+# Run verification
+python verify_venv.py
+```
+
+See [VERIFY_SETUP.md](VERIFY_SETUP.md) for detailed verification instructions.
 
 ## 📱 Pages Overview
 

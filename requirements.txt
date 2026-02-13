@@ -1,0 +1,10 @@
+# Python Dependencies for Glow Cycle
+# 
+# This file will be populated when we add Python packages
+# For now, it's empty as the project is pure HTML/CSS/JS
+#
+# To install dependencies (when added):
+#   pip install -r requirements.txt
+#
+# To update this file after installing new packages:
+#   pip freeze > requirements.txt
