@@ -34,10 +34,35 @@ glowcycle/
 │   ├── decoration-sparkle.png
 │   └── decoration-heart.png
 │
-└── pages/                 # Internal pages
-    ├── skin-tracking.html
-    ├── cycle-tracking.html
-    └── journal-mood.html
+├── pages/                 # Internal pages
+│   ├── skin-tracking.html
+│   ├── cycle-tracking.html
+│   └── journal-mood.html
+│
+├── backend/                  # Python AWS Lambda functions
+│   ├── skin/                 # Lambda for skin analysis
+│   │   └── handler.py        # Entry point for skin analysis
+│   ├── journal/              # Lambda for journal and prompts
+│   │   └── handler.py        # Entry point for journal Lambda
+│   ├── period/               # Lambda for period tracker
+│   │   └── handler.py        # Entry point for period tracker Lambda
+│   ├── shared/               # Shared Python helpers across Lambdas
+│   │   ├── dynamodb_client.py
+│   │   ├── s3_client.py
+│   │   └── secrets_client.py
+│   └── requirements.txt      # Python dependencies
+│
+├── infrastructure/           # AWS CDK (TypeScript) infrastructure
+│   ├── bin/
+│   │   └── glow-cycle.ts     # CDK entry point
+│   ├── lib/
+│   │   └── glow-cycle-stack.ts # CDK stack definition
+│   ├── node_modules/
+│   ├── cdk.json
+│   ├── package.json
+│   └── tsconfig.json
+│
+└── .gitignore
 ```
 
 ## 🎨 Design System
@@ -69,11 +94,22 @@ glowcycle/
    cd glowcycle
    ```
 
-2. **Open in browser**
+2. **Create and activate a Python Virtual Environment**
+   ```python -m venv .venv
+   # Windows PowerShell
+   .venv\Scripts\Activate.ps1
+   # macOS / Linux
+   source .venv/bin/activate
+   ```
+3. **Install Dependencies**
+   ```pip install -r requirements.txt
+   ```
+
+4. **Open in browser**
    - Simply open `index.html` in your web browser
    - No build process required - pure HTML, CSS, and JavaScript
 
-3. **Development**
+5. **Development**
    - Use any code editor (VS Code recommended)
    - Use Live Server extension for hot reload during development
 
