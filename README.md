@@ -34,10 +34,35 @@ glowcycle/
 │   ├── decoration-sparkle.png
 │   └── decoration-heart.png
 │
-└── pages/                 # Internal pages
-    ├── skin-tracking.html
-    ├── cycle-tracking.html
-    └── journal-mood.html
+├── pages/                 # Internal pages
+│   ├── skin-tracking.html
+│   ├── cycle-tracking.html
+│   └── journal-mood.html
+│
+├── backend/                  # Python AWS Lambda functions
+│   ├── skin/                 # Lambda for skin analysis
+│   │   └── handler.py        # Entry point for skin analysis
+│   ├── journal/              # Lambda for journal and prompts
+│   │   └── handler.py        # Entry point for journal Lambda
+│   ├── period/               # Lambda for period tracker
+│   │   └── handler.py        # Entry point for period tracker Lambda
+│   ├── shared/               # Shared Python helpers across Lambdas
+│   │   ├── dynamodb_client.py
+│   │   ├── s3_client.py
+│   │   └── secrets_client.py
+│   └── requirements.txt      # Python dependencies
+│
+├── infrastructure/           # AWS CDK (TypeScript) infrastructure
+│   ├── bin/
+│   │   └── glow-cycle.ts     # CDK entry point
+│   ├── lib/
+│   │   └── glow-cycle-stack.ts # CDK stack definition
+│   ├── node_modules/
+│   ├── cdk.json
+│   ├── package.json
+│   └── tsconfig.json
+│
+└── .gitignore
 ```
 
 ## 🎨 Design System
@@ -89,12 +114,17 @@ glowcycle/
    source .venv/bin/activate
    ```
 
-3. **Open in VS Code**
+3. **Install Dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Open in VS Code**
    ```bash
    code .
    ```
 
-4. **Run the project**
+5. **Run the project**
    - Install "Live Server" extension in VS Code
    - Right-click on `index.html` → "Open with Live Server"
    - Browser opens at `http://localhost:5500`

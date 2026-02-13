@@ -1,0 +1,21 @@
+{
+  "name": "infrastructure",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "cdk": "cdk"
+  },
+  "keywords": [],
+  "author": "Glow Cycle Team",
+  "license": "ISC",
+  "dependencies": {
+    "aws-cdk-lib": "^2.238.0",
+    "constructs": "^10.4.5"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

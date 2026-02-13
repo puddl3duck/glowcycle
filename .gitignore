@@ -54,6 +54,8 @@ pnpm-debug.log*
 *.tmp
 *.temp
 .cache
+*.bak
+*.swp
 
 # Environment variables
 .env
@@ -74,8 +76,25 @@ htmlcov/
 *.sqlite
 *.sqlite3
 
-# Node modules (if we add Node.js later)
+# Node modules
 node_modules/
 package-lock.json
 yarn.lock
 
+# AWS CDK / TypeScript build
+infrastructure/cdk.out/
+infrastructure/node_modules/
+infrastructure/*.js
+infrastructure/*.js.map
+
+# Python / backend
+backend/__pycache__/
+backend/*.py[cod]
+backend/.venv/
+backend/env/
+backend/venv/
+
+# Frontend / node
+frontend/node_modules/
+frontend/dist/
+frontend/build/
