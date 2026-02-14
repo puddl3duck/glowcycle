@@ -3,8 +3,89 @@
 let selectedMood = null;
 let selectedTags = [];
 
+// Time-based functionality
+let timeMode = 'morning'; // 'morning', 'afternoon', or 'night'
+
+function detectTimeMode() {
+    const hour = new Date().getHours();
+    // Morning: 05:00–11:59, Afternoon: 12:00–17:59, Night: 18:00–04:59
+    if (hour >= 5 && hour < 12) {
+        return 'morning';
+    } else if (hour >= 12 && hour < 18) {
+        return 'afternoon';
+    } else {
+        return 'night';
+    }
+}
+
+function getJournalPrompt() {
+    timeMode = detectTimeMode();
+    if (timeMode === 'morning') {
+        return 'How are you feeling this morning?';
+    } else if (timeMode === 'afternoon') {
+        return 'How is your day going?';
+    } else {
+        return 'How was your day?';
+    }
+}
+
+function getGreeting() {
+    timeMode = detectTimeMode();
+    if (timeMode === 'morning') {
+        return 'Good morning ☀️';
+    } else if (timeMode === 'afternoon') {
+        return 'Good afternoon 🌸';
+    } else {
+        return 'Good night 🌙';
+    }
+}
+
+function applyTheme() {
+    timeMode = detectTimeMode();
+    const body = document.body;
+    const themeOverride = localStorage.getItem('themeOverride');
+    
+    if (themeOverride) {
+        body.classList.remove('light-theme', 'dark-theme');
+        body.classList.add(`${themeOverride}-theme`);
+    } else {
+        body.classList.remove('light-theme', 'dark-theme');
+        if (timeMode === 'night') {
+            body.classList.add('dark-theme');
+        } else {
+            body.classList.add('light-theme');
+        }
+    }
+    
+    updateJournalPrompt();
+}
+
+function updateJournalPrompt() {
+    const promptElement = document.querySelector('.journal-prompt');
+    if (promptElement) {
+        promptElement.textContent = getJournalPrompt();
+    }
+}
+
+function toggleTheme() {
+    const body = document.body;
+    let themeOverride;
+    
+    if (body.classList.contains('light-theme')) {
+        body.classList.remove('light-theme');
+        body.classList.add('dark-theme');
+        themeOverride = 'dark';
+    } else {
+        body.classList.remove('dark-theme');
+        body.classList.add('light-theme');
+        themeOverride = 'light';
+    }
+    localStorage.setItem('themeOverride', themeOverride);
+}
+
 // Update current date
 document.addEventListener('DOMContentLoaded', function() {
+    applyTheme(); // Apply theme on load
     updateDate();
     setupEventListeners();
     loadEntries();

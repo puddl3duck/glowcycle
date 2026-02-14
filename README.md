@@ -14,30 +14,32 @@ A premium wellness web application designed to help women understand their skin 
 
 ```
 glowcycle/
-├── index.html              # Main landing page
-├── README.md              # Project documentation
+├── README.md                 # Project documentation
 │
-├── css/                   # Stylesheets
-│   ├── styles.css         # Main landing page styles
-│   ├── skin-tracking.css  # Skin tracking page styles
-│   ├── cycle-tracking.css # Cycle tracking page styles
-│   └── journal-mood.css   # Journal & mood page styles
-│
-├── js/                    # JavaScript files
-│   ├── script.js          # Main landing page functionality
-│   ├── skin-tracking.js   # Skin tracking functionality
-│   ├── cycle-tracking.js  # Cycle tracking functionality
-│   └── journal-mood.js    # Journal & mood functionality
-│
-├── images/                # Image assets
-│   ├── hero-illustration.png
-│   ├── decoration-sparkle.png
-│   └── decoration-heart.png
-│
-├── pages/                 # Internal pages
-│   ├── skin-tracking.html
-│   ├── cycle-tracking.html
-│   └── journal-mood.html
+├── frontend/                 # Frontend application
+│   ├── index.html            # Main landing page
+│   │
+│   ├── css/                  # Stylesheets
+│   │   ├── styles.css        # Main landing page styles
+│   │   ├── skin-tracking.css # Skin tracking page styles
+│   │   ├── cycle-tracking.css# Cycle tracking page styles
+│   │   └── journal-mood.css  # Journal & mood page styles
+│   │
+│   ├── js/                   # JavaScript files
+│   │   ├── script.js         # Main landing page functionality
+│   │   ├── skin-tracking.js  # Skin tracking functionality
+│   │   ├── cycle-tracking.js # Cycle tracking functionality
+│   │   └── journal-mood.js   # Journal & mood functionality
+│   │
+│   ├── images/               # Image assets
+│   │   ├── hero-illustration.png
+│   │   ├── decoration-sparkle.png
+│   │   └── decoration-heart.png
+│   │
+│   └── pages/                # Internal pages
+│       ├── skin-tracking.html
+│       ├── cycle-tracking.html
+│       └── journal-mood.html
 │
 ├── backend/                  # Python AWS Lambda functions
 │   ├── skin/                 # Lambda for skin analysis
@@ -46,23 +48,22 @@ glowcycle/
 │   │   └── handler.py        # Entry point for journal Lambda
 │   ├── period/               # Lambda for period tracker
 │   │   └── handler.py        # Entry point for period tracker Lambda
-│   ├── shared/               # Shared Python helpers across Lambdas
+│   ├── utils/                # Shared Python helpers across Lambdas
 │   │   ├── dynamodb_client.py
 │   │   ├── s3_client.py
-│   │   └── secrets_client.py
+│   │   └── bedrock_client.py
 │   └── requirements.txt      # Python dependencies
 │
 ├── infrastructure/           # AWS CDK (TypeScript) infrastructure
-│   ├── bin/
-│   │   └── glow-cycle.ts     # CDK entry point
-│   ├── lib/
-│   │   └── glow-cycle-stack.ts # CDK stack definition
-│   ├── node_modules/
+│   ├── glow_cycle.ts         # CDK entry point
+│   ├── glow_cycle_stack.ts   # CDK stack definition
 │   ├── cdk.json
 │   ├── package.json
 │   └── tsconfig.json
 │
-└── .gitignore
+├── .venv/                    # Python virtual environment (not in git)
+├── .gitignore
+└── requirements.txt          # Root Python dependencies
 ```
 
 ## 🎨 Design System
@@ -126,7 +127,7 @@ glowcycle/
 
 5. **Run the project**
    - Install "Live Server" extension in VS Code
-   - Right-click on `index.html` → "Open with Live Server"
+   - Right-click on `frontend/index.html` → "Open with Live Server"
    - Browser opens at `http://localhost:5500`
 
 ### Python Dependencies

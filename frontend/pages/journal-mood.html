@@ -8,15 +8,20 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/journal-mood.css">
+    <link rel="stylesheet" href="../css/dark-mode-complete.css">
 </head>
-<body>
+<body class="light-theme">
+    <!-- Theme Toggle Button -->
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
+        🌓
+    </button>
+    
     <!-- Navigation -->
     <nav class="navbar">
         <div class="nav-logo">✦ Glow Cycle</div>
         <div class="nav-links">
-            <a href="../index.html" class="nav-link">Home</a>
-            <a href="../index.html#features" class="nav-link">Features</a>
-            <a href="../index.html#how-it-works" class="nav-link">How it Works</a>
+            <a href="../index.html#dashboard" class="nav-link">Dashboard</a>
+            <a href="../index.html#about" class="nav-link">About</a>
         </div>
         <div class="nav-profile">
             <div class="profile-avatar">S</div>
@@ -38,6 +43,7 @@
         <div class="page-header">
             <h1>Daily Journal</h1>
             <p id="current-date">Saturday, February 14, 2026</p>
+            <p class="journal-prompt" style="font-size: 1.1rem; color: var(--text-medium); margin-top: 0.5rem;">How is your day going?</p>
         </div>
 
         <!-- Mood Selector -->

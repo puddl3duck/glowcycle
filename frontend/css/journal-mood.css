@@ -501,3 +501,307 @@ body {
         font-size: 0.85rem;
     }
 }
+
+
+/* ===== TIME-BASED THEMES ===== */
+
+/* Light Theme (Day Mode) - Default */
+body.light-theme {
+    --bg-cream: #FAF8F5;
+    --bg-secondary: #FFFFFF;
+    --text-dark: #4A4A5E;
+    --text-medium: #7A7A8E;
+    --text-light: #A8A8B8;
+    --card-bg: rgba(255, 255, 255, 0.9);
+    --card-border: rgba(212, 197, 232, 0.2);
+    --shadow-color: rgba(184, 168, 208, 0.15);
+}
+
+/* Dark Theme (Night Mode) */
+body.dark-theme {
+    --bg-cream: #1A1A2E;
+    --bg-secondary: #25253A;
+    --text-dark: #FFFFFF;
+    --text-medium: #D4C5E8;
+    --text-light: #B8A8D0;
+    --card-bg: rgba(37, 37, 58, 0.95);
+    --card-border: rgba(212, 197, 232, 0.25);
+    --shadow-color: rgba(0, 0, 0, 0.4);
+}
+
+body.dark-theme {
+    background: linear-gradient(135deg, #1A1A2E 0%, #25253A 50%, #2A2A3E 100%);
+    color: var(--text-dark);
+}
+
+body.dark-theme .navbar {
+    background: rgba(37, 37, 58, 0.98);
+    border-bottom: 1px solid rgba(255, 182, 217, 0.2);
+}
+
+body.dark-theme .nav-logo {
+    color: #FFFFFF;
+}
+
+body.dark-theme .nav-link {
+    color: #D4C5E8;
+}
+
+body.dark-theme .nav-link:hover,
+body.dark-theme .nav-link.active {
+    color: #FFB6D9;
+}
+
+body.dark-theme .profile-name {
+    color: #FFFFFF;
+}
+
+body.dark-theme .mood-card,
+body.dark-theme .energy-card,
+body.dark-theme .journal-card,
+body.dark-theme .tags-card,
+body.dark-theme .past-entries-card,
+body.dark-theme .entry-preview {
+    background: var(--card-bg);
+    border-color: var(--card-border);
+    box-shadow: 0 10px 40px var(--shadow-color);
+}
+
+body.dark-theme .mood-card h3,
+body.dark-theme .energy-card h3,
+body.dark-theme .journal-card h3,
+body.dark-theme .tags-card h3,
+body.dark-theme .past-entries-card h3,
+body.dark-theme .page-header h1 {
+    color: #FFFFFF;
+    font-weight: 700;
+}
+
+body.dark-theme .page-header p,
+body.dark-theme .journal-prompt {
+    color: #FFFFFF;
+    font-weight: 600;
+}
+
+body.dark-theme .mood-option span,
+body.dark-theme .energy-labels span {
+    color: #FFFFFF;
+    font-weight: 600;
+}
+
+body.dark-theme .journal-entry {
+    background: rgba(37, 37, 58, 0.9);
+    border-color: rgba(212, 197, 232, 0.4);
+    color: #FFFFFF;
+}
+
+body.dark-theme .journal-entry::placeholder {
+    color: #D4C5E8;
+}
+
+body.dark-theme .energy-slider {
+    background: rgba(212, 197, 232, 0.3);
+}
+
+body.dark-theme .energy-value {
+    color: #FFFFFF;
+    font-weight: 700;
+}
+
+body.dark-theme .tag-btn {
+    background: rgba(212, 197, 232, 0.2);
+    color: #FFFFFF;
+    border-color: rgba(212, 197, 232, 0.4);
+    font-weight: 600;
+}
+
+body.dark-theme .tag-btn.active {
+    background: linear-gradient(135deg, rgba(255, 182, 217, 0.5), rgba(212, 197, 232, 0.5));
+    color: #FFFFFF;
+    border-color: #FFB6D9;
+}
+
+body.dark-theme .entry-date,
+body.dark-theme .entry-snippet {
+    color: #FFFFFF;
+}
+
+body.dark-theme .word-count {
+    color: #E8D4F0;
+}
+
+body.dark-theme .save-entry-btn {
+    background: linear-gradient(135deg, #FFB6D9 0%, #D4C5E8 100%);
+    color: #1A1A2E;
+    font-weight: 700;
+}
+
+body.dark-theme .mood-option {
+    background: rgba(37, 37, 58, 0.8);
+    border: 2px solid rgba(212, 197, 232, 0.3);
+}
+
+body.dark-theme .mood-option:hover,
+body.dark-theme .mood-option.selected {
+    background: rgba(255, 182, 217, 0.3);
+    border-color: #FFB6D9;
+}
+
+body.dark-theme .entry-tag {
+    background: rgba(255, 182, 217, 0.3);
+    color: #FFFFFF;
+}
+
+/* Smooth transitions */
+body,
+.navbar,
+.mood-card,
+.energy-card,
+.journal-card,
+.tags-card,
+.past-entries-card,
+.entry-preview {
+    transition: background 0.5s ease, color 0.5s ease, border-color 0.5s ease;
+}
+
+
+body.dark-theme .back-link {
+    color: #FFFFFF;
+    background: linear-gradient(135deg, #D4C5E8 0%, #B8A8D0 100%);
+    font-weight: 700;
+    border: 2px solid rgba(255, 182, 217, 0.5);
+}
+
+body.dark-theme .back-link:hover {
+    color: #FFFFFF;
+    background: linear-gradient(135deg, #E8D4F0 0%, #D4C5E8 100%);
+    border-color: #FFB6D9;
+}
+
+body.dark-theme .back-arrow {
+    color: #FFFFFF;
+    font-weight: 900;
+}
+
+
+/* Theme Toggle Button */
+.theme-toggle {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 55px;
+    height: 55px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #FF9B9B, #9B7EBD);
+    border: none;
+    color: white;
+    font-size: 1.8rem;
+    cursor: pointer;
+    box-shadow: 0 8px 25px rgba(255, 155, 155, 0.4);
+    transition: all 0.3s ease;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.theme-toggle:hover {
+    transform: translateY(-3px) scale(1.1);
+    box-shadow: 0 12px 35px rgba(255, 155, 155, 0.6);
+}
+
+.theme-toggle:active {
+    transform: translateY(-1px) scale(1.05);
+}
+
+/* Navbar simplified for internal pages */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 3rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .theme-toggle {
+        bottom: 20px;
+        right: 20px;
+        width: 50px;
+        height: 50px;
+        font-size: 1.5rem;
+    }
+}
+
+
+/* Navbar with links */
+.nav-links {
+    display: flex;
+    gap: 3rem;
+}
+
+.nav-link {
+    text-decoration: none;
+    color: var(--text-medium);
+    font-weight: 600;
+    font-size: 1rem;
+    letter-spacing: 0.05em;
+    transition: all 0.3s ease;
+    font-family: 'Outfit', sans-serif;
+    position: relative;
+    padding: 0.5rem 0;
+}
+
+.nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #FF9B9B, #9B7EBD);
+    transition: width 0.3s ease;
+    border-radius: 10px;
+}
+
+.nav-link:hover,
+.nav-link.active {
+    color: #FF9B9B;
+    transform: translateY(-2px);
+}
+
+.nav-link:hover::after,
+.nav-link.active::after {
+    width: 100%;
+}
+
+body.dark-theme .nav-link {
+    color: #D4C5E8;
+}
+
+body.dark-theme .nav-link:hover,
+body.dark-theme .nav-link.active {
+    color: #FFB6D9;
+}
+
+
+/* Icon brightness adjustments for dark mode */
+body.dark-theme .mood-emoji {
+    filter: brightness(0.95) saturate(1.0);
+}
+
+body.dark-theme .journal-textarea {
+    background: rgba(37, 37, 58, 0.9);
+    border-color: rgba(255, 182, 217, 0.4);
+    color: #FFFFFF;
+    font-weight: 600;
+}
+
+body.dark-theme .journal-textarea::placeholder {
+    color: #D4C5E8;
+    font-weight: 500;
+}
+
+body.dark-theme .journal-textarea:focus {
+    border-color: #FFB6D9;
+}
