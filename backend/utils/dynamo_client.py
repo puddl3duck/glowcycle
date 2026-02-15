@@ -1,0 +1,34 @@
+import boto3
+from botocore.config import Config
+from utils.logger import select_powertools_logger
+
+logger = select_powertools_logger("aws-helpers-dynamo")
+
+def get_dynamodb_client(resource: bool = True, region_name: str = "ap-southeast-2"):
+    """
+    Returns a DynamoDB client or resource.
+    
+    Parameters:
+    - resource: bool, if True returns boto3.resource, else boto3.client
+    - region_name: AWS region
+    
+    """
+    try:
+        config = Config(
+            retries={
+                "max_attempts": 10,
+                "mode": "standard"
+            }
+        )
+        if resource:
+            dynamodb = boto3.resource("dynamodb", region_name=region_name, config=config)
+        else:
+            dynamodb = boto3.client("dynamodb", region_name=region_name, config=config)
+
+        # Optional: test call to ensure connection
+        dynamodb.meta.client.describe_limits() if resource else dynamodb.list_tables()
+
+        return dynamodb
+    except Exception as e:
+        logger.error(f"Failed to create DynamoDB client/resource: {e}")
+        raise

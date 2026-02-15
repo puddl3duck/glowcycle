@@ -15,6 +15,7 @@ export class GlowCycleStack extends cdk.Stack {
     // S3 Bucket
     // -------------------------
     const assetsBucket = new s3.Bucket(this, 'GlowCycleAssets', {
+      bucketName: 'glowcycle-assets',
       versioned: true,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
@@ -24,9 +25,10 @@ export class GlowCycleStack extends cdk.Stack {
     // DynamoDB Table
     // -------------------------
     const table = new dynamodb.Table(this, 'GlowCycleTable', {
-      partitionKey: { name: 'user_id', type: dynamodb.AttributeType.STRING },
-      sortKey: { name: 'entry_id', type: dynamodb.AttributeType.STRING },
+      partitionKey: { name: 'user', type: dynamodb.AttributeType.STRING },
+      sortKey: { name: 'date', type: dynamodb.AttributeType.STRING },
       removalPolicy: cdk.RemovalPolicy.DESTROY,
+      tableName: 'GlowCycleTable',
     });
 
     // -------------------------
@@ -59,8 +61,8 @@ export class GlowCycleStack extends cdk.Stack {
 
     const journalLambda = new lambda.Function(this, 'JournalLambda', {
       runtime: lambda.Runtime.PYTHON_3_11,
-      handler: 'handler.handler',
-      code: lambda.Code.fromAsset('../backend/journal'),
+      handler: 'journal.handler.lambda_handler',
+      code: lambda.Code.fromAsset('../backend'),
       environment: {
         TABLE_NAME: table.tableName,
       },
@@ -74,7 +76,10 @@ export class GlowCycleStack extends cdk.Stack {
         TABLE_NAME: table.tableName,
       },
     });
-
+    journalLambda.addToRolePolicy(new iam.PolicyStatement({
+      actions: ["dynamodb:DescribeLimits"],
+      resources: ["*"],  // Dynamo calls DescribeLimits on the account level
+    }));
     // -------------------------
     // Permissions
     // -------------------------

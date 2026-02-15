@@ -33,5 +33,6 @@
     "javascript": "javascriptreact"
   },
   "liveServer.settings.port": 5500,
-  "liveServer.settings.donotShowInfoMsg": true
+  "liveServer.settings.donotShowInfoMsg": true,
+  "python.analysis.extraPaths": ["./backend"]
 }
