@@ -51,10 +51,16 @@
                         </div>
                     </div>
                     
-                    <button class="cta-button primary-cta" onclick="startQuestionnaire()">
-                        Start Your Journey
-                        <span class="button-arrow">→</span>
-                    </button>
+                    <div class="cta-buttons">
+                        <button class="cta-button primary-cta" onclick="startQuestionnaire()">
+                            Start Your Journey
+                            <span class="button-arrow">→</span>
+                        </button>
+                        <button class="cta-button secondary-cta" onclick="openHowItWorksModal()">
+                            <span class="button-icon">✨</span>
+                            How It Works
+                        </button>
+                    </div>
                 </div>
                 
                 <div class="hero-right">
@@ -664,6 +670,59 @@
                 </div>
             </div>
         </footer>
+    </div>
+
+    <!-- How It Works Modal -->
+    <div id="howItWorksModal" class="modal-overlay" onclick="closeHowItWorksModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <button class="modal-close" onclick="closeHowItWorksModal()">×</button>
+            
+            <div class="modal-header">
+                <h2 class="modal-title">How It Works</h2>
+                <p class="modal-subtitle">Simple steps to start glowing with your cycle</p>
+            </div>
+            
+            <div class="modal-steps">
+                <div class="modal-step">
+                    <div class="modal-step-number">1</div>
+                    <div class="modal-step-content">
+                        <h3>Track Your Cycle</h3>
+                        <p>Log your period dates and we'll track your cycle phases automatically.</p>
+                    </div>
+                </div>
+                
+                <div class="modal-step">
+                    <div class="modal-step-number">2</div>
+                    <div class="modal-step-content">
+                        <h3>Daily Check-In</h3>
+                        <p>Quick check-in on your skin, mood, and energy each day.</p>
+                    </div>
+                </div>
+                
+                <div class="modal-step">
+                    <div class="modal-step-number">3</div>
+                    <div class="modal-step-content">
+                        <h3>Get Personalised Guidance</h3>
+                        <p>Receive daily skincare tips and wellness advice based on your cycle.</p>
+                    </div>
+                </div>
+                
+                <div class="modal-step">
+                    <div class="modal-step-number">4</div>
+                    <div class="modal-step-content">
+                        <h3>Understand Your Patterns</h3>
+                        <p>See insights and trends to understand your body better.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="modal-cta-button" onclick="closeHowItWorksModal(); startQuestionnaire();">
+                    Start Your Journey
+                    <span class="button-arrow">→</span>
+                </button>
+            </div>
+        </div>
     </div>
 
     <script src="js/script.js"></script>

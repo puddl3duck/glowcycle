@@ -811,3 +811,87 @@ body.dark-theme * {
         transition-duration: 0.01ms !important;
     }
 }
+
+/* ===== HOW IT WORKS MODAL - DARK MODE ===== */
+.dark-theme .modal-overlay {
+    background: rgba(25, 25, 42, 0.95);
+}
+
+.dark-theme .modal-content {
+    background: linear-gradient(135deg, #25253A 0%, #2A2A40 50%, #2F2F48 100%);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+}
+
+.dark-theme .modal-close {
+    background: rgba(255, 182, 217, 0.15);
+    color: #FFB6D9;
+}
+
+.dark-theme .modal-close:hover {
+    background: #FFB6D9;
+    color: #25253A;
+}
+
+.dark-theme .modal-title {
+    color: #FFFFFF;
+    font-weight: 700;
+}
+
+.dark-theme .modal-subtitle {
+    color: #E0E0E0;
+    font-weight: 500;
+}
+
+.dark-theme .modal-step {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 182, 217, 0.1);
+}
+
+.dark-theme .modal-step:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: #FFB6D9;
+    box-shadow: 0 8px 24px rgba(255, 182, 217, 0.3);
+}
+
+.dark-theme .modal-step-number {
+    background: linear-gradient(135deg, #FFB6D9 0%, #9B7EBD 100%);
+    color: #25253A;
+    font-weight: 700;
+}
+
+.dark-theme .modal-step-content h3 {
+    color: #FFFFFF;
+    font-weight: 700;
+}
+
+.dark-theme .modal-step-content p {
+    color: #E0E0E0;
+    font-weight: 500;
+}
+
+.dark-theme .modal-footer {
+    border-top-color: rgba(255, 182, 217, 0.2);
+}
+
+.dark-theme .modal-cta-button {
+    background: linear-gradient(135deg, #FFB6D9 0%, #9B7EBD 100%);
+    color: #25253A;
+    font-weight: 700;
+}
+
+.dark-theme .modal-cta-button:hover {
+    box-shadow: 0 12px 32px rgba(255, 182, 217, 0.5);
+}
+
+/* Secondary CTA Button - Dark Mode */
+.dark-theme .cta-button.secondary-cta {
+    background: rgba(255, 182, 217, 0.1);
+    color: #FFB6D9;
+    border-color: #FFB6D9;
+}
+
+.dark-theme .cta-button.secondary-cta:hover {
+    background: rgba(255, 182, 217, 0.2);
+    border-color: #FFFFFF;
+    color: #FFFFFF;
+}

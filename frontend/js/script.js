@@ -292,3 +292,27 @@ document.addEventListener('DOMContentLoaded', () => {
     // Update time-based content every minute
     setInterval(applyTheme, 60000);
 });
+
+// ===== HOW IT WORKS MODAL =====
+function openHowItWorksModal() {
+    const modal = document.getElementById('howItWorksModal');
+    if (modal) {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden'; // Prevent background scrolling
+    }
+}
+
+function closeHowItWorksModal() {
+    const modal = document.getElementById('howItWorksModal');
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = ''; // Restore scrolling
+    }
+}
+
+// Close modal with Escape key
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        closeHowItWorksModal();
+    }
+});
