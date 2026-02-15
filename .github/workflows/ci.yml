@@ -79,7 +79,7 @@ jobs:
         python -m py_compile backend/period/handler.py
         python -m py_compile backend/skin/handler.py
         python -m py_compile backend/utils/bedrock_client.py
-        python -m py_compile backend/utils/dynamodb_client.py
+        python -m py_compile backend/utils/dynamo_client.py
         python -m py_compile backend/utils/s3_client.py
         echo "✓ Python syntax validation complete"
 

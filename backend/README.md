@@ -14,7 +14,7 @@ backend/
 │   └── handler.py    # Lambda handler for skin operations
 ├── utils/            # Shared utilities
 │   ├── bedrock_client.py   # AWS Bedrock client
-│   ├── dynamodb_client.py  # DynamoDB client
+│   ├── dynamo_client.py  # DynamoDB client
 │   └── s3_client.py        # S3 client
 └── requirements.txt  # Python dependencies
 ```
