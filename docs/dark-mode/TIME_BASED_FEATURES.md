@@ -1,15 +1,15 @@
 # ⏰ Time-Based Personalization Features
 
 ## Overview
-Glow Cycle includes automatic time-based personalization that adapts the UI, content, and recommendations based on the user's local time, creating an emotionally aware and calming experience.
+Glow Cycle includes automatic time-based personalisation that adapts the UI, content, and recommendations based on the user's local time, creating an emotionally aware and calming experience.
 
 ## Time Periods
 
 ### 🌅 Morning (05:00 – 11:59)
 - **Greeting**: "Good morning, Sofia! ☀️"
 - **Journal Prompt**: "How are you feeling this morning?"
-- **Skincare**: AM Routine (Cleanser, Vitamin C, Moisturizer, SPF)
-- **Suggestions**: Energizing, productive, hydration-focused
+- **Skincare**: AM Routine (Cleanser, Vitamin C, Moisturiser, SPF)
+- **Suggestions**: Energising, productive, hydration-focused
 - **Theme**: Light mode (soft pastels)
 
 ### 🌸 Afternoon (12:00 – 17:59)

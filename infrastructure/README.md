@@ -66,7 +66,7 @@ infrastructure/
 ### AI/ML
 - **AWS Bedrock**
   - Claude model for skin analysis
-  - Personalized recommendations
+  - Personalised recommendations
 
 ## 🛠 CDK Commands
 

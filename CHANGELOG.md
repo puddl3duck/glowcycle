@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Complete dark mode implementation with 100% coverage
-- Time-based personalization (morning, afternoon, night)
+- Time-based personalisation (morning, afternoon, night)
 - Auto theme switching based on time of day
 - Comprehensive documentation (7 documents)
 - CI/CD pipeline with GitHub Actions
@@ -65,7 +65,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   
 - **Skin Tracking**
   - Manual skin condition logging
-  - Personalized skincare routine recommendations
+  - Personalised skincare routine recommendations
   - Time-based routines (AM/PM)
 
 ### Technical

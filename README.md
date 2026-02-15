@@ -1,6 +1,6 @@
 # 🌸 Glow Cycle
 
-> Your personalized companion for tracking your cycle, understanding your skin, and connecting with your body's natural rhythm.
+> Your personalised companion for tracking your cycle, understanding your skin, and connecting with your body's natural rhythm.
 
 [![CI/CD](https://github.com/puddl3duck/glowcycle/workflows/CI%2FCD%20Pipeline/badge.svg)](https://github.com/puddl3duck/glowcycle/actions)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -29,7 +29,7 @@
 
 ### 🌙 **Cycle Tracking**
 - Visual cycle wheel with phase indicators
-- Personalized predictions for next period and ovulation
+- Personalised predictions for next period and ovulation
 - Phase-specific tips and recommendations
 - Historical tracking and insights
 
@@ -37,17 +37,17 @@
 - AI-powered skin analysis (coming soon)
 - Manual skin condition logging
 - Cycle-phase correlated skin insights
-- Personalized skincare routine recommendations
+- Personalised skincare routine recommendations
 
 ### 📝 **Journal & Mood**
 - Daily mood tracking with emoji interface
 - Energy level monitoring
 - Thought journaling with word count
-- Customizable tags for patterns
+- Customisable tags for patterns
 - Historical entry viewing
 
-### 🎨 **Time-Based Personalization**
-- **Morning (5:00-11:59)**: Energizing content, AM skincare routine
+### 🎨 **Time-Based Personalisation**
+- **Morning (5:00-11:59)**: Energising content, AM skincare routine
 - **Afternoon (12:00-17:59)**: Balanced suggestions, light refresh routine
 - **Night (18:00-4:59)**: Calming content, PM skincare routine
 - Auto theme switching (light/dark)
@@ -406,7 +406,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - ✅ Journal & mood tracking
 - ✅ Skin tracking (manual)
 - ✅ Dark mode
-- ✅ Time-based personalization
+- ✅ Time-based personalisation
 
 ### v1.1 (Next)
 - 🔄 AI-powered skin analysis

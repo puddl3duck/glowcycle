@@ -130,7 +130,7 @@ glowcycle/
 - AI Skin Scanner (camera interface)
 - Manual entry (7 rating sliders)
 - Results view with radar chart
-- Personalized recommendations
+- Personalised recommendations
 - Cycle-based skincare tips
 
 ### 3. Cycle Tracking
@@ -285,7 +285,7 @@ Will require:
 **Use Cases**:
 - Understanding menstrual cycle
 - Tracking skin changes
-- Getting personalized skincare advice
+- Getting personalised skincare advice
 - Daily journaling and mood tracking
 - Connecting with body's natural rhythm
 

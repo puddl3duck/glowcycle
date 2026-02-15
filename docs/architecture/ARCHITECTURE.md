@@ -68,7 +68,7 @@ Glow Cycle is a serverless web application built on AWS, designed to help users 
 #### Features
 - Responsive design
 - Dark mode support
-- Time-based personalization
+- Time-based personalisation
 - Local storage for preferences
 - Progressive enhancement
 
