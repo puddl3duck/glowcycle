@@ -65,3 +65,14 @@ class JournalTableObject:
         except Exception as e:
             logger.error(f"Failed to deserialise DynamoDB item: {e}")
             raise
+
+    def to_dict(self) -> dict:
+        return {
+            "user": self.user,
+            "feeling": self.feeling.value,
+            "energy": self.energy,
+            "thoughts": self.thoughts,
+            "tags": self.tags,
+            "date": self.date.strftime("%d-%m-%Y"),
+            "time": self.time.value
+        }

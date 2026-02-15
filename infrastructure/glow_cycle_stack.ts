@@ -111,8 +111,18 @@ export class GlowCycleStack extends cdk.Stack {
     api.root.addResource('skin')
       .addMethod('POST', new apigateway.LambdaIntegration(skinLambda));
 
-    api.root.addResource('journal')
-      .addMethod('POST', new apigateway.LambdaIntegration(journalLambda));
+    // Journal (ONE resource, multiple methods)
+    const journalResource = api.root.addResource('journal');
+
+    journalResource.addMethod(
+      'POST',
+      new apigateway.LambdaIntegration(journalLambda)
+    );
+
+    journalResource.addMethod(
+      'GET',
+      new apigateway.LambdaIntegration(journalLambda)
+    );
 
     api.root.addResource('period')
       .addMethod('POST', new apigateway.LambdaIntegration(periodLambda));
