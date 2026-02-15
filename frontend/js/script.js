@@ -64,10 +64,12 @@ function resetToAutoTheme() {
 
 // Update time-based content
 function updateTimeBasedContent() {
+    // Get user name from localStorage or default
+    const userName = localStorage.getItem('userName') || 'Sofia';
+    
     // Update greeting in welcome line
     const subtextElement = document.querySelector('.motivational-subtext');
     if (subtextElement) {
-        const userName = 'Sofia'; // Could be dynamic from localStorage
         let greeting = '';
         
         if (timeMode === 'morning') {
@@ -96,6 +98,9 @@ function updateTimeBasedContent() {
         const randomQuote = moodQuotes[Math.floor(Math.random() * moodQuotes.length)];
         quoteElement.textContent = randomQuote;
     }
+    
+    // Update profile name and avatar
+    updateUserProfile();
 }
 
 // Get time-based journal prompt
@@ -231,7 +236,7 @@ function nextQuestion(questionNumber) {
 
 function updateProgress() {
     const progressFill = document.getElementById('progress-fill');
-    const percentage = (currentQuestion / 3) * 100;
+    const percentage = (currentQuestion / 4) * 100;
     progressFill.style.width = percentage + '%';
 }
 
@@ -250,6 +255,22 @@ function completeOnboarding() {
     localStorage.setItem('onboardingCompleted', 'true');
 }
 
+// Update user profile display
+function updateUserProfile() {
+    const userName = localStorage.getItem('userName') || 'Sofia';
+    const profileNameElement = document.getElementById('profile-name');
+    const profileAvatarElement = document.getElementById('profile-avatar');
+    
+    if (profileNameElement) {
+        profileNameElement.textContent = userName;
+    }
+    
+    if (profileAvatarElement) {
+        // Get first letter of name for avatar
+        profileAvatarElement.textContent = userName.charAt(0).toUpperCase();
+    }
+}
+
 // Navigation
 function showPage(pageId) {
     document.querySelectorAll('.page').forEach(page => {
@@ -264,14 +285,42 @@ function startQuestionnaire() {
 }
 
 function goToDashboard() {
+    // Save user name from input
+    const userNameInput = document.getElementById('user-name');
+    if (userNameInput && userNameInput.value.trim()) {
+        localStorage.setItem('userName', userNameInput.value.trim());
+    }
+    
+    // Save other data
+    const ageInput = document.getElementById('age');
+    if (ageInput && ageInput.value) {
+        localStorage.setItem('userAge', ageInput.value);
+    }
+    
+    const lastPeriodInput = document.getElementById('last-period');
+    if (lastPeriodInput && lastPeriodInput.value) {
+        localStorage.setItem('lastPeriod', lastPeriodInput.value);
+    }
+    
+    localStorage.setItem('cycleDays', cycleDays);
+    
     completeOnboarding(); // Mark onboarding as complete
     showPage('dashboard-page');
+    
+    // Update profile and content after showing dashboard
+    setTimeout(() => {
+        updateUserProfile();
+        updateTimeBasedContent();
+    }, 100);
 }
 
 // Check on page load if user should go directly to dashboard
 document.addEventListener('DOMContentLoaded', () => {
     // Apply theme on load
     applyTheme();
+    
+    // Update user profile on load
+    updateUserProfile();
     
     const today = new Date().toISOString().split('T')[0];
     const lastPeriodInput = document.getElementById('last-period');
@@ -283,10 +332,18 @@ document.addEventListener('DOMContentLoaded', () => {
     if (window.location.hash === '#dashboard') {
         if (hasCompletedOnboarding()) {
             showPage('dashboard-page');
+            // Force update content after page is shown
+            setTimeout(() => {
+                updateTimeBasedContent();
+            }, 100);
         }
     } else if (hasCompletedOnboarding()) {
         // If user has completed onboarding, show dashboard instead of landing
         showPage('dashboard-page');
+        // Force update content after page is shown
+        setTimeout(() => {
+            updateTimeBasedContent();
+        }, 100);
     }
     
     // Update time-based content every minute

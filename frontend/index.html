@@ -51,16 +51,10 @@
                         </div>
                     </div>
                     
-                    <div class="cta-buttons">
-                        <button class="cta-button primary-cta" onclick="startQuestionnaire()">
-                            Start Your Journey
-                            <span class="button-arrow">→</span>
-                        </button>
-                        <button class="cta-button secondary-cta" onclick="openHowItWorksModal()">
-                            <span class="button-icon">✨</span>
-                            How It Works
-                        </button>
-                    </div>
+                    <button class="cta-button primary-cta" onclick="openHowItWorksModal()">
+                        Start Your Journey
+                        <span class="button-arrow">→</span>
+                    </button>
                 </div>
                 
                 <div class="hero-right">
@@ -85,24 +79,32 @@
                     <div class="progress-fill" id="progress-fill"></div>
                 </div>
                 
-                <!-- Question 1: Age -->
+                <!-- Question 1: Name -->
                 <div class="question-card active" data-question="1">
-                    <h2 class="question-title">How old are you?</h2>
-                    <p class="question-subtitle">This helps us personalise your experience</p>
-                    <input type="number" id="age" class="input-field" placeholder="Enter your age" min="13" max="60">
+                    <h2 class="question-title">What's your name?</h2>
+                    <p class="question-subtitle">Let's make this personal ✨</p>
+                    <input type="text" id="user-name" class="input-field" placeholder="Enter your name">
                     <button class="btn-next" onclick="nextQuestion(2)">Continue</button>
                 </div>
                 
-                <!-- Question 2: Last Period -->
+                <!-- Question 2: Age -->
                 <div class="question-card" data-question="2">
-                    <h2 class="question-title">When was your last period?</h2>
-                    <p class="question-subtitle">We'll use this to track your cycle</p>
-                    <input type="date" id="last-period" class="input-field">
+                    <h2 class="question-title">How old are you?</h2>
+                    <p class="question-subtitle">This helps us personalise your experience</p>
+                    <input type="number" id="age" class="input-field" placeholder="Enter your age" min="13" max="60">
                     <button class="btn-next" onclick="nextQuestion(3)">Continue</button>
                 </div>
                 
-                <!-- Question 3: Cycle Length -->
+                <!-- Question 3: Last Period -->
                 <div class="question-card" data-question="3">
+                    <h2 class="question-title">When was your last period?</h2>
+                    <p class="question-subtitle">We'll use this to track your cycle</p>
+                    <input type="date" id="last-period" class="input-field">
+                    <button class="btn-next" onclick="nextQuestion(4)">Continue</button>
+                </div>
+                
+                <!-- Question 4: Cycle Length -->
+                <div class="question-card" data-question="4">
                     <h2 class="question-title">How many days is your cycle?</h2>
                     <p class="question-subtitle">Average cycle length (typically 21-35 days)</p>
                     <div class="cycle-selector">
@@ -134,8 +136,8 @@
                 <a href="#" class="nav-link" onclick="showAboutView()">About</a>
             </div>
             <div class="nav-profile">
-                <div class="profile-avatar">S</div>
-                <span class="profile-name">Sofia</span>
+                <div class="profile-avatar" id="profile-avatar">S</div>
+                <span class="profile-name" id="profile-name">Sofia</span>
             </div>
         </nav>
 
@@ -718,7 +720,7 @@
             
             <div class="modal-footer">
                 <button class="modal-cta-button" onclick="closeHowItWorksModal(); startQuestionnaire();">
-                    Start Your Journey
+                    Let's Start!
                     <span class="button-arrow">→</span>
                 </button>
             </div>
