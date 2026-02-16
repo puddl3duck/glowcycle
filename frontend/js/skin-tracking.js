@@ -114,10 +114,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+// Camera variables
+let stream = null;
+let currentFacingMode = 'user'; // 'user' for front camera, 'environment' for back camera
+let capturedImageData = null;
+
 // Show Scanner View
 function showScanner() {
     document.querySelector('.method-selection-single').style.display = 'none';
     document.getElementById('scanner-view').style.display = 'block';
+    startCamera();
+}
+
+// Close Scanner
+function closeScanner() {
+    stopCamera();
+    hideViews();
 }
 
 // Hide all views and show method selection
@@ -130,16 +142,116 @@ function hideViews() {
     document.getElementById('results-view').style.display = 'none';
 }
 
-// Simulate scan and show results
-function simulateScan() {
-    // Add scanning animation
-    const btn = document.querySelector('.capture-btn');
-    btn.textContent = 'Analyzing...';
-    btn.disabled = true;
+// Start Camera
+async function startCamera() {
+    try {
+        const constraints = {
+            video: {
+                facingMode: currentFacingMode,
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+            },
+            audio: false
+        };
+        
+        stream = await navigator.mediaDevices.getUserMedia(constraints);
+        const video = document.getElementById('camera-video');
+        video.srcObject = stream;
+        
+        updateCameraStatus('Ready to capture', '✓', 'success');
+    } catch (error) {
+        console.error('Error accessing camera:', error);
+        updateCameraStatus('Camera access denied', '⚠️', 'error');
+    }
+}
+
+// Stop Camera
+function stopCamera() {
+    if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        stream = null;
+    }
+    const video = document.getElementById('camera-video');
+    if (video) {
+        video.srcObject = null;
+    }
+}
+
+// Flip Camera
+async function flipCamera() {
+    currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+    stopCamera();
+    await startCamera();
+}
+
+// Update Camera Status
+function updateCameraStatus(text, icon, type = 'info') {
+    const statusElement = document.getElementById('camera-status');
+    if (statusElement) {
+        statusElement.innerHTML = `
+            <span class="status-icon">${icon}</span>
+            <span class="status-text ${type}">${text}</span>
+        `;
+    }
+}
+
+// Capture Photo
+function capturePhoto() {
+    const video = document.getElementById('camera-video');
+    const canvas = document.getElementById('camera-canvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Set canvas size to match video
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    
+    // Draw video frame to canvas
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    // Store captured image
+    capturedImageData = canvas.toDataURL('image/jpeg', 0.9);
+    
+    // Show captured image
+    canvas.style.display = 'block';
+    video.style.display = 'none';
+    
+    // Update UI
+    document.getElementById('capture-btn').style.display = 'none';
+    document.getElementById('retake-btn').style.display = 'flex';
+    document.querySelector('.flip-btn').style.display = 'none';
+    
+    updateCameraStatus('Photo captured! Analyzing...', '✨', 'success');
+    
+    // Simulate AI analysis
+    setTimeout(() => {
+        analyzePhoto();
+    }, 2000);
+}
+
+// Retake Photo
+function retakePhoto() {
+    const video = document.getElementById('camera-video');
+    const canvas = document.getElementById('camera-canvas');
+    
+    canvas.style.display = 'none';
+    video.style.display = 'block';
+    
+    document.getElementById('capture-btn').style.display = 'flex';
+    document.getElementById('retake-btn').style.display = 'none';
+    document.querySelector('.flip-btn').style.display = 'flex';
+    
+    capturedImageData = null;
+    updateCameraStatus('Ready to capture', '✓', 'success');
+}
+
+// Analyze Photo (Simulate AI Analysis)
+function analyzePhoto() {
+    updateCameraStatus('Analysis complete!', '🎉', 'success');
     
     setTimeout(() => {
+        stopCamera();
         showResults();
-    }, 2000);
+    }, 1000);
 }
 
 // Show Results View
