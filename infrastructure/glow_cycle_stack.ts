@@ -4,6 +4,7 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as s3n from 'aws-cdk-lib/aws-s3-notifications';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 
@@ -34,12 +35,19 @@ export class GlowCycleStack extends cdk.Stack {
     // -------------------------
     // Lambda Functions
     // -------------------------
-    const skinLambda = new lambda.Function(this, 'SkinTrackingLambda', {
+    const skinUploadLambda = new lambda.Function(this, 'SkinUploadLambda', {
       runtime: lambda.Runtime.PYTHON_3_11,
       handler: 'handler.handler',
       code: lambda.Code.fromAsset('../backend/skin'),
       environment: {
-        TABLE_NAME: table.tableName,
+        BUCKET_NAME: assetsBucket.bucketName,
+      },
+    });
+    const skinProcessLambda = new lambda.Function(this, 'SkinProcessLambda', {
+      runtime: lambda.Runtime.PYTHON_3_11,
+      handler: 'handler.handler',
+      code: lambda.Code.fromAsset('../backend/skin'),
+      environment: {
         BUCKET_NAME: assetsBucket.bucketName,
       },
     });
@@ -83,16 +91,18 @@ export class GlowCycleStack extends cdk.Stack {
     // -------------------------
     // Permissions
     // -------------------------
-    table.grantReadWriteData(skinLambda);
     table.grantReadWriteData(journalLambda);
     table.grantReadWriteData(periodLambda);
-    glowCycleSecret.grantRead(skinLambda);
+    glowCycleSecret.grantRead(skinProcessLambda);
+    glowCycleSecret.grantRead(skinUploadLambda);
     glowCycleSecret.grantRead(journalLambda);
     glowCycleSecret.grantRead(periodLambda);
-    assetsBucket.grantReadWrite(skinLambda);
+    assetsBucket.grantRead(skinProcessLambda);
+    assetsBucket.grantWrite(skinUploadLambda);
 
-    skinLambda.addToRolePolicy(new iam.PolicyStatement({
-      actions: ['rekognition:*'],
+
+    skinProcessLambda.addToRolePolicy(new iam.PolicyStatement({
+      actions: ['rekognition:DetectFaces'],
       resources: ['*'],
     }));
 
@@ -108,8 +118,14 @@ export class GlowCycleStack extends cdk.Stack {
       restApiName: 'Glow Cycle API',
     });
 
+    assetsBucket.addEventNotification(
+      s3.EventType.OBJECT_CREATED,
+      new s3n.LambdaDestination(skinProcessLambda),
+      { prefix: 'selfies/' }
+    );
+
     api.root.addResource('skin')
-      .addMethod('POST', new apigateway.LambdaIntegration(skinLambda));
+      .addMethod('POST', new apigateway.LambdaIntegration(skinUploadLambda));
 
     // Journal (ONE resource, multiple methods)
     const journalResource = api.root.addResource('journal');

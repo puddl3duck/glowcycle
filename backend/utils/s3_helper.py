@@ -1,14 +1,9 @@
 from __future__ import annotations
 import boto3
-import io
 import json
-from concurrent.futures import Future, ThreadPoolExecutor
-from abc import ABC, abstractmethod
-from typing import Optional, Any, Dict, List
-from datetime import datetime, date
+from typing import Optional
 from copy import copy
 import os
-import gzip
 from enum import Enum
 
 from utils.logger import select_powertools_logger
@@ -16,33 +11,9 @@ from utils.logger import select_powertools_logger
 logger = select_powertools_logger("aws-helpers-s3")
 
 
-
 class ContentType(str, Enum):
     json_content = "application/json"
     jpeg_content = "image/jpeg"
-
-
-class ContentEncoding(str, Enum):
-    gzip = "gzip"
-
-
-class S3Serialiser:
-
-    @staticmethod
-    def _serialise(obj: Any):
-        if isinstance(obj, datetime) or isinstance(obj, date):
-            return obj.isoformat()
-        if isinstance(obj, S3Location):
-            return obj.location
-        return obj
-
-    @staticmethod
-    def object_serialiser(obj: Dict):
-        if isinstance(obj, list):
-            return [S3Serialiser.object_serialiser(obj=obj) for obj in obj]
-        if isinstance(obj, dict):
-            return {k: S3Serialiser.object_serialiser(v) for k, v in obj.items()}
-        return S3Serialiser._serialise(obj=obj)
 
 
 class S3Location:
@@ -81,63 +52,60 @@ class S3:
 
     def _get_client(self) -> boto3.client:
         region_name = os.environ["AWS_DEFAULT_REGION"]
-        s3_client = boto3.client("s3", region_name=region_name)
-        endpoint_url = s3_client.meta.endpoint_url
-        s3_client = boto3.client(
-            "s3", region_name=region_name, endpoint_url=endpoint_url
-        )
-        return s3_client
+        return boto3.client("s3", region_name=region_name)
 
-    def _streaming_body_to_dict(self, payload):
-        file_like_obj = io.BytesIO(payload.read())
-        response = json.loads(file_like_obj.getvalue())
-        return response
+    # ---------- JSON ----------
 
-    def put_json_object(self, bucket_name: str, file_name: str, object: dict):
+    def put_json_object(self, bucket_name: str, file_name: str, obj: dict):
         return self.client.put_object(
-            Body=json.dumps(object), Bucket=bucket_name, Key=file_name
+            Body=json.dumps(obj),
+            Bucket=bucket_name,
+            Key=file_name,
+            ContentType=ContentType.json_content.value,
         )
-
-    def list_objects_by_prefix(self, bucket_name: str, prefix: str) -> List[S3Location]:
-        """
-        list objects by prefix gets 1000 items at a time, if theres more, I want em
-        """
-        objects = list()
-        try:
-            continuation_token = None
-            while True:
-                if continuation_token:
-                    response = self.client.list_objects_v2(
-                        Bucket=bucket_name,
-                        Prefix=prefix,
-                        ContinuationToken=continuation_token,
-                    )
-                else:
-                    response = self.client.list_objects_v2(
-                        Bucket=bucket_name, Prefix=prefix
-                    )
-
-                # Append current batch
-                objects.extend(response.get("Contents", []))
-
-                # Check if more results exist
-                if response.get("IsTruncated"):  # True if more pages available
-                    continuation_token = response["NextContinuationToken"]
-                else:
-                    break
-            locations = [
-                S3Location(bucket=bucket_name, file_name=c["Key"]) for c in objects
-            ]
-            return locations
-        except Exception as e:
-            logger.exception(
-                f"Failed to get objects from s3: {bucket_name}/{prefix} due to {e}"
-            )
-            return []
 
     def get_object(self, bucket_name: str, file_name: str):
         response = self.client.get_object(Bucket=bucket_name, Key=file_name)
-        return self._streaming_body_to_dict(response["Body"])
+        return json.loads(response["Body"].read())
+
+    # ---------- JPG ----------
+
+    def save_jpg_to_s3(self, content: bytes, s3_location: S3Location):
+        """
+        Save JPG image to S3 (no compression).
+        """
+        try:
+            return self.client.put_object(
+                Body=content,
+                Bucket=s3_location.bucket,
+                Key=s3_location.file_name,
+                ContentType=ContentType.jpeg_content.value,
+            )
+        except Exception as e:
+            logger.exception(f"Failed to save jpg to s3 due to {e}")
+            return None
+
+    def get_jpg_from_s3(self, bucket: str, file_name: str) -> bytes:
+        """
+        Retrieve JPG bytes from S3.
+        """
+        response = self.client.get_object(Bucket=bucket, Key=file_name)
+        return response["Body"].read()
+
+    # ---------- Rekognition Helper ----------
+
+    def to_rekognition_s3_object(self, bucket: str, file_name: str) -> dict:
+        """
+        Build Rekognition S3Object payload.
+        """
+        return {
+            "S3Object": {
+                "Bucket": bucket,
+                "Name": file_name,
+            }
+        }
+
+    # ---------- Presigned URL ----------
 
     def get_presigned_url(
         self,
@@ -153,144 +121,3 @@ class S3:
             },
             ExpiresIn=expires_in,
         )
-
-    def get_s3_location_from_bucket_file(
-        bucket_name: str, file_name: str
-    ) -> S3Location:
-        return S3Location(bucket=bucket_name, file_name=file_name)
-
-    def get_bucket_file_from_s3_location(s3_location: S3Location) -> S3Location:
-        return S3Location.from_location(location=s3_location)
-
-    def save_document_content(
-        self,
-        file_contents: bytes,
-        s3_location: S3Location,
-        content_encoding: str = "",
-        content_type: str = "application/pdf",
-        compress: bool = True,
-    ) -> Optional[S3Location]:
-        """
-        saves document content to bucket, in file_name
-        Options for content_type:
-            "application/pdf"
-            "text/plain"
-            "application/json"
-            probably more
-        Options for content_encoding:
-            "": default encoding
-            "gzip": compressed contents
-        """
-        try:
-            if compress or s3_location.file_name.endswith(".gz"):
-                file_contents = gzip.compress(file_contents)
-                content_encoding = ContentEncoding.gzip.value
-            obj = self.resource.Object(s3_location.bucket, s3_location.file_name)
-            obj.put(
-                Body=file_contents,
-                ContentType=content_type,
-                ContentEncoding=content_encoding,
-            )
-            return s3_location
-        except Exception as e:
-            logger.exception(e)
-            return None
-
-    def read_binary_from_s3(self, s3_location: S3Location) -> Optional[bytes]:
-        try:
-            obj = self.resource.Object(s3_location.bucket, s3_location.file_name)
-            d_bytes = io.BytesIO()
-            obj.download_fileobj(d_bytes)
-            d_bytes.seek(0)
-            if obj.content_encoding == ContentEncoding.gzip.value:
-                try:
-                    with gzip.GzipFile(fileobj=d_bytes) as gz_file:
-                        return gz_file.read()
-                except gzip.BadGzipFile:
-                    d_bytes.seek(0)
-            return d_bytes.read()
-        except Exception as e:
-            logger.exception(f"Failed to read binary from s3 due to {e}")
-            return None
-
-    def save_text_to_s3(self, text: str, s3_location: S3Location):
-        try:
-            file_contents = bytes(text.encode("UTF-8"))
-            return self.save_document_content(
-                file_contents=file_contents,
-                s3_location=s3_location,
-                content_type=ContentType.plain_text.value,
-                compress=True,
-                content_encoding=ContentEncoding.gzip.value,
-            )
-        except Exception as e:
-            logger.exception(f"Failed to save text to s3 due to {e}")
-            return None
-
-    def save_jpeg_to_s3(self, content: bytes, s3_location: S3Location):
-        try:
-            return self.save_document_content(
-                file_contents=content,
-                s3_location=s3_location,
-                content_type=ContentType.jpeg_content.value,
-                compress=True,
-                content_encoding=ContentEncoding.gzip.value,
-            )
-        except Exception as e:
-            logger.exception(f"Failed to save jpeg to s3 due to {e}")
-            return None
-
-    def read_dict_from_s3(self, s3_location: S3Location) -> dict:
-        return json.loads(
-            self.read_binary_from_s3(s3_location=s3_location).decode("utf-8")
-        )
-
-
-class BaseS3Object(ABC):
-    def to_s3_representation(self) -> dict:
-        obj = copy(vars(self))
-        return S3Serialiser.object_serialiser(obj=obj)
-
-    @classmethod
-    def from_s3_representation(cls, obj: dict) -> BaseS3Object:
-        return cls(**obj)
-
-    @abstractmethod
-    def get_save_location(self, bucket_name: str) -> S3Location:
-        pass
-
-
-class BaseS3Queries:
-    s3_client: S3
-    bucket_name: str
-
-    def __init__(self, s3_client: S3, bucket_name: str):
-        self.s3_client = s3_client
-        self.bucket_name = bucket_name
-
-    def _concurrent_s3_dict_read(
-        self, locations: List[S3Location], max_workers: int = 10
-    ) -> List[BaseS3Object]:
-        results: List[BaseS3Object] = list()
-        futures: List[Future] = list()
-        with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            for location in locations:
-                future = executor.submit(
-                    self.s3_client.read_dict_from_s3,
-                    s3_location=location,
-                )
-                futures.append(future)
-        for f in futures:
-            results.append(f.result())
-        results = [r for r in results if r is not None]
-        return results
-
-    def save_s3_object_to_s3(self, object: BaseS3Object) -> Optional[S3Location]:
-        try:
-            obj = object.to_s3_representation()
-            return self.s3_client.save_dict_to_s3(
-                content=obj, s3_location=object.get_save_location()
-            )
-        except Exception as e:
-            logger.exception(f"Failed to save s3 object to s3 due to {e}")
-        return None
