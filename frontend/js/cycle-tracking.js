@@ -102,5 +102,4 @@ function updateCycleInfo() {
     const cycleDay = (daysDiff % 28) + 1;
     
     // Update UI with calculated day
-    console.log(`Cycle Day: ${cycleDay}`);
 }

@@ -369,8 +369,15 @@ $RECYCLE.BIN/
 # ===== Project Specific =====
 # Local configuration
 config.local.json
+config.local.js
 secrets.json
 .secrets/
+*.local.bat
+*.local.sh
+
+# Deployment packages
+*.zip
+function.zip
 
 # Build outputs
 build/

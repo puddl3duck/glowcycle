@@ -152,7 +152,17 @@
    # Visit http://localhost:8000
    ```
 
-5. **Setup infrastructure** (optional)
+5. **Setup backend** (optional - for cloud features)
+   ```bash
+   # See backend/journal/SETUP_GUIDE.md for detailed instructions
+   # Quick overview:
+   # 1. Create DynamoDB table
+   # 2. Deploy Lambda function
+   # 3. Setup API Gateway
+   # 4. Update frontend/js/config.js with API URL
+   ```
+
+6. **Setup infrastructure** (optional)
    ```bash
    cd infrastructure
    npm install
@@ -231,9 +241,16 @@ source .venv/bin/activate  # macOS/Linux
 # Install dependencies
 pip install -r backend/requirements.txt
 
-# Run tests
-pytest backend/
+# Test locally (requires AWS credentials)
+cd backend/journal
+python test_local.py
+
+# Deploy to AWS
+./deploy.sh arn:aws:iam::YOUR_ACCOUNT_ID:role/lambda-role  # Linux/Mac
+deploy.bat arn:aws:iam::YOUR_ACCOUNT_ID:role/lambda-role   # Windows
 ```
+
+For detailed backend setup, see [Journal Backend Setup Guide](backend/journal/SETUP_GUIDE.md).
 
 ### Infrastructure Development
 

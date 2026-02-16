@@ -7,14 +7,12 @@ from utils.dynamo_helper import JournalTableObject
 from utils.lambda_utils import handle_error_response
 from journal.types import FeelingType, DayPeriod
 from boto3.dynamodb.conditions import Key
-#from utils.logger import select_powertools_logger
+from utils.logger import select_powertools_logger
+import os
 
-# Todo: Generates journal prompts using Bedrock
-# Todo: Returns prompts or stored entries
+logger = select_powertools_logger("journal-lambda")
 
-#ToDo: fix loggers logger = select_powertools_logger("journal-lambda")
-
-DYNAMODB_TABLE_NAME = "GlowCycleTable"
+DYNAMODB_TABLE_NAME = os.environ.get("DYNAMODB_TABLE_NAME", "GlowCycleTable")
 dynamodb = get_dynamodb_client()
 journal_table = dynamodb.Table(DYNAMODB_TABLE_NAME)
 
@@ -54,73 +52,114 @@ def save_entry(event):
         "night": True
     }
     """
+    try:
+        body = json.loads(event.get("body", "{}"))
+        
+        # Validate required fields
+        required_fields = ["user", "feeling", "energy", "thoughts", "tags", "date", "night"]
+        missing_fields = [field for field in required_fields if field not in body]
+        if missing_fields:
+            logger.error(f"Missing required fields: {missing_fields}")
+            raise ValueError(f"Missing required fields: {', '.join(missing_fields)}")
+        
+        # Validate feeling type
+        if body["feeling"] not in [f.value for f in FeelingType]:
+            raise ValueError(f"Invalid feeling type: {body['feeling']}")
+        
+        # Parse date and create entry
+        date_obj = datetime.strptime(body["date"], "%d-%m-%Y")
+        period = DayPeriod.from_bool(body["night"])
+        feeling_enum = FeelingType(body["feeling"])
 
-    body = json.loads(event.get("body", "{}"))
+        entry_obj = JournalTableObject(
+            user=body["user"],
+            feeling=feeling_enum,
+            energy=int(body["energy"]),
+            thoughts=body["thoughts"],
+            tags=body["tags"],
+            date=date_obj,
+            time=period
+        )
 
+        # Convert to DynamoDB item
+        item = entry_obj._to_dynamo_representation()
+        logger.info(f"Saving entry for user: {item['user']}, date: {item['date']}")
+        journal_table.put_item(Item=item)
 
-
-
-
-
-    date_obj = datetime.strptime(body["date"], "%d-%m-%Y")
-    period = DayPeriod.from_bool(body["night"])
-    feeling_enum = FeelingType(body["feeling"])
-
-    entry_obj = JournalTableObject(
-        user=body["user"],
-        feeling=feeling_enum,
-        energy=int(body["energy"]),
-        thoughts=body["thoughts"],
-        tags=body["tags"],
-        date=date_obj,
-        time=period
-    )
-
-    # Convert to DynamoDB item
-    item = entry_obj._to_dynamo_representation()
-    journal_table.put_item(Item=item)
-
-    return {
-        "status": "success",
-        "user": item["user"],
-        "date": item["date"]
-    }
+        return {
+            "status": "success",
+            "user": item["user"],
+            "date": item["date"],
+            "message": "Entry saved successfully"
+        }
+    except ValueError as e:
+        logger.error(f"Validation error: {str(e)}")
+        raise
+    except Exception as e:
+        logger.error(f"Error saving entry: {str(e)}")
+        raise
 
 
 # get historic journal entries (GET)
 def get_entries(event):
+    try:
+        params = event.get("queryStringParameters") or {}
+        user = params.get("user")
 
-    params = event.get("queryStringParameters") or {}
-    user = params.get("user")
+        if not user:
+            logger.error("Missing user parameter in GET request")
+            raise ValueError("Missing user parameter")
 
-    if not user:
-        return {"error": "Missing user parameter"}
+        logger.info(f"Fetching entries for user: {user}")
+        response = journal_table.query(
+            KeyConditionExpression=Key("user").eq(user),
+            ScanIndexForward=False  # newest first
+        )
 
-    response = journal_table.query(
-        KeyConditionExpression=Key("user").eq(user),
-        ScanIndexForward=False  # newest first
-    )
+        items = response.get("Items", [])
+        logger.info(f"Found {len(items)} entries for user: {user}")
 
-    items = response.get("Items", [])
+        entries = [
+            JournalTableObject._from_dynamo_representation(item).to_dict()
+            for item in items
+        ]
 
-    entries = [
-        JournalTableObject._from_dynamo_representation(item).to_dict()
-        for item in items
-    ]
-
-    return {"entries": entries}
+        return {
+            "entries": entries,
+            "count": len(entries)
+        }
+    except ValueError as e:
+        logger.error(f"Validation error: {str(e)}")
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching entries: {str(e)}")
+        raise
 
 
 
 @handle_error_response
 def lambda_handler(event, context):
+    """
+    Main Lambda handler for journal operations.
+    Supports GET (retrieve entries) and POST (save entry) methods.
+    """
+    try:
+        method = event.get("httpMethod", "")
+        logger.info(f"Received {method} request")
 
-    method = event.get("httpMethod", "")
+        if method == "OPTIONS":
+            logger.info("Handling OPTIONS request for CORS")
+            return {"status": "ok", "message": "CORS preflight"}
 
-    if method == "POST":
-        return save_entry(event)
+        if method == "POST":
+            return save_entry(event)
 
-    if method == "GET":
-        return get_entries(event)
+        if method == "GET":
+            return get_entries(event)
 
-    return {"error": "Unsupported method"}
+        logger.warning(f"Unsupported HTTP method: {method}")
+        raise ValueError(f"Unsupported HTTP method: {method}")
+    
+    except Exception as e:
+        logger.error(f"Lambda handler error: {str(e)}")
+        raise

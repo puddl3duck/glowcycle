@@ -636,16 +636,93 @@ body {
 
 /* Responsive */
 @media (max-width: 768px) {
+    .navbar {
+        padding: 1rem 1.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .nav-logo {
+        font-size: 1.2rem;
+    }
+    
+    .nav-links {
+        order: 3;
+        width: 100%;
+        justify-content: center;
+        margin-top: 1rem;
+        gap: 1.5rem;
+    }
+    
+    .nav-link {
+        font-size: 0.85rem;
+    }
+    
+    .nav-profile {
+        padding: 0.4rem 1rem;
+    }
+    
+    .profile-avatar {
+        width: 35px;
+        height: 35px;
+        font-size: 1rem;
+    }
+    
+    .profile-name {
+        font-size: 0.9rem;
+    }
+    
     .method-selection {
         grid-template-columns: 1fr;
+        gap: 1.5rem;
     }
     
     .skin-metrics {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
     }
     
     .page-header h1 {
-        font-size: 2.5rem;
+        font-size: 2rem;
+    }
+    
+    .skin-container {
+        padding: 2rem 1rem;
+    }
+    
+    .method-card,
+    .skin-card {
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .navbar {
+        padding: 1rem;
+    }
+    
+    .profile-name {
+        display: none;
+    }
+    
+    .skin-container {
+        padding: 1.5rem 0.8rem;
+    }
+    
+    .page-header h1 {
+        font-size: 1.8rem;
+    }
+    
+    .skin-metrics {
+        grid-template-columns: 1fr;
+    }
+    
+    .method-card-large {
+        padding: 2.5rem 1.5rem;
+    }
+    
+    .method-icon-large {
+        width: 100px;
+        height: 100px;
     }
 }
 

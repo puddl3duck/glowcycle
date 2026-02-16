@@ -481,24 +481,178 @@ body {
 
 /* Responsive */
 @media (max-width: 768px) {
-    .mood-options {
-        grid-template-columns: repeat(3, 1fr);
+    .navbar {
+        padding: 1rem 1.5rem;
+        flex-wrap: wrap;
     }
     
-    .tags-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .page-header h1 {
-        font-size: 2.5rem;
+    .nav-logo {
+        font-size: 1.2rem;
     }
     
     .nav-links {
-        gap: 1rem;
+        order: 3;
+        width: 100%;
+        justify-content: center;
+        margin-top: 1rem;
+        gap: 1.5rem;
     }
     
     .nav-link {
         font-size: 0.85rem;
+    }
+    
+    .nav-profile {
+        padding: 0.4rem 1rem;
+    }
+    
+    .profile-avatar {
+        width: 35px;
+        height: 35px;
+        font-size: 1rem;
+    }
+    
+    .profile-name {
+        font-size: 0.9rem;
+    }
+    
+    .journal-container {
+        padding: 2rem 1rem;
+    }
+    
+    .page-header h1 {
+        font-size: 2rem;
+    }
+    
+    .page-header p {
+        font-size: 0.95rem;
+    }
+    
+    .mood-card,
+    .energy-card,
+    .journal-card,
+    .tags-card,
+    .past-entries-card {
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .mood-options {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.8rem;
+    }
+    
+    .mood-option {
+        padding: 1rem 0.5rem;
+    }
+    
+    .mood-emoji {
+        font-size: 2rem;
+    }
+    
+    .mood-option span {
+        font-size: 0.8rem;
+    }
+    
+    .tags-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.8rem;
+    }
+    
+    .tag-btn {
+        padding: 0.8rem;
+        font-size: 0.85rem;
+    }
+    
+    .journal-textarea {
+        min-height: 200px;
+        font-size: 0.95rem;
+    }
+    
+    .save-entry-btn {
+        padding: 1.2rem;
+        font-size: 1.1rem;
+    }
+    
+    .theme-toggle {
+        bottom: 20px;
+        right: 20px;
+        width: 50px;
+        height: 50px;
+        font-size: 1.5rem;
+    }
+    
+    .back-link {
+        padding: 0.6rem 1.2rem;
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .navbar {
+        padding: 1rem;
+    }
+    
+    .nav-logo {
+        font-size: 1.1rem;
+    }
+    
+    .nav-profile {
+        padding: 0.3rem 0.8rem;
+    }
+    
+    .profile-name {
+        display: none;
+    }
+    
+    .journal-container {
+        padding: 1.5rem 0.8rem;
+    }
+    
+    .page-header h1 {
+        font-size: 1.8rem;
+    }
+    
+    .mood-card,
+    .energy-card,
+    .journal-card,
+    .tags-card,
+    .past-entries-card {
+        padding: 1.2rem;
+        border-radius: 20px;
+    }
+    
+    .mood-options {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.6rem;
+    }
+    
+    .mood-option {
+        padding: 0.8rem 0.4rem;
+    }
+    
+    .mood-emoji {
+        font-size: 1.8rem;
+    }
+    
+    .tags-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .energy-labels {
+        font-size: 0.8rem;
+    }
+    
+    .energy-value {
+        font-size: 1.3rem;
+    }
+    
+    .theme-toggle {
+        bottom: 15px;
+        right: 15px;
+        width: 45px;
+        height: 45px;
+        font-size: 1.3rem;
     }
 }
 

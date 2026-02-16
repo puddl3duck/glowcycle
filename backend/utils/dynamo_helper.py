@@ -1,7 +1,13 @@
 from dataclasses import dataclass
 from datetime import datetime
-from journal.types import FeelingType, DayPeriod
+import os
+import sys
 from typing import List
+
+# Add parent directory to path for imports
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from journal.types import FeelingType, DayPeriod
 from utils.logger import select_powertools_logger
 
 logger = select_powertools_logger("aws-helpers-dynamo")

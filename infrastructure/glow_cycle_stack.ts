@@ -116,6 +116,18 @@ export class GlowCycleStack extends cdk.Stack {
     // -------------------------
     const api = new apigateway.RestApi(this, 'GlowCycleApi', {
       restApiName: 'Glow Cycle API',
+      defaultCorsPreflightOptions: {
+        allowOrigins: apigateway.Cors.ALL_ORIGINS,
+        allowMethods: apigateway.Cors.ALL_METHODS,
+        allowHeaders: [
+          'Content-Type',
+          'X-Amz-Date',
+          'Authorization',
+          'X-Api-Key',
+          'X-Amz-Security-Token',
+          'X-Requested-With'
+        ],
+      },
     });
 
     assetsBucket.addEventNotification(

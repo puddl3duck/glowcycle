@@ -130,7 +130,7 @@ async function initFaceDetector() {
             return true;
         }
     } catch (error) {
-        console.log('Face Detection API not available, using fallback');
+        // Face Detection API not available, using fallback
     }
     return false;
 }

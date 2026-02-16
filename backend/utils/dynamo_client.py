@@ -1,18 +1,22 @@
 import boto3
+import os
 from botocore.config import Config
 from utils.logger import select_powertools_logger
 
 logger = select_powertools_logger("aws-helpers-dynamo")
 
-def get_dynamodb_client(resource: bool = True, region_name: str = "ap-southeast-2"):
+def get_dynamodb_client(resource: bool = True, region_name: str = None):
     """
     Returns a DynamoDB client or resource.
     
     Parameters:
     - resource: bool, if True returns boto3.resource, else boto3.client
-    - region_name: AWS region
+    - region_name: AWS region (defaults to AWS_DEFAULT_REGION env var or us-east-1)
     
     """
+    if region_name is None:
+        region_name = os.environ.get("AWS_DEFAULT_REGION", "us-east-1")
+    
     try:
         config = Config(
             retries={
