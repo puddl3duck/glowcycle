@@ -118,6 +118,178 @@ document.addEventListener('DOMContentLoaded', () => {
 let stream = null;
 let currentFacingMode = 'user'; // 'user' for front camera, 'environment' for back camera
 let capturedImageData = null;
+let faceDetectionInterval = null;
+let faceDetector = null;
+
+// Initialize Face Detector
+async function initFaceDetector() {
+    try {
+        // Check if Face Detection API is available
+        if ('FaceDetector' in window) {
+            faceDetector = new FaceDetector({ fastMode: true, maxDetectedFaces: 1 });
+            return true;
+        }
+    } catch (error) {
+        console.log('Face Detection API not available, using fallback');
+    }
+    return false;
+}
+
+// Start Camera
+async function startCamera() {
+    try {
+        const constraints = {
+            video: {
+                facingMode: currentFacingMode,
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+            },
+            audio: false
+        };
+        
+        stream = await navigator.mediaDevices.getUserMedia(constraints);
+        const video = document.getElementById('camera-video');
+        video.srcObject = stream;
+        
+        // Wait for video to be ready
+        video.onloadedmetadata = () => {
+            video.play();
+            // Start face detection after a short delay
+            setTimeout(() => {
+                startFaceDetection();
+            }, 500);
+        };
+        
+        updateCameraStatus('Initializing camera...', '⏳', 'info');
+    } catch (error) {
+        console.error('Error accessing camera:', error);
+        updateCameraStatus('Camera access denied', '⚠️', 'error');
+    }
+}
+
+// Start Face Detection
+function startFaceDetection() {
+    const video = document.getElementById('camera-video');
+    const guideRect = document.querySelector('.face-guide-rect');
+    
+    // Always use the fallback method as it's more reliable
+    faceDetectionInterval = setInterval(() => {
+        if (video.readyState === video.HAVE_ENOUGH_DATA) {
+            detectFaceInVideo(video, guideRect);
+        }
+    }, 300); // Check every 300ms for better responsiveness
+}
+
+// Enhanced face detection using image analysis
+function detectFaceInVideo(video, guideRect) {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Use smaller canvas for faster processing
+    canvas.width = 320;
+    canvas.height = 240;
+    
+    // Draw current video frame
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+    
+    // Analyze center region (where face should be)
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const regionSize = 100;
+    
+    let skinTonePixels = 0;
+    let totalPixels = 0;
+    let avgBrightness = 0;
+    let edgeCount = 0;
+    
+    // Scan center region
+    for (let y = centerY - regionSize; y < centerY + regionSize; y++) {
+        for (let x = centerX - regionSize; x < centerX + regionSize; x++) {
+            if (x >= 0 && x < canvas.width && y >= 0 && y < canvas.height) {
+                const i = (y * canvas.width + x) * 4;
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+                
+                // Calculate brightness
+                const brightness = (r + g + b) / 3;
+                avgBrightness += brightness;
+                
+                // Detect skin tones (wide range to catch different skin colors)
+                const isSkinTone = (
+                    r > 60 && g > 40 && b > 20 && // Minimum values
+                    r > b && r > g - 20 && // Red dominant
+                    Math.abs(r - g) < 50 && // R and G similar
+                    r - b > 10 // R greater than B
+                ) || (
+                    // Darker skin tones
+                    r > 40 && g > 30 && b > 20 &&
+                    r >= g && r >= b
+                );
+                
+                if (isSkinTone) {
+                    skinTonePixels++;
+                }
+                
+                // Simple edge detection
+                if (x < canvas.width - 1 && y < canvas.height - 1) {
+                    const nextI = (y * canvas.width + (x + 1)) * 4;
+                    const diff = Math.abs(r - data[nextI]);
+                    if (diff > 30) edgeCount++;
+                }
+                
+                totalPixels++;
+            }
+        }
+    }
+    
+    avgBrightness = avgBrightness / totalPixels;
+    const skinToneRatio = skinTonePixels / totalPixels;
+    
+    // Face detected if:
+    // - Good lighting (brightness between 40 and 220)
+    // - Significant skin tone presence (>15%)
+    // - Some edges detected (facial features)
+    const faceDetected = (
+        avgBrightness > 40 && 
+        avgBrightness < 220 && 
+        skinToneRatio > 0.15 &&
+        edgeCount > 50
+    );
+    
+    if (faceDetected) {
+        guideRect.classList.add('face-detected');
+        updateCameraStatus('Ready to capture', '✓', 'success');
+    } else {
+        guideRect.classList.remove('face-detected');
+        
+        // Provide helpful feedback
+        if (avgBrightness < 40) {
+            updateCameraStatus('Need more light', '💡', 'warning');
+        } else if (avgBrightness > 220) {
+            updateCameraStatus('Too bright, adjust lighting', '☀️', 'warning');
+        } else {
+            updateCameraStatus('Position your face in the frame', '📷', 'info');
+        }
+    }
+}
+
+// Fallback: Simple motion/brightness detection (removed, using enhanced detection above)
+let lastImageData = null;
+function detectMotion(video) {
+    // This function is no longer used, kept for compatibility
+}
+
+// Stop Face Detection
+function stopFaceDetection() {
+    if (faceDetectionInterval) {
+        clearInterval(faceDetectionInterval);
+        faceDetectionInterval = null;
+    }
+    lastImageData = null;
+}
 
 // Show Scanner View
 function showScanner() {
@@ -142,31 +314,10 @@ function hideViews() {
     document.getElementById('results-view').style.display = 'none';
 }
 
-// Start Camera
-async function startCamera() {
-    try {
-        const constraints = {
-            video: {
-                facingMode: currentFacingMode,
-                width: { ideal: 1280 },
-                height: { ideal: 720 }
-            },
-            audio: false
-        };
-        
-        stream = await navigator.mediaDevices.getUserMedia(constraints);
-        const video = document.getElementById('camera-video');
-        video.srcObject = stream;
-        
-        updateCameraStatus('Ready to capture', '✓', 'success');
-    } catch (error) {
-        console.error('Error accessing camera:', error);
-        updateCameraStatus('Camera access denied', '⚠️', 'error');
-    }
-}
-
 // Stop Camera
 function stopCamera() {
+    stopFaceDetection();
+    
     if (stream) {
         stream.getTracks().forEach(track => track.stop());
         stream = null;
@@ -174,6 +325,12 @@ function stopCamera() {
     const video = document.getElementById('camera-video');
     if (video) {
         video.srcObject = null;
+    }
+    
+    // Remove face detected class
+    const guideRect = document.querySelector('.face-guide-rect');
+    if (guideRect) {
+        guideRect.classList.remove('face-detected');
     }
 }
 
@@ -197,6 +354,9 @@ function updateCameraStatus(text, icon, type = 'info') {
 
 // Capture Photo
 function capturePhoto() {
+    // Stop face detection
+    stopFaceDetection();
+    
     const video = document.getElementById('camera-video');
     const canvas = document.getElementById('camera-canvas');
     const ctx = canvas.getContext('2d');
@@ -318,7 +478,11 @@ function retakePhoto() {
     document.getElementById('retake-btn').style.display = 'none';
     
     capturedImageData = null;
-    updateCameraStatus('Ready to capture', '✓', 'success');
+    
+    // Restart face detection
+    setTimeout(() => {
+        startFaceDetection();
+    }, 300);
 }
 
 // Show Results View
