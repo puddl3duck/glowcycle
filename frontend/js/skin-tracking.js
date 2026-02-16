@@ -170,18 +170,18 @@ async function startCamera() {
 // Start Face Detection
 function startFaceDetection() {
     const video = document.getElementById('camera-video');
-    const guideRect = document.querySelector('.face-guide-rect');
+    const guideOval = document.querySelector('.face-guide-oval');
     
     // Always use the fallback method as it's more reliable
     faceDetectionInterval = setInterval(() => {
         if (video.readyState === video.HAVE_ENOUGH_DATA) {
-            detectFaceInVideo(video, guideRect);
+            detectFaceInVideo(video, guideOval);
         }
     }, 300); // Check every 300ms for better responsiveness
 }
 
 // Enhanced face detection using image analysis
-function detectFaceInVideo(video, guideRect) {
+function detectFaceInVideo(video, guideOval) {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     
@@ -194,84 +194,162 @@ function detectFaceInVideo(video, guideRect) {
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const data = imageData.data;
     
-    // Analyze center region (where face should be)
+    // Define oval region (center of frame, matching the visual oval)
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
-    const regionSize = 100;
+    const ovalWidth = canvas.width * 0.35; // 35% of width
+    const ovalHeight = ovalWidth * 1.33; // 3:4 aspect ratio
+    const radiusX = ovalWidth / 2;
+    const radiusY = ovalHeight / 2;
     
-    let skinTonePixels = 0;
-    let totalPixels = 0;
-    let avgBrightness = 0;
+    // Divide oval into regions for better face detection
+    const topRegion = { y: centerY - radiusY, height: radiusY * 0.4 }; // Top 40% (forehead/hair)
+    const middleRegion = { y: centerY - radiusY * 0.2, height: radiusY * 0.6 }; // Middle 60% (eyes, nose)
+    const bottomRegion = { y: centerY + radiusY * 0.4, height: radiusY * 0.6 }; // Bottom 60% (mouth, chin)
+    
+    let topSkinPixels = 0, topTotalPixels = 0;
+    let middleSkinPixels = 0, middleTotalPixels = 0;
+    let bottomSkinPixels = 0, bottomTotalPixels = 0;
+    let topBrightness = 0, middleBrightness = 0, bottomBrightness = 0;
     let edgeCount = 0;
+    let symmetryScore = 0;
     
-    // Scan center region
-    for (let y = centerY - regionSize; y < centerY + regionSize; y++) {
-        for (let x = centerX - regionSize; x < centerX + regionSize; x++) {
+    // Scan the oval region
+    for (let y = Math.floor(centerY - radiusY); y < Math.floor(centerY + radiusY); y++) {
+        for (let x = Math.floor(centerX - radiusX); x < Math.floor(centerX + radiusX); x++) {
             if (x >= 0 && x < canvas.width && y >= 0 && y < canvas.height) {
-                const i = (y * canvas.width + x) * 4;
-                const r = data[i];
-                const g = data[i + 1];
-                const b = data[i + 2];
+                // Check if point is inside oval
+                const normalizedX = (x - centerX) / radiusX;
+                const normalizedY = (y - centerY) / radiusY;
+                const isInsideOval = (normalizedX * normalizedX + normalizedY * normalizedY) <= 1;
                 
-                // Calculate brightness
-                const brightness = (r + g + b) / 3;
-                avgBrightness += brightness;
-                
-                // Detect skin tones (wide range to catch different skin colors)
-                const isSkinTone = (
-                    r > 60 && g > 40 && b > 20 && // Minimum values
-                    r > b && r > g - 20 && // Red dominant
-                    Math.abs(r - g) < 50 && // R and G similar
-                    r - b > 10 // R greater than B
-                ) || (
-                    // Darker skin tones
-                    r > 40 && g > 30 && b > 20 &&
-                    r >= g && r >= b
-                );
-                
-                if (isSkinTone) {
-                    skinTonePixels++;
+                if (isInsideOval) {
+                    const i = (y * canvas.width + x) * 4;
+                    const r = data[i];
+                    const g = data[i + 1];
+                    const b = data[i + 2];
+                    
+                    const brightness = (r + g + b) / 3;
+                    
+                    // Detect skin tones (improved algorithm)
+                    const isSkinTone = (
+                        r > 60 && g > 40 && b > 20 && // Minimum values
+                        r > b && r > g - 20 && // Red dominant
+                        Math.abs(r - g) < 50 && // R and G similar
+                        r - b > 10 && r - b < 80 // R greater than B but not too much
+                    ) || (
+                        // Darker skin tones
+                        r > 40 && g > 30 && b > 20 &&
+                        r >= g && r >= b &&
+                        r - b < 60
+                    );
+                    
+                    // Classify by region
+                    if (y >= topRegion.y && y < topRegion.y + topRegion.height) {
+                        topTotalPixels++;
+                        topBrightness += brightness;
+                        if (isSkinTone) topSkinPixels++;
+                    }
+                    
+                    if (y >= middleRegion.y && y < middleRegion.y + middleRegion.height) {
+                        middleTotalPixels++;
+                        middleBrightness += brightness;
+                        if (isSkinTone) middleSkinPixels++;
+                    }
+                    
+                    if (y >= bottomRegion.y && y < bottomRegion.y + bottomRegion.height) {
+                        bottomTotalPixels++;
+                        bottomBrightness += brightness;
+                        if (isSkinTone) bottomSkinPixels++;
+                    }
+                    
+                    // Edge detection (facial features)
+                    if (x < canvas.width - 1 && y < canvas.height - 1) {
+                        const nextI = (y * canvas.width + (x + 1)) * 4;
+                        const diff = Math.abs(r - data[nextI]);
+                        if (diff > 35) edgeCount++;
+                    }
+                    
+                    // Symmetry check (compare left and right sides)
+                    if (x < centerX) {
+                        const mirrorX = Math.floor(centerX + (centerX - x));
+                        if (mirrorX < canvas.width) {
+                            const mirrorI = (y * canvas.width + mirrorX) * 4;
+                            const mirrorR = data[mirrorI];
+                            const colorDiff = Math.abs(r - mirrorR);
+                            if (colorDiff < 40) symmetryScore++;
+                        }
+                    }
                 }
-                
-                // Simple edge detection
-                if (x < canvas.width - 1 && y < canvas.height - 1) {
-                    const nextI = (y * canvas.width + (x + 1)) * 4;
-                    const diff = Math.abs(r - data[nextI]);
-                    if (diff > 30) edgeCount++;
-                }
-                
-                totalPixels++;
             }
         }
     }
     
-    avgBrightness = avgBrightness / totalPixels;
-    const skinToneRatio = skinTonePixels / totalPixels;
+    // Calculate ratios and averages
+    const topSkinRatio = topTotalPixels > 0 ? topSkinPixels / topTotalPixels : 0;
+    const middleSkinRatio = middleTotalPixels > 0 ? middleSkinPixels / middleTotalPixels : 0;
+    const bottomSkinRatio = bottomTotalPixels > 0 ? bottomSkinPixels / bottomTotalPixels : 0;
     
-    // Face detected if:
-    // - Good lighting (brightness between 40 and 220)
-    // - Significant skin tone presence (>15%)
-    // - Some edges detected (facial features)
+    topBrightness = topTotalPixels > 0 ? topBrightness / topTotalPixels : 0;
+    middleBrightness = middleTotalPixels > 0 ? middleBrightness / middleTotalPixels : 0;
+    bottomBrightness = bottomTotalPixels > 0 ? bottomBrightness / bottomTotalPixels : 0;
+    
+    const avgBrightness = (topBrightness + middleBrightness + bottomBrightness) / 3;
+    const totalPixels = topTotalPixels + middleTotalPixels + bottomTotalPixels;
+    const symmetryRatio = totalPixels > 0 ? symmetryScore / (totalPixels / 2) : 0;
+    
+    // STRICT face detection criteria
     const faceDetected = (
-        avgBrightness > 40 && 
-        avgBrightness < 220 && 
-        skinToneRatio > 0.15 &&
-        edgeCount > 50
+        // Good lighting
+        avgBrightness > 50 && avgBrightness < 210 &&
+        
+        // All three regions must have skin tone (complete face)
+        topSkinRatio > 0.20 &&      // Top region (forehead/hair area)
+        middleSkinRatio > 0.30 &&   // Middle region (eyes, nose) - highest requirement
+        bottomSkinRatio > 0.25 &&   // Bottom region (mouth, chin)
+        
+        // Sufficient facial features detected
+        edgeCount > 80 &&
+        
+        // Face should be relatively symmetrical
+        symmetryRatio > 0.4 &&
+        
+        // Brightness should be consistent across regions (not just showing part of face)
+        Math.abs(topBrightness - middleBrightness) < 60 &&
+        Math.abs(middleBrightness - bottomBrightness) < 60
     );
     
     if (faceDetected) {
-        guideRect.classList.add('face-detected');
+        guideOval.classList.add('face-detected');
         updateCameraStatus('Ready to capture', '✓', 'success');
-    } else {
-        guideRect.classList.remove('face-detected');
         
-        // Provide helpful feedback
-        if (avgBrightness < 40) {
+        // Enable capture button
+        const captureBtn = document.getElementById('capture-btn');
+        if (captureBtn) {
+            captureBtn.disabled = false;
+        }
+    } else {
+        guideOval.classList.remove('face-detected');
+        
+        // Disable capture button
+        const captureBtn = document.getElementById('capture-btn');
+        if (captureBtn) {
+            captureBtn.disabled = true;
+        }
+        
+        // Provide specific feedback
+        if (avgBrightness < 50) {
             updateCameraStatus('Need more light', '💡', 'warning');
-        } else if (avgBrightness > 220) {
+        } else if (avgBrightness > 210) {
             updateCameraStatus('Too bright, adjust lighting', '☀️', 'warning');
+        } else if (topSkinRatio < 0.15 || bottomSkinRatio < 0.15) {
+            updateCameraStatus('Center your face in the oval', '👤', 'info');
+        } else if (middleSkinRatio < 0.25) {
+            updateCameraStatus('Move closer to the camera', '📷', 'info');
+        } else if (symmetryRatio < 0.3) {
+            updateCameraStatus('Face the camera directly', '↔️', 'info');
         } else {
-            updateCameraStatus('Position your face in the frame', '📷', 'info');
+            updateCameraStatus('Position your face in the oval', '📷', 'info');
         }
     }
 }
@@ -328,9 +406,9 @@ function stopCamera() {
     }
     
     // Remove face detected class
-    const guideRect = document.querySelector('.face-guide-rect');
-    if (guideRect) {
-        guideRect.classList.remove('face-detected');
+    const guideOval = document.querySelector('.face-guide-oval');
+    if (guideOval) {
+        guideOval.classList.remove('face-detected');
     }
 }
 

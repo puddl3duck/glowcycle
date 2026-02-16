@@ -895,3 +895,24 @@ body.dark-theme * {
     border-color: #FFFFFF;
     color: #FFFFFF;
 }
+
+/* ===== COMPACT MODAL - DARK MODE ===== */
+.dark-theme .modal-step-compact {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 182, 217, 0.1);
+}
+
+.dark-theme .modal-step-compact:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: #FFB6D9;
+}
+
+.dark-theme .step-number-compact {
+    background: linear-gradient(135deg, #FFB6D9 0%, #9B7EBD 100%);
+    color: #25253A;
+}
+
+.dark-theme .step-text-compact {
+    color: #FFFFFF;
+    font-weight: 600;
+}

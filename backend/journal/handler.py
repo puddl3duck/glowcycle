@@ -57,6 +57,11 @@ def save_entry(event):
 
     body = json.loads(event.get("body", "{}"))
 
+
+
+
+
+
     date_obj = datetime.strptime(body["date"], "%d-%m-%Y")
     period = DayPeriod.from_bool(body["night"])
     feeling_enum = FeelingType(body["feeling"])

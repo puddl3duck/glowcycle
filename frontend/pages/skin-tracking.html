@@ -75,18 +75,22 @@
         <!-- Consent Popup (Hidden by default) -->
         <div id="consent-popup" class="consent-overlay" style="display: none;">
             <div class="consent-modal">
-                <h2>VIRTUAL TRY-ON</h2>
+                <div class="consent-icon">🔒</div>
+                <h2>Privacy & Consent</h2>
                 <div class="consent-content">
-                    <p>In the context of using the Virtual Try-On tool, we process your personal data to provide a personalised augmented reality skincare/makeup trial experience.</p>
-                    <a href="#" class="see-more-link">See more</a>
+                    <p>We'll use your camera to analyze your skin condition. Your photo is processed locally and never stored or shared without your permission.</p>
+                    <details class="consent-details">
+                        <summary>Learn more about data privacy</summary>
+                        <p class="consent-detail-text">Your facial image is analyzed in real-time using AI technology. We detect skin characteristics to provide personalized recommendations. All processing happens securely, and you maintain full control over your data.</p>
+                    </details>
                 </div>
                 <div class="consent-checkbox">
                     <input type="checkbox" id="consent-check" />
-                    <label for="consent-check">YES, I HAVE READ THE NOTICE AND I CONSENT</label>
+                    <label for="consent-check">I understand and consent to use the AI skin scanner</label>
                 </div>
                 <div class="consent-buttons">
                     <button class="btn-cancel" onclick="closeConsentPopup()">Cancel</button>
-                    <button class="btn-accept" onclick="acceptConsent()" disabled id="accept-btn">Accept</button>
+                    <button class="btn-accept" onclick="acceptConsent()" disabled id="accept-btn">Start Scanner</button>
                 </div>
             </div>
         </div>
@@ -94,6 +98,22 @@
         <!-- Scanner View (Hidden by default) -->
         <div id="scanner-view" class="tracking-view" style="display: none;">
             <div class="scanner-container">
+                <!-- Instructions at top -->
+                <div class="scanner-instructions">
+                    <div class="instruction-item">
+                        <span class="instruction-icon">💡</span>
+                        <span>Good lighting</span>
+                    </div>
+                    <div class="instruction-item">
+                        <span class="instruction-icon">😊</span>
+                        <span>Neutral expression</span>
+                    </div>
+                    <div class="instruction-item">
+                        <span class="instruction-icon">🧼</span>
+                        <span>Clean face</span>
+                    </div>
+                </div>
+                
                 <div class="scanner-header">
                     <h2>AI Skin Scanner</h2>
                     <button class="close-scanner-btn" onclick="closeScanner()">✕</button>
@@ -104,11 +124,12 @@
                         <video id="camera-video" autoplay playsinline></video>
                         <canvas id="camera-canvas" style="display: none;"></canvas>
                         <div class="camera-overlay">
-                            <div class="face-guide-rect">
-                                <div class="corner corner-tl"></div>
-                                <div class="corner corner-tr"></div>
-                                <div class="corner corner-bl"></div>
-                                <div class="corner corner-br"></div>
+                            <div class="face-guide-oval">
+                                <div class="oval-border"></div>
+                                <div class="corner-dot dot-tl"></div>
+                                <div class="corner-dot dot-tr"></div>
+                                <div class="corner-dot dot-bl"></div>
+                                <div class="corner-dot dot-br"></div>
                             </div>
                         </div>
                         
@@ -156,21 +177,6 @@
                             <span class="status-icon">📷</span>
                             <span class="status-text">Position your face in the frame</span>
                         </div>
-                    </div>
-                </div>
-
-                <div class="scanner-instructions">
-                    <div class="instruction-item">
-                        <span class="instruction-icon">💡</span>
-                        <span>Good lighting</span>
-                    </div>
-                    <div class="instruction-item">
-                        <span class="instruction-icon">😊</span>
-                        <span>Neutral expression</span>
-                    </div>
-                    <div class="instruction-item">
-                        <span class="instruction-icon">🧼</span>
-                        <span>Clean face</span>
                     </div>
                 </div>
 

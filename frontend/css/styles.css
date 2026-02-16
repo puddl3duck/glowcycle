@@ -2589,3 +2589,98 @@ body.dark-theme label {
         justify-content: center;
     }
 }
+
+/* ===== COMPACT HOW IT WORKS MODAL ===== */
+.modal-content {
+    max-height: 85vh;
+    padding: 36px 32px;
+}
+
+.modal-header {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.modal-title {
+    font-size: 28px;
+    margin-bottom: 0;
+}
+
+.modal-steps-compact {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 28px;
+}
+
+.modal-step-compact {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 16px;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.modal-step-compact:hover {
+    background: rgba(255, 255, 255, 0.9);
+    border-color: var(--accent-pink);
+    transform: translateX(4px);
+}
+
+.step-number-compact {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent-pink) 0%, var(--accent-purple) 100%);
+    color: white;
+    font-size: 18px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.step-text-compact {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-dark);
+    line-height: 1.4;
+}
+
+.modal-footer {
+    padding-top: 16px;
+    border-top: none;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .modal-content {
+        padding: 28px 24px;
+    }
+    
+    .modal-title {
+        font-size: 24px;
+    }
+    
+    .modal-steps-compact {
+        gap: 12px;
+    }
+    
+    .modal-step-compact {
+        padding: 14px 16px;
+    }
+    
+    .step-number-compact {
+        width: 32px;
+        height: 32px;
+        font-size: 16px;
+    }
+    
+    .step-text-compact {
+        font-size: 14px;
+    }
+}
