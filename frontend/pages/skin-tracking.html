@@ -111,6 +111,47 @@
                                 <div class="corner corner-br"></div>
                             </div>
                         </div>
+                        
+                        <!-- AI Analysis Overlay -->
+                        <div class="ai-analysis-overlay" id="ai-analysis-overlay" style="display: none;">
+                            <div class="analysis-content">
+                                <div class="scanning-animation">
+                                    <div class="scan-line"></div>
+                                    <div class="scan-particles">
+                                        <div class="particle"></div>
+                                        <div class="particle"></div>
+                                        <div class="particle"></div>
+                                        <div class="particle"></div>
+                                        <div class="particle"></div>
+                                    </div>
+                                </div>
+                                <div class="analysis-text">
+                                    <h3 id="analysis-title">Analyzing Your Skin</h3>
+                                    <div class="analysis-steps">
+                                        <div class="step-item" id="step-1">
+                                            <span class="step-icon">🔍</span>
+                                            <span class="step-text">Detecting facial features...</span>
+                                        </div>
+                                        <div class="step-item" id="step-2">
+                                            <span class="step-icon">✨</span>
+                                            <span class="step-text">Analyzing skin texture...</span>
+                                        </div>
+                                        <div class="step-item" id="step-3">
+                                            <span class="step-icon">💎</span>
+                                            <span class="step-text">Evaluating radiance...</span>
+                                        </div>
+                                        <div class="step-item" id="step-4">
+                                            <span class="step-icon">🎯</span>
+                                            <span class="step-text">Generating recommendations...</span>
+                                        </div>
+                                    </div>
+                                    <div class="progress-bar-container">
+                                        <div class="progress-bar" id="analysis-progress"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
                         <div class="camera-status" id="camera-status">
                             <span class="status-icon">📷</span>
                             <span class="status-text">Position your face in the frame</span>
@@ -134,21 +175,21 @@
                 </div>
 
                 <div class="camera-controls">
-                    <button class="control-btn flip-btn" onclick="flipCamera()" title="Flip camera">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
-                        </svg>
-                    </button>
                     <button class="capture-btn" onclick="capturePhoto()" id="capture-btn">
-                        <span class="capture-circle"></span>
-                        <span class="capture-text">Capture</span>
+                        <span class="capture-circle">
+                            <svg class="capture-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </span>
+                        <span class="capture-text">Capture Photo</span>
                     </button>
-                    <button class="control-btn retake-btn" onclick="retakePhoto()" id="retake-btn" style="display: none;">
+                    <button class="retake-btn" onclick="retakePhoto()" id="retake-btn" style="display: none;">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <polyline points="1 4 1 10 7 10"></polyline>
                             <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
                         </svg>
+                        <span>Retake</span>
                     </button>
                 </div>
             </div>

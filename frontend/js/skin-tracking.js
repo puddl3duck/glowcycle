@@ -215,17 +215,91 @@ function capturePhoto() {
     canvas.style.display = 'block';
     video.style.display = 'none';
     
+    // Hide camera overlay and status
+    document.querySelector('.camera-overlay').style.display = 'none';
+    document.getElementById('camera-status').style.display = 'none';
+    
     // Update UI
     document.getElementById('capture-btn').style.display = 'none';
     document.getElementById('retake-btn').style.display = 'flex';
-    document.querySelector('.flip-btn').style.display = 'none';
     
-    updateCameraStatus('Photo captured! Analyzing...', '✨', 'success');
+    // Start AI analysis animation
+    startAIAnalysis();
+}
+
+// Start AI Analysis Animation
+function startAIAnalysis() {
+    const overlay = document.getElementById('ai-analysis-overlay');
+    const progressBar = document.getElementById('analysis-progress');
     
-    // Simulate AI analysis
+    overlay.style.display = 'flex';
+    
+    // Animate progress bar
+    let progress = 0;
+    const progressInterval = setInterval(() => {
+        progress += 1;
+        progressBar.style.width = progress + '%';
+        
+        if (progress >= 100) {
+            clearInterval(progressInterval);
+        }
+    }, 40); // 4 seconds total
+    
+    // Animate steps
+    const steps = ['step-1', 'step-2', 'step-3', 'step-4'];
+    steps.forEach((stepId, index) => {
+        setTimeout(() => {
+            const step = document.getElementById(stepId);
+            step.classList.add('active');
+            
+            // Add completion checkmark after a moment
+            setTimeout(() => {
+                step.classList.add('completed');
+                const icon = step.querySelector('.step-icon');
+                icon.textContent = '✓';
+            }, 800);
+        }, index * 1000);
+    });
+    
+    // Complete analysis
     setTimeout(() => {
-        analyzePhoto();
-    }, 2000);
+        completeAnalysis();
+    }, 4500);
+}
+
+// Complete Analysis
+function completeAnalysis() {
+    const overlay = document.getElementById('ai-analysis-overlay');
+    const title = document.getElementById('analysis-title');
+    
+    title.textContent = 'Analysis Complete! ✨';
+    
+    setTimeout(() => {
+        overlay.style.display = 'none';
+        stopCamera();
+        showResults();
+        
+        // Reset for next use
+        resetAnalysisOverlay();
+    }, 1000);
+}
+
+// Reset Analysis Overlay
+function resetAnalysisOverlay() {
+    const progressBar = document.getElementById('analysis-progress');
+    progressBar.style.width = '0%';
+    
+    const steps = ['step-1', 'step-2', 'step-3', 'step-4'];
+    const icons = ['🔍', '✨', '💎', '🎯'];
+    
+    steps.forEach((stepId, index) => {
+        const step = document.getElementById(stepId);
+        step.classList.remove('active', 'completed');
+        const icon = step.querySelector('.step-icon');
+        icon.textContent = icons[index];
+    });
+    
+    document.getElementById('analysis-title').textContent = 'Analyzing Your Skin';
 }
 
 // Retake Photo
@@ -236,22 +310,15 @@ function retakePhoto() {
     canvas.style.display = 'none';
     video.style.display = 'block';
     
+    // Show camera overlay and status
+    document.querySelector('.camera-overlay').style.display = 'flex';
+    document.getElementById('camera-status').style.display = 'flex';
+    
     document.getElementById('capture-btn').style.display = 'flex';
     document.getElementById('retake-btn').style.display = 'none';
-    document.querySelector('.flip-btn').style.display = 'flex';
     
     capturedImageData = null;
     updateCameraStatus('Ready to capture', '✓', 'success');
-}
-
-// Analyze Photo (Simulate AI Analysis)
-function analyzePhoto() {
-    updateCameraStatus('Analysis complete!', '🎉', 'success');
-    
-    setTimeout(() => {
-        stopCamera();
-        showResults();
-    }, 1000);
 }
 
 // Show Results View
