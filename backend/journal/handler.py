@@ -66,8 +66,20 @@ def save_entry(event):
         if body["feeling"] not in [f.value for f in FeelingType]:
             raise ValueError(f"Invalid feeling type: {body['feeling']}")
         
-        # Parse date and create entry
-        date_obj = datetime.strptime(body["date"], "%d-%m-%Y")
+        # Parse date and add current time for unique entries
+        date_str = body["date"]  # DD-MM-YYYY
+        current_time = datetime.now()
+        # Combine date from body with current time
+        date_parts = date_str.split('-')
+        date_obj = datetime(
+            year=int(date_parts[2]),
+            month=int(date_parts[1]),
+            day=int(date_parts[0]),
+            hour=current_time.hour,
+            minute=current_time.minute,
+            second=current_time.second
+        )
+        
         period = DayPeriod.from_bool(body["night"])
         feeling_enum = FeelingType(body["feeling"])
 

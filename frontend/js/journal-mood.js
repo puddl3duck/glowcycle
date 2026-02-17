@@ -298,6 +298,8 @@ async function loadEntries() {
         
         entriesList.innerHTML = entries.slice(0, 5).map(entry => {
             const dateStr = entry.date;
+            const timeStr = entry.timestamp || '';  // Show time if available
+            const displayDate = timeStr ? `${dateStr} ${timeStr}` : dateStr;
             const moodEmoji = getMoodEmoji(entry.feeling);
             const snippet = entry.thoughts.substring(0, 100) + (entry.thoughts.length > 100 ? '...' : '');
             const tagsHtml = entry.tags && entry.tags.length > 0 
@@ -307,7 +309,7 @@ async function loadEntries() {
             return `
                 <div class="entry-preview">
                     <div class="entry-header">
-                        <span class="entry-date">${dateStr}</span>
+                        <span class="entry-date">${displayDate}</span>
                         <span class="entry-mood">${moodEmoji}</span>
                     </div>
                     <p class="entry-snippet">${snippet}</p>
