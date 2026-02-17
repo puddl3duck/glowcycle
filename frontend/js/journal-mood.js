@@ -1,8 +1,7 @@
 // Journal & Mood JavaScript
 
-// API URL - Update this with your deployed API Gateway URL
-// Get this from: AWS Console → API Gateway → Your API → Stages → prod
-const API_URL = 'https://YOUR-API-ID.execute-api.YOUR-REGION.amazonaws.com/prod';
+// API URL - Production endpoint
+const API_URL = 'https://7ofiibs7k7.execute-api.ap-southeast-2.amazonaws.com/prod';
 
 let selectedMood = null;
 let selectedTags = [];
