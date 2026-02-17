@@ -1,12 +1,12 @@
-import * as cdk from 'aws-cdk-lib';
-import { Construct } from 'constructs';
-import * as lambda from 'aws-cdk-lib/aws-lambda';
-import * as apigateway from 'aws-cdk-lib/aws-apigateway';
-import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
-import * as s3 from 'aws-cdk-lib/aws-s3';
-import * as s3n from 'aws-cdk-lib/aws-s3-notifications';
-import * as iam from 'aws-cdk-lib/aws-iam';
-import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
+import * as cdk from "aws-cdk-lib";
+import { Construct } from "constructs";
+import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as apigateway from "aws-cdk-lib/aws-apigateway";
+import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
+import * as s3 from "aws-cdk-lib/aws-s3";
+import * as s3n from "aws-cdk-lib/aws-s3-notifications";
+import * as iam from "aws-cdk-lib/aws-iam";
+import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
 
 export class GlowCycleStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -15,8 +15,8 @@ export class GlowCycleStack extends cdk.Stack {
     // -------------------------
     // S3 Bucket
     // -------------------------
-    const assetsBucket = new s3.Bucket(this, 'GlowCycleAssets', {
-      bucketName: 'glowcycle-assets',
+    const assetsBucket = new s3.Bucket(this, "GlowCycleAssets", {
+      bucketName: "glowcycle-assets",
       versioned: true,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
@@ -25,28 +25,28 @@ export class GlowCycleStack extends cdk.Stack {
     // -------------------------
     // DynamoDB Table
     // -------------------------
-    const table = new dynamodb.Table(this, 'GlowCycleTable', {
-      partitionKey: { name: 'user', type: dynamodb.AttributeType.STRING },
-      sortKey: { name: 'date', type: dynamodb.AttributeType.STRING },
+    const table = new dynamodb.Table(this, "GlowCycleTable", {
+      partitionKey: { name: "user", type: dynamodb.AttributeType.STRING },
+      sortKey: { name: "date", type: dynamodb.AttributeType.STRING },
       removalPolicy: cdk.RemovalPolicy.DESTROY,
-      tableName: 'GlowCycleTable',
+      tableName: "GlowCycleTable",
     });
 
     // -------------------------
     // Lambda Functions
     // -------------------------
-    const skinUploadLambda = new lambda.Function(this, 'SkinUploadLambda', {
+    const skinUploadLambda = new lambda.Function(this, "SkinUploadLambda", {
       runtime: lambda.Runtime.PYTHON_3_11,
-      handler: 'handler.handler',
-      code: lambda.Code.fromAsset('../backend/skin'),
+      handler: "skin/handler.lambda_handler",
+      code: lambda.Code.fromAsset('../backend', { exclude: ['journal/', 'period/'] }),
       environment: {
         BUCKET_NAME: assetsBucket.bucketName,
       },
     });
-    const skinProcessLambda = new lambda.Function(this, 'SkinProcessLambda', {
+    const skinProcessLambda = new lambda.Function(this, "SkinProcessLambda", {
       runtime: lambda.Runtime.PYTHON_3_11,
-      handler: 'handler.handler',
-      code: lambda.Code.fromAsset('../backend/skin'),
+      handler: "skin/handler.lambda_handler",
+      code: lambda.Code.fromAsset('../backend', { exclude: ['journal/', 'period/'] }),
       environment: {
         BUCKET_NAME: assetsBucket.bucketName,
       },
@@ -55,39 +55,41 @@ export class GlowCycleStack extends cdk.Stack {
     // -------------------------
     // Create a secret
     // -------------------------
-    const glowCycleSecret = new secretsmanager.Secret(this, 'GlowCycleSecret', {
-      secretName: 'glow-cycle-backend',
-      description: 'Secrets for Glow Cycle backend Lambdas',
+    const glowCycleSecret = new secretsmanager.Secret(this, "GlowCycleSecret", {
+      secretName: "glow-cycle-backend",
+      description: "Secrets for Glow Cycle backend Lambdas",
       generateSecretString: {
         secretStringTemplate: JSON.stringify({
-          s3_access_key: 'dummyfakedata',
-          dynamodb_password: 'dummyfakedata',
+          s3_access_key: "dummyfakedata",
+          dynamodb_password: "dummyfakedata",
         }),
-        generateStringKey: 'secret_key',
+        generateStringKey: "secret_key",
       },
     });
 
-    const journalLambda = new lambda.Function(this, 'JournalLambda', {
+    const journalLambda = new lambda.Function(this, "JournalLambda", {
       runtime: lambda.Runtime.PYTHON_3_11,
-      handler: 'journal.handler.lambda_handler',
-      code: lambda.Code.fromAsset('../backend'),
+      handler: "journal.handler.lambda_handler",
+      code: lambda.Code.fromAsset("../backend"),
       environment: {
         TABLE_NAME: table.tableName,
       },
     });
 
-    const periodLambda = new lambda.Function(this, 'PeriodTrackingLambda', {
+    const periodLambda = new lambda.Function(this, "PeriodTrackingLambda", {
       runtime: lambda.Runtime.PYTHON_3_11,
-      handler: 'handler.handler',
-      code: lambda.Code.fromAsset('../backend/period'),
+      handler: "handler.handler",
+      code: lambda.Code.fromAsset("../backend/period"),
       environment: {
         TABLE_NAME: table.tableName,
       },
     });
-    journalLambda.addToRolePolicy(new iam.PolicyStatement({
-      actions: ["dynamodb:DescribeLimits"],
-      resources: ["*"],  // Dynamo calls DescribeLimits on the account level
-    }));
+    journalLambda.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ["dynamodb:DescribeLimits"],
+        resources: ["*"], // Dynamo calls DescribeLimits on the account level
+      }),
+    );
     // -------------------------
     // Permissions
     // -------------------------
@@ -100,32 +102,35 @@ export class GlowCycleStack extends cdk.Stack {
     assetsBucket.grantRead(skinProcessLambda);
     assetsBucket.grantWrite(skinUploadLambda);
 
+    skinProcessLambda.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ["rekognition:DetectFaces"],
+        resources: ["*"],
+      }),
+    );
 
-    skinProcessLambda.addToRolePolicy(new iam.PolicyStatement({
-      actions: ['rekognition:DetectFaces'],
-      resources: ['*'],
-    }));
-
-    journalLambda.addToRolePolicy(new iam.PolicyStatement({
-      actions: ['bedrock:InvokeModel'],
-      resources: ['*'],
-    }));
+    journalLambda.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ["bedrock:InvokeModel"],
+        resources: ["*"],
+      }),
+    );
 
     // -------------------------
     // API Gateway
     // -------------------------
-    const api = new apigateway.RestApi(this, 'GlowCycleApi', {
-      restApiName: 'Glow Cycle API',
+    const api = new apigateway.RestApi(this, "GlowCycleApi", {
+      restApiName: "Glow Cycle API",
       defaultCorsPreflightOptions: {
         allowOrigins: apigateway.Cors.ALL_ORIGINS,
         allowMethods: apigateway.Cors.ALL_METHODS,
         allowHeaders: [
-          'Content-Type',
-          'X-Amz-Date',
-          'Authorization',
-          'X-Api-Key',
-          'X-Amz-Security-Token',
-          'X-Requested-With'
+          "Content-Type",
+          "X-Amz-Date",
+          "Authorization",
+          "X-Api-Key",
+          "X-Amz-Security-Token",
+          "X-Requested-With",
         ],
       },
     });
@@ -133,26 +138,28 @@ export class GlowCycleStack extends cdk.Stack {
     assetsBucket.addEventNotification(
       s3.EventType.OBJECT_CREATED,
       new s3n.LambdaDestination(skinProcessLambda),
-      { prefix: 'selfies/' }
+      { prefix: "selfies/" },
     );
 
-    api.root.addResource('skin')
-      .addMethod('POST', new apigateway.LambdaIntegration(skinUploadLambda));
+    api.root
+      .addResource("skin")
+      .addMethod("POST", new apigateway.LambdaIntegration(skinUploadLambda));
 
     // Journal (ONE resource, multiple methods)
-    const journalResource = api.root.addResource('journal');
+    const journalResource = api.root.addResource("journal");
 
     journalResource.addMethod(
-      'POST',
-      new apigateway.LambdaIntegration(journalLambda)
+      "POST",
+      new apigateway.LambdaIntegration(journalLambda),
     );
 
     journalResource.addMethod(
-      'GET',
-      new apigateway.LambdaIntegration(journalLambda)
+      "GET",
+      new apigateway.LambdaIntegration(journalLambda),
     );
 
-    api.root.addResource('period')
-      .addMethod('POST', new apigateway.LambdaIntegration(periodLambda));
+    api.root
+      .addResource("period")
+      .addMethod("POST", new apigateway.LambdaIntegration(periodLambda));
   }
 }
