@@ -24,8 +24,8 @@
             <a href="../index.html#about" class="nav-link">About</a>
         </div>
         <div class="nav-profile">
-            <div class="profile-avatar">S</div>
-            <span class="profile-name">Sofia</span>
+            <div class="profile-avatar" id="profile-avatar">S</div>
+            <span class="profile-name" id="profile-name">Sofia</span>
         </div>
     </nav>
 
@@ -39,136 +39,267 @@
             </a>
         </div>
         
-        <!-- Header -->
+        <!-- Header with Current Status -->
         <div class="page-header">
-            <h1>Your Cycle</h1>
-            <p>Day 14 • Ovulation Phase</p>
-        </div>
-
-        <!-- Cycle Wheel -->
-        <div class="cycle-wheel-container">
-            <div class="cycle-wheel">
-                <svg viewBox="0 0 300 300" class="wheel-svg">
-                    <!-- Menstrual Phase -->
-                    <path d="M 150 150 L 150 30 A 120 120 0 0 1 220 70 Z" fill="#FFB6D9" opacity="0.8"/>
-                    <text x="165" y="60" font-size="12" fill="#4A4A5E" font-weight="600">Menstrual</text>
-                    
-                    <!-- Follicular Phase -->
-                    <path d="M 150 150 L 220 70 A 120 120 0 0 1 270 150 Z" fill="#A8E6CF" opacity="0.8"/>
-                    <text x="230" y="110" font-size="12" fill="#4A4A5E" font-weight="600">Follicular</text>
-                    
-                    <!-- Ovulation Phase -->
-                    <path d="M 150 150 L 270 150 A 120 120 0 0 1 220 230 Z" fill="#FFE0A0" opacity="0.8"/>
-                    <text x="230" y="190" font-size="12" fill="#4A4A5E" font-weight="600">Ovulation</text>
-                    
-                    <!-- Luteal Phase -->
-                    <path d="M 150 150 L 220 230 A 120 120 0 0 1 80 230 Z" fill="#D4C5E8" opacity="0.8"/>
-                    <text x="120" y="240" font-size="12" fill="#4A4A5E" font-weight="600">Luteal</text>
-                    
-                    <!-- Center circle -->
-                    <circle cx="150" cy="150" r="80" fill="#FFFFFF"/>
-                    <circle cx="150" cy="150" r="80" fill="url(#centerGrad)"/>
-                    
-                    <!-- Day indicator -->
-                    <text x="150" y="140" text-anchor="middle" font-size="48" font-weight="700" fill="#9B7EBD">14</text>
-                    <text x="150" y="165" text-anchor="middle" font-size="14" fill="#7A7A8E">Day</text>
-                    
-                    <defs>
-                        <linearGradient id="centerGrad">
-                            <stop offset="0%" stop-color="#FFF5FA" stop-opacity="0.9"/>
-                            <stop offset="100%" stop-color="#F5F0FA" stop-opacity="0.9"/>
-                        </linearGradient>
-                    </defs>
-                </svg>
+            <h1>Your Cycle Journey</h1>
+            <div class="current-status">
+                <span class="status-day" id="status-day">Day 14</span>
+                <span class="status-separator">•</span>
+                <span class="status-phase" id="status-phase">Ovulation Phase ✨</span>
             </div>
         </div>
 
-        <!-- Current Phase Info -->
-        <div class="phase-info-card">
-            <div class="phase-header">
-                <h2>✨ Ovulation Phase</h2>
-                <span class="phase-days">Days 13-17</span>
-            </div>
-            <p class="phase-description">You're in your glow phase! Energy and confidence are at their peak. Your skin is radiant and you're feeling your best.</p>
+        <!-- Main Grid Layout -->
+        <div class="main-grid">
             
-            <div class="phase-tips">
-                <h3>What to Expect</h3>
-                <div class="tip-grid">
-                    <div class="tip-item">
-                        <span class="tip-icon">💪</span>
-                        <span>High energy</span>
+            <!-- Left Column: Current Phase & Calendar -->
+            <div class="left-column">
+                
+                <!-- Current Phase Card -->
+                <div class="phase-card">
+                    <div class="phase-header-section">
+                        <div class="phase-badge" id="phase-badge">
+                            <span class="phase-emoji-large" id="phase-emoji-large">✨</span>
+                        </div>
+                        <div class="phase-info-section">
+                            <h2 id="phase-title">Ovulation Phase</h2>
+                            <p class="phase-day-info" id="phase-day-info">Day 14 of 28</p>
+                        </div>
                     </div>
-                    <div class="tip-item">
-                        <span class="tip-icon">✨</span>
-                        <span>Glowing skin</span>
-                    </div>
-                    <div class="tip-item">
-                        <span class="tip-icon">😊</span>
-                        <span>Positive mood</span>
-                    </div>
-                    <div class="tip-item">
-                        <span class="tip-icon">🎯</span>
-                        <span>Peak focus</span>
+                    
+                    <p class="phase-description" id="phase-description">
+                        Peak estrogen means your skin is at its best! Radiant, glowing, and less reactive. Perfect time for trying new products.
+                    </p>
+                    
+                    <div class="phase-quick-tips">
+                        <div class="quick-tip">
+                            <span class="tip-icon">✨</span>
+                            <span>Glowing skin</span>
+                        </div>
+                        <div class="quick-tip">
+                            <span class="tip-icon">💧</span>
+                            <span>Less oily</span>
+                        </div>
+                        <div class="quick-tip">
+                            <span class="tip-icon">🌟</span>
+                            <span>Less breakouts</span>
+                        </div>
                     </div>
                 </div>
+
+                <!-- Compact Calendar -->
+                <div class="calendar-card">
+                    <div class="calendar-header">
+                        <h3>Period History</h3>
+                        <button class="btn-log-period" onclick="openCalendarPicker()">
+                            + Log Period
+                        </button>
+                    </div>
+                    
+                    <div class="calendar-controls">
+                        <button class="calendar-nav" onclick="previousMonth()">←</button>
+                        <h4 id="calendar-month">February 2026</h4>
+                        <button class="calendar-nav" onclick="nextMonth()">→</button>
+                    </div>
+                    
+                    <div class="calendar-grid" id="calendar-grid">
+                        <!-- Calendar generated by JS -->
+                    </div>
+                    
+                    <div class="calendar-legend">
+                        <div class="legend-item">
+                            <span class="legend-dot period"></span>
+                            <span>Period</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-dot predicted"></span>
+                            <span>Predicted</span>
+                        </div>
+                    </div>
+                    
+                    <p class="calendar-hint">💡 Click any past date to log a period</p>
+                </div>
+
+                <!-- Period History Summary -->
+                <div class="history-summary-card">
+                    <h3>Recent Periods</h3>
+                    <div class="history-list" id="history-list">
+                        <div class="history-item">
+                            <span class="history-date">January 15, 2026</span>
+                            <span class="history-badge">28 days ago</span>
+                        </div>
+                        <div class="history-item">
+                            <span class="history-date">December 18, 2025</span>
+                            <span class="history-badge">28 day cycle</span>
+                        </div>
+                        <div class="history-item">
+                            <span class="history-date">November 20, 2025</span>
+                            <span class="history-badge">28 day cycle</span>
+                        </div>
+                    </div>
+                    <p class="history-note">Tracking helps us predict your cycle more accurately</p>
+                </div>
+                
             </div>
 
-            <div class="phase-care">
-                <h3>Skincare Tips</h3>
-                <ul>
-                    <li>Use lighter moisturizers</li>
-                    <li>Add Vitamin C serum for extra glow</li>
-                    <li>Your skin can handle active ingredients</li>
-                </ul>
+            <!-- Right Column: Insights & Predictions -->
+            <div class="right-column">
+                
+                <!-- Your Stats -->
+                <div class="stats-card">
+                    <h3>Your Cycle Stats</h3>
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="stat-value" id="avg-cycle">28</div>
+                            <div class="stat-label">Avg Cycle</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="cycle-count">3</div>
+                            <div class="stat-label">Tracked</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="cycle-range">27-30</div>
+                            <div class="stat-label">Range</div>
+                        </div>
+                    </div>
+                    <p class="stat-message" id="insight-message">
+                        Track more cycles for better predictions ✨
+                    </p>
+                </div>
+
+                <!-- Upcoming Events -->
+                <div class="upcoming-card">
+                    <h3>What's Coming</h3>
+                    
+                    <div class="upcoming-item">
+                        <div class="upcoming-icon">🌸</div>
+                        <div class="upcoming-info">
+                            <h4>Next Period</h4>
+                            <p id="next-period-text">Expected in 14 days</p>
+                            <div class="confidence-indicator">
+                                <div class="confidence-bar">
+                                    <div class="confidence-fill" id="period-confidence"></div>
+                                </div>
+                                <span class="confidence-text" id="period-confidence-label">High confidence</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="upcoming-item">
+                        <div class="upcoming-icon">✨</div>
+                        <div class="upcoming-info">
+                            <h4>Next Ovulation</h4>
+                            <p id="next-ovulation-text">Expected in 28 days</p>
+                            <div class="confidence-indicator">
+                                <div class="confidence-bar">
+                                    <div class="confidence-fill" id="ovulation-confidence"></div>
+                                </div>
+                                <span class="confidence-text" id="ovulation-confidence-label">High confidence</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cycle Timeline -->
+                <div class="timeline-card">
+                    <h3>Cycle Phases</h3>
+                    <div class="timeline-visual">
+                        <div class="timeline-bar">
+                            <div class="timeline-segment menstrual" style="width: 18%;">
+                                <span class="segment-label">Menstrual</span>
+                            </div>
+                            <div class="timeline-segment follicular" style="width: 25%;">
+                                <span class="segment-label">Follicular</span>
+                            </div>
+                            <div class="timeline-segment ovulation active" style="width: 18%;">
+                                <span class="segment-label">Ovulation</span>
+                            </div>
+                            <div class="timeline-segment luteal" style="width: 39%;">
+                                <span class="segment-label">Luteal</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phase Explanation -->
+                <div class="phase-explanation-card">
+                    <h3>How Your Cycle Affects Your Skin</h3>
+                    <div class="phase-info-grid">
+                        <div class="phase-info-item">
+                            <div class="phase-info-icon menstrual">🌸</div>
+                            <div class="phase-info-content">
+                                <h4>Menstrual (Days 1-5)</h4>
+                                <p>Low hormones make skin dry and sensitive. Focus on hydration and gentle products. Avoid harsh treatments.</p>
+                            </div>
+                        </div>
+                        <div class="phase-info-item">
+                            <div class="phase-info-icon follicular">🌱</div>
+                            <div class="phase-info-content">
+                                <h4>Follicular (Days 6-12)</h4>
+                                <p>Rising estrogen improves skin texture and clarity. Great time to try new products or book treatments.</p>
+                            </div>
+                        </div>
+                        <div class="phase-info-item">
+                            <div class="phase-info-icon ovulation">✨</div>
+                            <div class="phase-info-content">
+                                <h4>Ovulation (Days 13-17)</h4>
+                                <p>Peak estrogen = peak glow! Skin is radiant, plump, and can handle active ingredients like retinol or acids.</p>
+                            </div>
+                        </div>
+                        <div class="phase-info-item">
+                            <div class="phase-info-icon luteal">🌙</div>
+                            <div class="phase-info-content">
+                                <h4>Luteal (Days 18-28)</h4>
+                                <p>Rising progesterone increases oil and can cause breakouts. Use oil-control products and spot treatments.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
+    </div>
 
-        <!-- Quick Log -->
-        <div class="quick-log-card">
-            <h3>Log Your Period</h3>
-            <p>When did your last period start?</p>
-            <input type="date" id="period-date" class="date-input" max="">
-            <button class="save-btn" onclick="savePeriodDate()">Save Date</button>
-        </div>
-
-        <!-- Phase Timeline -->
-        <div class="timeline-card">
-            <h3>Your Cycle Timeline</h3>
-            <div class="timeline">
-                <div class="timeline-phase menstrual">
-                    <div class="phase-bar"></div>
-                    <span class="phase-label">Menstrual<br>Days 1-5</span>
-                </div>
-                <div class="timeline-phase follicular">
-                    <div class="phase-bar"></div>
-                    <span class="phase-label">Follicular<br>Days 6-12</span>
-                </div>
-                <div class="timeline-phase ovulation active">
-                    <div class="phase-bar"></div>
-                    <span class="phase-label">Ovulation<br>Days 13-17</span>
-                </div>
-                <div class="timeline-phase luteal">
-                    <div class="phase-bar"></div>
-                    <span class="phase-label">Luteal<br>Days 18-28</span>
-                </div>
+    <!-- Log Period Modal -->
+    <div class="modal-overlay" id="calendar-modal" onclick="closeCalendarModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3>Log Period Start Date</h3>
+                <button class="modal-close" onclick="closeCalendarModal()">×</button>
             </div>
-        </div>
-
-        <!-- Predictions -->
-        <div class="predictions-card">
-            <h3>Upcoming</h3>
-            <div class="prediction-item">
-                <div class="prediction-icon">🌸</div>
-                <div class="prediction-content">
-                    <h4>Next Period</h4>
-                    <p>Expected in 14 days • March 1</p>
+            <div class="modal-body">
+                <p class="modal-instruction">
+                    When did your period start? This helps us track your cycle and make accurate predictions.
+                </p>
+                
+                <div class="date-options">
+                    <button class="date-option-btn" onclick="selectDateOption('today')">
+                        <span class="option-icon">🌸</span>
+                        <div class="option-content">
+                            <span class="option-text">Today</span>
+                            <span class="option-subtext" id="today-date">Feb 17</span>
+                        </div>
+                    </button>
+                    <button class="date-option-btn" onclick="selectDateOption('yesterday')">
+                        <span class="option-icon">📅</span>
+                        <div class="option-content">
+                            <span class="option-text">Yesterday</span>
+                            <span class="option-subtext" id="yesterday-date">Feb 16</span>
+                        </div>
+                    </button>
+                    <button class="date-option-btn" onclick="selectDateOption('custom')">
+                        <span class="option-icon">🗓️</span>
+                        <div class="option-content">
+                            <span class="option-text">Another Day</span>
+                            <span class="option-subtext">Pick a date</span>
+                        </div>
+                    </button>
                 </div>
-            </div>
-            <div class="prediction-item">
-                <div class="prediction-icon">✨</div>
-                <div class="prediction-content">
-                    <h4>Next Ovulation</h4>
-                    <p>Expected in 28 days • March 15</p>
+                
+                <div class="custom-date-picker" id="custom-date-section" style="display: none;">
+                    <label for="period-date-picker">Select the date your period started:</label>
+                    <input type="date" id="period-date-picker" class="date-input" max="">
+                    <button class="save-btn" onclick="savePeriodFromModal()">Save Date</button>
                 </div>
             </div>
         </div>
