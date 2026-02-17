@@ -322,10 +322,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Update user profile on load
     updateUserProfile();
     
+    // Set max date for last period input (today)
     const today = new Date().toISOString().split('T')[0];
     const lastPeriodInput = document.getElementById('last-period');
     if (lastPeriodInput) {
         lastPeriodInput.value = today;
+        lastPeriodInput.max = today;  // Block future dates
     }
     
     // Check if navigating to dashboard via hash

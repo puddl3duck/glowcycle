@@ -34,7 +34,9 @@ class JournalTableObject:
         return self.user
 
     def _get_sk(self) -> str:
-        return f"{self.date.strftime('%d-%m-%Y')}#{self.time.value}"  # DD-MM-YYYY format
+        # Include timestamp to allow multiple entries per day
+        timestamp = self.date.strftime('%d-%m-%Y-%H-%M-%S')
+        return f"{timestamp}#{self.time.value}"  # DD-MM-YYYY-HH-MM-SS#morning
 
     def _to_dynamo_representation(self) -> dict:
         """
@@ -58,14 +60,22 @@ class JournalTableObject:
         Creates a JournalTableObject from a DynamoDB item.
         """
         try:
-            date_part, period_part = item["date"].split("#")
+            # Split by last # to get timestamp and period
+            date_str, period_part = item["date"].rsplit("#", 1)
+            
+            # Parse timestamp (DD-MM-YYYY-HH-MM-SS or DD-MM-YYYY for old entries)
+            if date_str.count('-') >= 5:  # New format with time
+                date_obj = datetime.strptime(date_str, "%d-%m-%Y-%H-%M-%S")
+            else:  # Old format without time
+                date_obj = datetime.strptime(date_str, "%d-%m-%Y")
+            
             return cls(
                 user=item["user"],
                 feeling=FeelingType(item["feeling"]),
                 energy=int(item["energy"]),
                 thoughts=item["thoughts"],
                 tags=item["tags"],
-                date=datetime.strptime(date_part, "%d-%m-%Y"),
+                date=date_obj,
                 time=DayPeriod(period_part)
             )
         except Exception as e:
@@ -80,5 +90,6 @@ class JournalTableObject:
             "thoughts": self.thoughts,
             "tags": self.tags,
             "date": self.date.strftime("%d-%m-%Y"),
-            "time": self.time.value
+            "time": self.time.value,
+            "timestamp": self.date.strftime("%H:%M:%S")  # Add time for display
         }
