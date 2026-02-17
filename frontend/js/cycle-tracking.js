@@ -103,3 +103,17 @@ function updateCycleInfo() {
     
     // Update UI with calculated day
 }
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    applyTheme();
+    updateUserProfile();
+    updateCycleInfo();
+    
+    // Set max date for period input (today)
+    const today = new Date().toISOString().split('T')[0];
+    const periodDateInput = document.getElementById('period-date');
+    if (periodDateInput) {
+        periodDateInput.max = today;  // Block future dates
+    }
+});
