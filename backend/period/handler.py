@@ -118,20 +118,24 @@ def get_periods(event):
         items = response.get("Items", [])
         print(f"Found {len(items)} period entries for user: {user}")
 
-        # Format the response
+        # Format the response, skipping any malformed entries
         periods = []
         for item in items:
-            period_data = {
-                "period_date": item.get("period_date"),
-                "created_at": item.get("created_at")
-            }
-            # Add optional fields only if they exist
-            if "user_age" in item:
-                period_data["user_age"] = item.get("user_age")
-            if "cycle_length" in item:
-                period_data["cycle_length"] = item.get("cycle_length")
-            
-            periods.append(period_data)
+            try:
+                period_data = {
+                    "period_date": item.get("period_date"),
+                    "created_at": item.get("created_at")
+                }
+                # Add optional fields only if they exist
+                if "user_age" in item:
+                    period_data["user_age"] = item.get("user_age")
+                if "cycle_length" in item:
+                    period_data["cycle_length"] = item.get("cycle_length")
+                
+                periods.append(period_data)
+            except Exception as e:
+                print(f"Skipping malformed period entry: {item.get('date', 'unknown')}, error: {str(e)}")
+                continue
 
         return {
             "periods": periods,
