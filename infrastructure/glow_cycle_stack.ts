@@ -20,6 +20,15 @@ export class GlowCycleStack extends cdk.Stack {
       versioned: true,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
+      cors: [
+        {
+          allowedMethods: [s3.HttpMethods.PUT, s3.HttpMethods.GET, s3.HttpMethods.HEAD],
+          allowedOrigins: ["http://localhost:8000"], // local dev
+          allowedHeaders: ["*"],
+          exposedHeaders: ["ETag"],
+          maxAge: 3000,
+        },
+      ],
     });
 
     // -------------------------
@@ -35,20 +44,25 @@ export class GlowCycleStack extends cdk.Stack {
     // -------------------------
     // Lambda Functions
     // -------------------------
-    const skinUploadLambda = new lambda.Function(this, "SkinUploadLambda", {
+    const skinUploadUrlLambda = new lambda.Function(this, "SkinUploadUrlLambda", {
       runtime: lambda.Runtime.PYTHON_3_11,
-      handler: "skin/handler.lambda_handler",
-      code: lambda.Code.fromAsset('../backend', { exclude: ['journal/', 'period/'] }),
+      handler: "skin/upload_url.lambda_handler",
+      code: lambda.Code.fromAsset("../backend", { exclude: ["journal/", "period/"] }),
       environment: {
         BUCKET_NAME: assetsBucket.bucketName,
       },
     });
-    const skinProcessLambda = new lambda.Function(this, "SkinProcessLambda", {
+
+    const skinAnalyzeLambda = new lambda.Function(this, "SkinAnalyzeLambda", {
       runtime: lambda.Runtime.PYTHON_3_11,
-      handler: "skin/handler.lambda_handler",
-      code: lambda.Code.fromAsset('../backend', { exclude: ['journal/', 'period/'] }),
+      handler: "skin/analyze.lambda_handler",
+      code: lambda.Code.fromAsset("../backend", { exclude: ["journal/", "period/"] }),
+      timeout: cdk.Duration.seconds(30),
+      memorySize: 512,
       environment: {
-        BUCKET_NAME: assetsBucket.bucketName,
+      BUCKET_NAME: assetsBucket.bucketName,
+      // Put the Claude Sonnet 4.5 v1 model id here (copy from Bedrock model catalog "API details")
+      BEDROCK_MODEL_ID: "global.anthropic.claude-sonnet-4-5-20250929-v1:0",
       },
     });
 
@@ -95,25 +109,33 @@ export class GlowCycleStack extends cdk.Stack {
     // -------------------------
     table.grantReadWriteData(journalLambda);
     table.grantReadWriteData(periodLambda);
-    glowCycleSecret.grantRead(skinProcessLambda);
-    glowCycleSecret.grantRead(skinUploadLambda);
     glowCycleSecret.grantRead(journalLambda);
     glowCycleSecret.grantRead(periodLambda);
-    assetsBucket.grantRead(skinProcessLambda);
-    assetsBucket.grantWrite(skinUploadLambda);
-
-    skinProcessLambda.addToRolePolicy(
-      new iam.PolicyStatement({
-        actions: ["rekognition:DetectFaces"],
-        resources: ["*"],
-      }),
-    );
+    assetsBucket.grantWrite(skinUploadUrlLambda);
+    assetsBucket.grantRead(skinAnalyzeLambda);
+    assetsBucket.grantPut(skinUploadUrlLambda);
 
     journalLambda.addToRolePolicy(
       new iam.PolicyStatement({
         actions: ["bedrock:InvokeModel"],
         resources: ["*"],
       }),
+    );
+    skinAnalyzeLambda.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ["rekognition:DetectFaces"],
+        resources: ["*"],
+      }),
+    );
+
+   skinAnalyzeLambda.addToRolePolicy(
+      new iam.PolicyStatement({
+      actions: ["bedrock:InvokeModel", "bedrock:Converse"],
+      resources: [
+          "arn:aws:bedrock:*::foundation-model/anthropic.claude-sonnet-4-5-20250929-v1:0",
+          "arn:aws:bedrock:*:*:inference-profile/global.anthropic.claude-sonnet-4-5-20250929-v1:0",
+      ],
+     }),
     );
 
     // -------------------------
@@ -134,17 +156,24 @@ export class GlowCycleStack extends cdk.Stack {
         ],
       },
     });
+    new cdk.CfnOutput(this, "ApiBaseUrl", {
+      value: api.url,
+    });
 
-    assetsBucket.addEventNotification(
-      s3.EventType.OBJECT_CREATED,
-      new s3n.LambdaDestination(skinProcessLambda),
-      { prefix: "selfies/" },
+    const skinResource = api.root.addResource("skin");
+
+    const uploadUrlResource = skinResource.addResource("upload-url");
+    const analyzeResource = skinResource.addResource("analyze");
+
+    const uploadUrlMethod = uploadUrlResource.addMethod(
+      "POST",
+      new apigateway.LambdaIntegration(skinUploadUrlLambda),
     );
 
-    api.root
-      .addResource("skin")
-      .addMethod("POST", new apigateway.LambdaIntegration(skinUploadLambda));
-
+    const analyzeMethod = analyzeResource.addMethod(
+      "POST",
+      new apigateway.LambdaIntegration(skinAnalyzeLambda),
+    );
     // Journal (ONE resource, multiple methods)
     const journalResource = api.root.addResource("journal");
 

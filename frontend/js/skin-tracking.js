@@ -32,7 +32,18 @@ function applyTheme() {
 
   updateSkincareRoutine();
 }
+function dataURLtoBlob(dataurl) {
+  const arr = dataurl.split(",");
+  const mime = arr[0].match(/:(.*?);/)[1];
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
 
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n);
+  }
+  return new Blob([u8arr], { type: mime });
+}
 function toggleTheme() {
   const body = document.body;
   let themeOverride;
@@ -486,56 +497,66 @@ function capturePhoto() {
 // Send captured image to backend S3
 async function sendCapturedImageToBackend(dataUrl) {
   try {
-    // Import API config if not already in scope
     const apiConfig =
       typeof API_CONFIG !== "undefined" ? API_CONFIG : window.API_CONFIG;
-    const endpoint = apiConfig.BASE_URL + apiConfig.ENDPOINTS.SKIN;
 
-    // Get user and date (customize as needed)
-    const user =
-      document.querySelector(".profile-name")?.textContent?.trim() ||
-      "anonymous";
-    const date = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+    // 1) Convert dataURL -> Blob
+    const blob = dataURLtoBlob(dataUrl);
+    const contentType = blob.type || "image/jpeg";
 
-    // Convert dataURL to base64 (strip prefix)
-    const base64Image = dataUrl.split(",")[1];
-
-    const payload = {
-      user,
-      date,
-      file: base64Image,
-    };
-
-    const response = await fetch(endpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+    // 2) Ask backend for presigned URL
+    updateCameraStatus("Preparing secure upload...", "🔐", "info");
+    const presignResp = await fetch(
+      apiConfig.BASE_URL + apiConfig.ENDPOINTS.SKIN_UPLOAD_URL,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contentType }),
       },
-      body: JSON.stringify(payload),
+    );
+
+    if (!presignResp.ok) throw new Error("Failed to get upload URL");
+    const { uploadUrl, s3Key } = await presignResp.json();
+
+    // 3) Upload directly to S3
+    updateCameraStatus("Uploading photo...", "⬆️", "info");
+    const putResp = await fetch(uploadUrl, {
+      method: "PUT",
+      headers: { "Content-Type": contentType },
+      body: blob,
     });
 
-    if (!response.ok) {
-      throw new Error("Failed to upload image");
-    }
-    // Optionally handle response
-    const result = await response.json();
-    console.log("Image uploaded:", result);
-  } catch (err) {
-    console.error("Error uploading image:", err);
-  }
-}
+    if (!putResp.ok) throw new Error("Failed to upload to S3");
 
-// Helper: Convert dataURL to Blob
-function dataURLtoBlob(dataurl) {
-  const arr = dataurl.split(","),
-    mime = arr[0].match(/:(.*?);/)[1],
-    bstr = atob(arr[1]),
-    n = bstr.length,
-    u8arr = new Uint8Array(n);
-  for (let i = 0; i < n; i++) {
-    u8arr[i] = bstr.charCodeAt(i);
+    // 4) Ask backend to analyze (Rekognition + Bedrock)
+    updateCameraStatus("Analyzing with AI...", "✨", "info");
+    const analyzeResp = await fetch(
+      apiConfig.BASE_URL + apiConfig.ENDPOINTS.SKIN_ANALYZE,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          s3Key,
+          timeOfDay: detectTimeMode(),
+          cyclePhase: "unknown",
+          skinGoals: ["hydration", "texture"],
+        }),
+      },
+    );
+
+    if (!analyzeResp.ok) {
+      const err = await analyzeResp.text();
+      throw new Error(err || "Analyze failed");
+    }
+
+    const analysis = await analyzeResp.json();
+    window.__skinAnalysisResult = analysis;
+
+    completeAnalysis(); // show results when real analysis is done
+  } catch (err) {
+    console.error(err);
+    updateCameraStatus("Something went wrong. Please try again.", "⚠️", "error");
   }
-  return new Blob([u8arr], { type: mime });
 }
 
 // Start AI Analysis Animation
@@ -571,11 +592,6 @@ function startAIAnalysis() {
       }, 800);
     }, index * 1000);
   });
-
-  // Complete analysis
-  setTimeout(() => {
-    completeAnalysis();
-  }, 4500);
 }
 
 // Complete Analysis
@@ -640,11 +656,100 @@ function retakePhoto() {
 function showResults() {
   document.getElementById("scanner-view").style.display = "none";
   document.getElementById("results-view").style.display = "block";
-
+  renderSkinAnalysisResult();
   // Draw radar chart
   drawRadarChart();
 }
+function renderSkinAnalysisResult() {
+  const result = window.__skinAnalysisResult;
+  if (!result) return;
 
+  // Summary
+  const msgEl = document.querySelector(".score-message");
+  if (msgEl && result.summary) msgEl.textContent = result.summary;
+
+  // Calculate overall score from metrics
+  const m = result.metrics || {};
+  const metricValues = Object.values(m).filter(v => typeof v === "number");
+  const avgScore = metricValues.length
+    ? Math.round(metricValues.reduce((a, b) => a + b, 0) / metricValues.length)
+    : 75;
+
+  // Update score number
+  const scoreEl = document.querySelector(".score-number");
+  if (scoreEl) scoreEl.textContent = avgScore;
+
+  // Update score circle
+  const scoreCircle = document.querySelector(".score-circle circle:nth-child(2)");
+  if (scoreCircle) {
+    const offset = 314 - (314 * avgScore) / 100;
+    scoreCircle.setAttribute("stroke-dashoffset", offset);
+  }
+
+  // Update metric cards
+  const metricItems = document.querySelectorAll(".metric-item");
+  const metricMap = [
+    { label: "Radiance", key: "radiance" },
+    { label: "Moisture", key: "moisture" },
+    { label: "Texture", key: "texture" },
+    { label: "Pores", key: "pores" },
+    { label: "Dark Circles", key: "dark_circles" },
+  ];
+  metricItems.forEach((item, i) => {
+    if (metricMap[i]) {
+      const val = m[metricMap[i].key];
+      const valEl = item.querySelector(".metric-value");
+      const labelEl = item.querySelector(".metric-label");
+      if (valEl && val !== undefined) valEl.textContent = val;
+      if (labelEl) labelEl.textContent = metricMap[i].label;
+    }
+  });
+
+  // AM/PM routine
+  const routineSteps = document.querySelector(".routine-steps");
+  const routineTitle = document.querySelector(".routine-title");
+  const isNight = detectTimeMode() === "night";
+  const steps = isNight ? result.pm_routine : result.am_routine;
+  if (routineTitle) routineTitle.textContent = isNight ? "🌙 PM Routine" : "☀️ AM Routine";
+  if (routineSteps && Array.isArray(steps)) {
+    routineSteps.innerHTML = steps.map(s => `<div class="routine-step">✓ ${s}</div>`).join("");
+  }
+
+  // Remove static hardcoded recommendation cards
+  document.querySelectorAll(".recommendations .recommendation-card").forEach(el => el.remove());
+
+  // Tips
+  const tipsEl = document.getElementById("ai-tips");
+  if (tipsEl && Array.isArray(result.tips)) {
+    tipsEl.innerHTML = `
+      <h3 style="margin-top: 1.5rem">Tips for You</h3>
+      ${result.tips.map(t => `
+        <div class="recommendation-card">
+          <div class="rec-icon">✨</div>
+          <div class="rec-content"><p>${t}</p></div>
+        </div>`).join("")}
+    `;
+  }
+
+  // Concerns detected
+  if (Array.isArray(result.concerns_detected) && result.concerns_detected.length) {
+    const tipsEl = document.getElementById("ai-tips");
+    if (tipsEl) {
+      tipsEl.innerHTML += `
+        <h3 style="margin-top: 1.5rem">Concerns Detected</h3>
+        ${result.concerns_detected.map(c => `
+          <div class="recommendation-card">
+            <div class="rec-icon">🔍</div>
+            <div class="rec-content"><p>${c}</p></div>
+          </div>`).join("")}
+      `;
+    }
+  }
+
+  // Disclaimer
+  const disEl = document.getElementById("ai-disclaimer");
+  if (disEl && result.disclaimer) disEl.textContent = result.disclaimer;
+}
 // Draw Radar Chart
 function drawRadarChart() {
   const canvas = document.getElementById("skinRadar");
@@ -654,17 +759,18 @@ function drawRadarChart() {
   const centerX = canvas.width / 2;
   const centerY = canvas.height / 2;
   const radius = Math.min(centerX, centerY) - 40;
-
+  const labels = ["Radiance", "Moisture", "Texture", "Pores", "Dark Circles", "Oiliness", "Redness"];
   // Data points
-  const data = [85, 70, 88, 73, 78, 67, 82];
-  const labels = [
-    "Radiance",
-    "Moisture",
-    "Texture",
-    "Pores",
-    "Dark Circles",
-    "Oiliness",
-    "Redness",
+  const result = window.__skinAnalysisResult;
+  const m = result?.metrics || {};
+  const data = [
+    m.radiance ?? 70,
+    m.moisture ?? 70,
+    m.texture ?? 70,
+    m.pores ?? 70,
+    m.dark_circles ?? 70,
+    m.oiliness ?? 70,
+    m.redness ?? 70,
   ];
   const numPoints = data.length;
 
