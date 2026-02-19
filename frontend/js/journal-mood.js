@@ -173,10 +173,16 @@ function selectMood(mood) {
 
 function toggleTag(button) {
     button.classList.toggle('active');
-    const tagText = button.textContent.trim();
+    
+    // Get tag text without the × symbol
+    const tagContent = button.querySelector('span:first-child') || button;
+    const tagText = tagContent.textContent.trim();
     
     if (button.classList.contains('active')) {
-        selectedTags.push(tagText);
+        // Add only if not already in array
+        if (!selectedTags.includes(tagText)) {
+            selectedTags.push(tagText);
+        }
     } else {
         selectedTags = selectedTags.filter(tag => tag !== tagText);
     }
@@ -261,6 +267,7 @@ async function saveEntry() {
             document.getElementById('word-count').textContent = '0 words';
             document.querySelectorAll('.mood-option').forEach(opt => opt.classList.remove('selected'));
             document.querySelectorAll('.tag-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.custom-tag-btn').forEach(btn => btn.classList.remove('active'));
             selectedMood = null;
             selectedTags = [];
             
@@ -321,14 +328,18 @@ async function loadEntries() {
             const moodEmoji = getMoodEmoji(entry.feeling);
             const snippet = entry.thoughts.substring(0, 100) + (entry.thoughts.length > 100 ? '...' : '');
             
-            // Debug: log the entry to see tags structure
-            console.log('Entry tags:', entry.tags, 'Type:', typeof entry.tags);
-            
-            // Handle tags - ensure it's an array
+            // Handle tags - ensure it's an array and properly formatted
             let tags = [];
             if (entry.tags) {
                 if (Array.isArray(entry.tags)) {
-                    tags = entry.tags;
+                    // Tags is already an array
+                    tags = entry.tags.map(tag => {
+                        // If tag is an object like {S: "value"}, extract the value
+                        if (typeof tag === 'object' && tag.S) {
+                            return tag.S;
+                        }
+                        return tag;
+                    });
                 } else if (typeof entry.tags === 'string') {
                     try {
                         tags = JSON.parse(entry.tags);
@@ -364,6 +375,7 @@ function suggestTagsFromHistory(entries) {
     const allTags = new Set();
     const defaultTags = ['💪 Workout', '🧘 Meditation', '😴 Good Sleep', '🍎 Healthy Eating', 
                          '💧 Hydrated', '🎉 Social', '📚 Productive', '🌸 Self-care'];
+    const deletedTags = getDeletedTags(); // Get list of tags user has deleted
     
     entries.forEach(entry => {
         let tags = [];
@@ -371,7 +383,13 @@ function suggestTagsFromHistory(entries) {
         // Handle different tag formats
         if (entry.tags) {
             if (Array.isArray(entry.tags)) {
-                tags = entry.tags;
+                tags = entry.tags.map(tag => {
+                    // If tag is an object like {S: "value"}, extract the value
+                    if (typeof tag === 'object' && tag.S) {
+                        return tag.S;
+                    }
+                    return tag;
+                });
             } else if (typeof entry.tags === 'string') {
                 try {
                     tags = JSON.parse(entry.tags);
@@ -382,8 +400,8 @@ function suggestTagsFromHistory(entries) {
         }
         
         tags.forEach(tag => {
-            // Only add if it's not a default tag and not already in custom tags
-            if (!defaultTags.includes(tag) && !customTags.includes(tag)) {
+            // Only add if it's not a default tag AND not in deleted tags list
+            if (!defaultTags.includes(tag) && !deletedTags.includes(tag)) {
                 allTags.add(tag);
             }
         });
@@ -553,8 +571,7 @@ function addCustomTag() {
     const tagText = input.value.trim();
     
     if (!tagText) {
-        showNotification('Please enter a tag name', 'error');
-        return;
+        return; // Just clear, no error
     }
     
     if (tagText.length > 30) {
@@ -564,7 +581,15 @@ function addCustomTag() {
     
     // Check if tag already exists
     if (customTags.includes(tagText)) {
-        showNotification('This tag already exists', 'error');
+        // If it exists, just select it
+        const existingBtn = Array.from(document.querySelectorAll('.custom-tag-btn')).find(btn => {
+            const span = btn.querySelector('span:first-child');
+            return span && span.textContent === tagText;
+        });
+        if (existingBtn && !existingBtn.classList.contains('active')) {
+            existingBtn.click(); // Select it
+        }
+        input.value = '';
         return;
     }
     
@@ -575,7 +600,12 @@ function addCustomTag() {
     saveCustomTags();
     
     // Render the tag
-    renderCustomTag(tagText);
+    const newTagBtn = renderCustomTag(tagText);
+    
+    // Auto-select the new tag
+    if (newTagBtn && !newTagBtn.classList.contains('active')) {
+        newTagBtn.click();
+    }
     
     // Clear input
     input.value = '';
@@ -587,6 +617,17 @@ function addCustomTag() {
 function renderCustomTag(tagText) {
     const container = document.getElementById('custom-tags-container');
     
+    // Check if tag already rendered
+    const existingTags = Array.from(container.querySelectorAll('.custom-tag-btn'));
+    const existing = existingTags.find(btn => {
+        const span = btn.querySelector('span:first-child');
+        return span && span.textContent === tagText;
+    });
+    
+    if (existing) {
+        return existing; // Return existing button
+    }
+    
     const tagBtn = document.createElement('button');
     tagBtn.className = 'custom-tag-btn';
     tagBtn.onclick = function() { toggleTag(this); };
@@ -596,7 +637,8 @@ function renderCustomTag(tagText) {
     
     const removeBtn = document.createElement('span');
     removeBtn.className = 'remove-tag';
-    removeBtn.textContent = '×';
+    removeBtn.innerHTML = '&times;'; // Use HTML entity
+    removeBtn.title = 'Delete this tag permanently';
     removeBtn.onclick = function(e) {
         e.stopPropagation();
         removeCustomTag(tagText, tagBtn);
@@ -605,6 +647,8 @@ function renderCustomTag(tagText) {
     tagBtn.appendChild(tagContent);
     tagBtn.appendChild(removeBtn);
     container.appendChild(tagBtn);
+    
+    return tagBtn; // Return the button so we can select it
 }
 
 function removeCustomTag(tagText, tagElement) {
@@ -613,6 +657,9 @@ function removeCustomTag(tagText, tagElement) {
     
     // Remove from selected tags if it was selected
     selectedTags = selectedTags.filter(tag => tag !== tagText);
+    
+    // Add to deleted tags list so it doesn't come back from history
+    addToDeletedTags(tagText);
     
     // Save to localStorage
     saveCustomTags();
@@ -625,6 +672,39 @@ function removeCustomTag(tagText, tagElement) {
     }, 300);
     
     showNotification('Tag removed', 'success');
+}
+
+function addToDeletedTags(tagText) {
+    if (!currentUser) return;
+    
+    let deletedTags = [];
+    const saved = localStorage.getItem(`deletedTags_${currentUser}`);
+    if (saved) {
+        try {
+            deletedTags = JSON.parse(saved);
+        } catch (e) {
+            deletedTags = [];
+        }
+    }
+    
+    if (!deletedTags.includes(tagText)) {
+        deletedTags.push(tagText);
+        localStorage.setItem(`deletedTags_${currentUser}`, JSON.stringify(deletedTags));
+    }
+}
+
+function getDeletedTags() {
+    if (!currentUser) return [];
+    
+    const saved = localStorage.getItem(`deletedTags_${currentUser}`);
+    if (saved) {
+        try {
+            return JSON.parse(saved);
+        } catch (e) {
+            return [];
+        }
+    }
+    return [];
 }
 
 function saveCustomTags() {
