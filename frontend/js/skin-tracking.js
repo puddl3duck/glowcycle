@@ -103,6 +103,7 @@ function acceptConsent() {
 // Enable/disable accept button based on checkbox
 document.addEventListener('DOMContentLoaded', () => {
     applyTheme(); // Apply theme on load
+    updateUserProfile(); // Update user profile
     
     const consentCheck = document.getElementById('consent-check');
     const acceptBtn = document.getElementById('accept-btn');
@@ -113,6 +114,20 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+function updateUserProfile() {
+    const userName = localStorage.getItem('userName') || 'User';
+    const profileNameElement = document.getElementById('profile-name');
+    const profileAvatarElement = document.getElementById('profile-avatar');
+    
+    if (profileNameElement) {
+        profileNameElement.textContent = userName;
+    }
+    
+    if (profileAvatarElement) {
+        profileAvatarElement.textContent = userName.charAt(0).toUpperCase();
+    }
+}
 
 // Camera variables
 let stream = null;

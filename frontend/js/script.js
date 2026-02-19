@@ -220,6 +220,39 @@ function goToDashboard() {
 
 // Questionnaire
 function nextQuestion(questionNumber) {
+    // Clear all previous errors
+    document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
+    document.querySelectorAll('.input-field').forEach(el => el.classList.remove('error'));
+    
+    // Validate current question before moving to next
+    const currentCard = document.querySelector('.question-card.active');
+    const currentQuestionNum = parseInt(currentCard.dataset.question);
+    
+    // Validation for each question
+    if (currentQuestionNum === 1) {
+        const nameInput = document.getElementById('user-name');
+        if (!nameInput.value.trim()) {
+            showError('user-name', 'name-error', 'Name is required');
+            return;
+        }
+    } else if (currentQuestionNum === 2) {
+        const ageInput = document.getElementById('age');
+        if (!ageInput.value) {
+            showError('age', 'age-error', 'Age is required');
+            return;
+        }
+        if (ageInput.value < 13 || ageInput.value > 60) {
+            showError('age', 'age-error', 'Age must be between 13 and 60');
+            return;
+        }
+    } else if (currentQuestionNum === 3) {
+        const lastPeriodInput = document.getElementById('last-period');
+        if (!lastPeriodInput.value) {
+            showError('last-period', 'period-error', 'Last period date is required');
+            return;
+        }
+    }
+    
     // Hide current question
     document.querySelectorAll('.question-card').forEach(card => {
         card.classList.remove('active');
@@ -233,6 +266,39 @@ function nextQuestion(questionNumber) {
         updateProgress();
     }
 }
+
+// Show error message and highlight field
+function showError(inputId, errorId, message) {
+    const input = document.getElementById(inputId);
+    const error = document.getElementById(errorId);
+    
+    if (input) {
+        input.classList.add('error');
+        input.focus();
+    }
+    
+    if (error) {
+        error.textContent = message;
+    }
+}
+
+// Clear error when user starts typing
+document.addEventListener('DOMContentLoaded', () => {
+    // Add event listeners to clear errors on input
+    const inputs = ['user-name', 'age', 'last-period'];
+    inputs.forEach(inputId => {
+        const input = document.getElementById(inputId);
+        if (input) {
+            input.addEventListener('input', () => {
+                input.classList.remove('error');
+                const errorId = inputId === 'user-name' ? 'name-error' : 
+                               inputId === 'age' ? 'age-error' : 'period-error';
+                const error = document.getElementById(errorId);
+                if (error) error.textContent = '';
+            });
+        }
+    });
+});
 
 function updateProgress() {
     const progressFill = document.getElementById('progress-fill');
@@ -285,26 +351,64 @@ function startQuestionnaire() {
 }
 
 function goToDashboard() {
-    // Save user name from input
+    // Clear all previous errors
+    document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
+    document.querySelectorAll('.input-field').forEach(el => el.classList.remove('error'));
+    
+    // Validate ALL required fields
     const userNameInput = document.getElementById('user-name');
-    if (userNameInput && userNameInput.value.trim()) {
-        localStorage.setItem('userName', userNameInput.value.trim());
-    }
-    
-    // Save other data
     const ageInput = document.getElementById('age');
-    if (ageInput && ageInput.value) {
-        localStorage.setItem('userAge', ageInput.value);
-    }
-    
     const lastPeriodInput = document.getElementById('last-period');
-    if (lastPeriodInput && lastPeriodInput.value) {
-        localStorage.setItem('lastPeriod', lastPeriodInput.value);
+    
+    let hasError = false;
+    
+    if (!userNameInput || !userNameInput.value.trim()) {
+        showPage('questionnaire-page');
+        document.querySelectorAll('.question-card').forEach(card => card.classList.remove('active'));
+        document.querySelector('.question-card[data-question="1"]').classList.add('active');
+        currentQuestion = 1;
+        updateProgress();
+        showError('user-name', 'name-error', 'Name is required');
+        return;
     }
     
+    if (!ageInput || !ageInput.value) {
+        showPage('questionnaire-page');
+        document.querySelectorAll('.question-card').forEach(card => card.classList.remove('active'));
+        document.querySelector('.question-card[data-question="2"]').classList.add('active');
+        currentQuestion = 2;
+        updateProgress();
+        showError('age', 'age-error', 'Age is required');
+        return;
+    }
+    
+    if (ageInput.value < 13 || ageInput.value > 60) {
+        showPage('questionnaire-page');
+        document.querySelectorAll('.question-card').forEach(card => card.classList.remove('active'));
+        document.querySelector('.question-card[data-question="2"]').classList.add('active');
+        currentQuestion = 2;
+        updateProgress();
+        showError('age', 'age-error', 'Age must be between 13 and 60');
+        return;
+    }
+    
+    if (!lastPeriodInput || !lastPeriodInput.value) {
+        showPage('questionnaire-page');
+        document.querySelectorAll('.question-card').forEach(card => card.classList.remove('active'));
+        document.querySelector('.question-card[data-question="3"]').classList.add('active');
+        currentQuestion = 3;
+        updateProgress();
+        showError('last-period', 'period-error', 'Last period date is required');
+        return;
+    }
+    
+    // All validations passed - save data
+    localStorage.setItem('userName', userNameInput.value.trim());
+    localStorage.setItem('userAge', ageInput.value);
+    localStorage.setItem('lastPeriod', lastPeriodInput.value);
     localStorage.setItem('cycleDays', cycleDays);
     
-    completeOnboarding(); // Mark onboarding as complete
+    completeOnboarding();
     showPage('dashboard-page');
     
     // Update profile and content after showing dashboard
@@ -330,19 +434,23 @@ document.addEventListener('DOMContentLoaded', () => {
         lastPeriodInput.max = today;  // Block future dates
     }
     
-    // Check if navigating to dashboard via hash
-    if (window.location.hash === '#dashboard') {
+    // Check if user has name - if not, force onboarding
+    const userName = localStorage.getItem('userName');
+    if (!userName || userName.trim() === '') {
+        // No user name - force onboarding
+        localStorage.removeItem('onboardingCompleted');
+        showPage('landing-page');
+    } else if (window.location.hash === '#dashboard') {
+        // Has name and navigating to dashboard
         if (hasCompletedOnboarding()) {
             showPage('dashboard-page');
-            // Force update content after page is shown
             setTimeout(() => {
                 updateTimeBasedContent();
             }, 100);
         }
     } else if (hasCompletedOnboarding()) {
-        // If user has completed onboarding, show dashboard instead of landing
+        // Has name and completed onboarding - show dashboard
         showPage('dashboard-page');
-        // Force update content after page is shown
         setTimeout(() => {
             updateTimeBasedContent();
         }, 100);
@@ -369,9 +477,127 @@ function closeHowItWorksModal() {
     }
 }
 
+// ===== PROFILE SETTINGS MODAL =====
+function openProfileSettings() {
+    const modal = document.getElementById('profileSettingsModal');
+    if (modal) {
+        // Clear any previous errors
+        document.querySelectorAll('#profileSettingsModal .error-message').forEach(el => el.textContent = '');
+        document.querySelectorAll('#profileSettingsModal .input-field').forEach(el => el.classList.remove('error'));
+        
+        // Load current values
+        document.getElementById('settings-name').value = localStorage.getItem('userName') || '';
+        document.getElementById('settings-age').value = localStorage.getItem('userAge') || '';
+        document.getElementById('settings-last-period').value = localStorage.getItem('lastPeriod') || '';
+        
+        const cycleDays = parseInt(localStorage.getItem('cycleDays')) || 28;
+        document.getElementById('settings-cycle-days').textContent = cycleDays;
+        
+        // Set max date to today
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('settings-last-period').max = today;
+        
+        // Add event listeners to clear errors on input
+        ['settings-name', 'settings-age', 'settings-last-period'].forEach(inputId => {
+            const input = document.getElementById(inputId);
+            if (input) {
+                input.addEventListener('input', () => {
+                    input.classList.remove('error');
+                    const errorId = inputId + '-error';
+                    const error = document.getElementById(errorId);
+                    if (error) error.textContent = '';
+                });
+            }
+        });
+        
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeProfileSettings() {
+    const modal = document.getElementById('profileSettingsModal');
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+}
+
+function adjustSettingsCycle(change) {
+    const cycleElement = document.getElementById('settings-cycle-days');
+    let currentCycle = parseInt(cycleElement.textContent);
+    currentCycle = Math.max(21, Math.min(45, currentCycle + change));
+    cycleElement.textContent = currentCycle;
+}
+
+function saveProfileSettings() {
+    // Clear previous errors
+    document.querySelectorAll('#profileSettingsModal .error-message').forEach(el => el.textContent = '');
+    document.querySelectorAll('#profileSettingsModal .input-field').forEach(el => el.classList.remove('error'));
+    
+    const name = document.getElementById('settings-name').value.trim();
+    const age = document.getElementById('settings-age').value;
+    const lastPeriod = document.getElementById('settings-last-period').value;
+    const cycleDays = parseInt(document.getElementById('settings-cycle-days').textContent);
+    
+    let hasError = false;
+    
+    // Validate all required fields
+    if (!name) {
+        showSettingsError('settings-name', 'settings-name-error', 'Name is required');
+        hasError = true;
+    }
+    
+    if (!age) {
+        showSettingsError('settings-age', 'settings-age-error', 'Age is required');
+        hasError = true;
+    } else if (age < 13 || age > 60) {
+        showSettingsError('settings-age', 'settings-age-error', 'Age must be between 13 and 60');
+        hasError = true;
+    }
+    
+    if (!lastPeriod) {
+        showSettingsError('settings-last-period', 'settings-period-error', 'Last period date is required');
+        hasError = true;
+    }
+    
+    if (hasError) {
+        return;
+    }
+    
+    // Save all settings
+    localStorage.setItem('userName', name);
+    localStorage.setItem('userAge', age);
+    localStorage.setItem('lastPeriod', lastPeriod);
+    localStorage.setItem('cycleDays', cycleDays);
+    
+    // Update UI
+    updateUserProfile();
+    updateTimeBasedContent();
+    
+    // Show success message
+    alert('Profile updated successfully! 🎉');
+    
+    closeProfileSettings();
+}
+
+function showSettingsError(inputId, errorId, message) {
+    const input = document.getElementById(inputId);
+    const error = document.getElementById(errorId);
+    
+    if (input) {
+        input.classList.add('error');
+    }
+    
+    if (error) {
+        error.textContent = message;
+    }
+}
+
 // Close modal with Escape key
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         closeHowItWorksModal();
+        closeProfileSettings();
     }
 });

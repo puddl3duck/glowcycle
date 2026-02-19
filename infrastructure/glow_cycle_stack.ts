@@ -78,10 +78,10 @@ export class GlowCycleStack extends cdk.Stack {
 
     const periodLambda = new lambda.Function(this, 'PeriodTrackingLambda', {
       runtime: lambda.Runtime.PYTHON_3_11,
-      handler: 'handler.handler',
-      code: lambda.Code.fromAsset('../backend/period'),
+      handler: 'period.handler.lambda_handler',
+      code: lambda.Code.fromAsset('../backend'),
       environment: {
-        TABLE_NAME: table.tableName,
+        DYNAMODB_TABLE_NAME: table.tableName,
       },
     });
     journalLambda.addToRolePolicy(new iam.PolicyStatement({
@@ -152,7 +152,22 @@ export class GlowCycleStack extends cdk.Stack {
       new apigateway.LambdaIntegration(journalLambda)
     );
 
-    api.root.addResource('period')
-      .addMethod('POST', new apigateway.LambdaIntegration(periodLambda));
+    // Period tracking (multiple methods)
+    const periodResource = api.root.addResource('period');
+    
+    periodResource.addMethod(
+      'POST',
+      new apigateway.LambdaIntegration(periodLambda)
+    );
+    
+    periodResource.addMethod(
+      'GET',
+      new apigateway.LambdaIntegration(periodLambda)
+    );
+    
+    periodResource.addMethod(
+      'DELETE',
+      new apigateway.LambdaIntegration(periodLambda)
+    );
   }
 }

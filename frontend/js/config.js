@@ -3,7 +3,7 @@
 // Get this URL from: AWS Console → API Gateway → Your API → Stages → prod
 
 const API_CONFIG = {
-    BASE_URL: 'https://YOUR-API-ID.execute-api.YOUR-REGION.amazonaws.com/prod',
+    BASE_URL: 'https://7ofiibs7k7.execute-api.ap-southeast-2.amazonaws.com/prod',
     ENDPOINTS: {
         JOURNAL: '/journal',
         PERIOD: '/period',
