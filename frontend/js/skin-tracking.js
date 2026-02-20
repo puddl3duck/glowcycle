@@ -646,6 +646,14 @@ function drawRadarChart() {
     const canvas = document.getElementById('skinRadar');
     if (!canvas) return;
     
+    // Make canvas responsive
+    const container = canvas.parentElement;
+    const containerWidth = container.clientWidth;
+    const size = Math.min(containerWidth - 40, 400); // Max 400px, min container width
+    
+    canvas.width = size;
+    canvas.height = size;
+    
     const ctx = canvas.getContext('2d');
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
@@ -732,11 +740,13 @@ function drawRadarChart() {
     }
 }
 
-// Set canvas size on load
-window.addEventListener('load', () => {
+// Set canvas size on load and resize
+function initRadarChart() {
     const canvas = document.getElementById('skinRadar');
     if (canvas) {
-        canvas.width = 400;
-        canvas.height = 400;
+        drawRadarChart();
     }
-});
+}
+
+window.addEventListener('load', initRadarChart);
+window.addEventListener('resize', drawRadarChart);

@@ -126,6 +126,7 @@ async function loadPeriodsFromBackend() {
         });
         
         if (!response.ok) {
+            console.error(`Backend returned ${response.status}`);
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         
@@ -135,12 +136,18 @@ async function loadPeriodsFromBackend() {
         // Parse periods from backend
         if (data.periods && Array.isArray(data.periods)) {
             periodHistory = data.periods.map(p => {
-                // Parse DD-MM-YYYY format
-                const [day, month, year] = p.period_date.split('-');
-                const date = new Date(year, month - 1, day);
-                date.setHours(0, 0, 0, 0);
-                return date;
-            });
+                try {
+                    // Parse DD-MM-YYYY format
+                    const [day, month, year] = p.period_date.split('-');
+                    const date = new Date(year, month - 1, day);
+                    date.setHours(0, 0, 0, 0);
+                    return date;
+                } catch (e) {
+                    console.error('Error parsing period date:', p.period_date, e);
+                    return null;
+                }
+            }).filter(d => d !== null);
+            
             periodHistory.sort((a, b) => b - a);
             
             // Update cycle length from history

@@ -551,7 +551,15 @@ body {
     padding: 2rem;
     margin: 2rem 0;
     box-shadow: 0 20px 60px rgba(212, 197, 232, 0.2);
-    height: 400px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 400px;
+}
+
+#skinRadar {
+    max-width: 100%;
+    height: auto;
 }
 
 .skin-metrics {
@@ -736,8 +744,13 @@ body {
     }
     
     .radar-chart {
-        height: 300px;
+        min-height: 300px;
         padding: 1.5rem;
+        margin: 1.5rem 0;
+    }
+    
+    #skinRadar {
+        max-width: 100%;
     }
     
     .skin-metrics {
@@ -901,9 +914,13 @@ body {
     }
     
     .radar-chart {
-        height: 280px;
+        min-height: 280px;
         padding: 1rem;
         margin: 1.5rem 0;
+    }
+    
+    #skinRadar {
+        max-width: 100%;
     }
     
     .skin-metrics {
