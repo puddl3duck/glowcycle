@@ -126,11 +126,11 @@ def get_periods(event):
                     "period_date": item.get("period_date"),
                     "created_at": item.get("created_at")
                 }
-                # Add optional fields only if they exist
+                # Add optional fields only if they exist, converting Decimal to int
                 if "user_age" in item:
-                    period_data["user_age"] = item.get("user_age")
+                    period_data["user_age"] = int(item.get("user_age"))
                 if "cycle_length" in item:
-                    period_data["cycle_length"] = item.get("cycle_length")
+                    period_data["cycle_length"] = int(item.get("cycle_length"))
                 
                 periods.append(period_data)
             except Exception as e:

@@ -231,47 +231,26 @@ async function saveEntry() {
             thoughts: journalText,
             tags: selectedTags,
             date: formattedDate,
-            night: isNight,
-            timestamp: now.toLocaleTimeString()
+            night: isNight
         };
 
-        // Try to save to backend, but always save to localStorage
-        let backendSuccess = false;
-        try {
-            const response = await fetch(`${API_URL}/journal`, {
-                method: 'POST',
-                mode: 'cors',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify(entry)
-            });
+        // Save to AWS backend
+        const response = await fetch(`${API_URL}/journal`, {
+            method: 'POST',
+            mode: 'cors',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(entry)
+        });
 
-            if (response.ok) {
-                const data = await response.json();
-                console.log('Saved to backend:', data);
-                backendSuccess = true;
-            } else {
-                console.log('Backend save failed, using localStorage only');
-            }
-        } catch (backendError) {
-            console.log('Backend not available, using localStorage:', backendError.message);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        // Always save to localStorage as backup
-        const saved = localStorage.getItem(`journal_entries_${currentUser}`);
-        let entries = [];
-        if (saved) {
-            try {
-                entries = JSON.parse(saved);
-            } catch (e) {
-                entries = [];
-            }
-        }
-        entries.unshift(entry);
-        localStorage.setItem(`journal_entries_${currentUser}`, JSON.stringify(entries));
-        console.log('Saved to localStorage');
+        const result = await response.json();
+        console.log('Entry saved to backend:', result);
 
         btn.textContent = '✓ Entry Saved!';
         btn.style.background = 'linear-gradient(135deg, #A8E6CF, #C8E6E6)';
@@ -317,42 +296,22 @@ async function loadEntries() {
     try {
         console.log(`Loading entries for user: ${currentUser}`);
         
-        // Try to load from backend, but use localStorage as fallback
-        let entries = [];
-        let useBackend = true;
+        // Load from AWS backend only
+        const response = await fetch(`${API_URL}/journal?user=${encodeURIComponent(currentUser)}`, {
+            method: 'GET',
+            mode: 'cors',
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
         
-        try {
-            const response = await fetch(`${API_URL}/journal?user=${encodeURIComponent(currentUser)}`, {
-                method: 'GET',
-                mode: 'cors',
-                headers: {
-                    'Accept': 'application/json'
-                }
-            });
-            
-            if (response.ok) {
-                const data = await response.json();
-                entries = data.entries || [];
-                console.log('Loaded entries from backend:', entries.length);
-            } else {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-        } catch (backendError) {
-            console.log('Backend not available, using localStorage:', backendError.message);
-            useBackend = false;
-            
-            // Load from localStorage
-            const saved = localStorage.getItem(`journal_entries_${currentUser}`);
-            if (saved) {
-                try {
-                    entries = JSON.parse(saved);
-                    console.log('Loaded entries from localStorage:', entries.length);
-                } catch (e) {
-                    console.error('Error parsing localStorage:', e);
-                    entries = [];
-                }
-            }
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
+        
+        const data = await response.json();
+        const entries = data.entries || [];
+        console.log('Loaded entries from backend:', entries.length);
         
         if (entries.length === 0) {
             entriesList.innerHTML = '<p style="text-align: center; color: var(--text-light);">No entries yet. Start journaling!</p>';

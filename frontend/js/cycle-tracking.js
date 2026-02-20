@@ -22,29 +22,34 @@ async function loadUserData() {
     // Update profile display
     updateUserProfile();
     
-    // Try to load from backend first
-    const backendLoaded = await loadPeriodsFromBackend();
-    
-    // If backend failed or no data, use localStorage as fallback
-    if (!backendLoaded || periodHistory.length === 0) {
-        console.log('Using localStorage fallback for period data');
-        loadPeriodHistory(); // Load from localStorage
+    // Try to load from backend
+    try {
+        const backendLoaded = await loadPeriodsFromBackend();
         
-        // If still no data, check for initial period from onboarding
-        if (periodHistory.length === 0) {
+        // If backend loaded successfully but no data, check for initial period from onboarding
+        if (backendLoaded && periodHistory.length === 0) {
             const initialPeriod = localStorage.getItem('lastPeriod');
             if (initialPeriod) {
                 console.log('Adding initial period from onboarding:', initialPeriod);
                 const date = new Date(initialPeriod);
                 date.setHours(0, 0, 0, 0);
                 periodHistory.push(date);
-                savePeriodHistory(); // Save to localStorage
                 
-                // Try to save to backend (but don't wait)
-                savePeriodToBackend(date).catch(err => {
-                    console.log('Could not save to backend, using localStorage only');
+                // Try to save to backend
+                await savePeriodToBackend(date).catch(err => {
+                    console.log('Could not save initial period to backend:', err.message);
                 });
             }
+        }
+    } catch (error) {
+        console.error('Error loading from backend:', error);
+        // If backend fails, check for initial period from onboarding
+        const initialPeriod = localStorage.getItem('lastPeriod');
+        if (initialPeriod) {
+            console.log('Using initial period from onboarding:', initialPeriod);
+            const date = new Date(initialPeriod);
+            date.setHours(0, 0, 0, 0);
+            periodHistory.push(date);
         }
     }
     
@@ -90,25 +95,12 @@ async function savePeriodToBackend(date) {
         if (!periodHistory.some(d => d.getTime() === periodDate.getTime())) {
             periodHistory.push(periodDate);
             periodHistory.sort((a, b) => b - a);
-            savePeriodHistory(); // Save to localStorage as backup
         }
         
         return true;
     } catch (error) {
         console.error('Error saving period to backend:', error);
-        console.log('Saving to localStorage only');
-        
-        // Fallback: save to localStorage
-        const periodDate = new Date(date);
-        periodDate.setHours(0, 0, 0, 0);
-        
-        if (!periodHistory.some(d => d.getTime() === periodDate.getTime())) {
-            periodHistory.push(periodDate);
-            periodHistory.sort((a, b) => b - a);
-            savePeriodHistory();
-        }
-        
-        return true; // Return true even if backend failed, since we saved to localStorage
+        throw error;
     }
 }
 
@@ -153,9 +145,6 @@ async function loadPeriodsFromBackend() {
             // Update cycle length from history
             updateCycleLengthFromHistory();
             
-            // Also save to localStorage as backup
-            savePeriodHistory();
-            
             isLoadingFromBackend = false;
             return true;
         }
@@ -164,9 +153,8 @@ async function loadPeriodsFromBackend() {
         return false;
     } catch (error) {
         console.error('Error loading periods from backend:', error);
-        console.log('Will use localStorage fallback');
         isLoadingFromBackend = false;
-        return false;
+        throw error;
     }
 }
 
@@ -287,17 +275,19 @@ async function addPeriodDate(date) {
         return false;
     }
     
-    // Save to backend
-    const success = await savePeriodToBackend(newDate);
-    
-    if (success) {
+    try {
+        // Save to backend
+        await savePeriodToBackend(newDate);
+        
         // Recalculate cycle length if we have enough data
         updateCycleLengthFromHistory();
         updateAllUI();
         return true;
+    } catch (error) {
+        console.error('Failed to save period:', error);
+        showNotification('Failed to save period. Please try again.');
+        return false;
     }
-    
-    return false;
 }
 
 // Smart cycle length calculation from history
@@ -639,15 +629,6 @@ function updatePredictionsUI() {
     } else {
         document.getElementById('next-ovulation-text').textContent = `Expected in ${ovulationDays} days • ${ovulationDateStr}`;
     }
-    
-    // Update confidence bars
-    document.getElementById('period-confidence').style.width = `${predictions.periodConfidence}%`;
-    document.getElementById('ovulation-confidence').style.width = `${predictions.ovulationConfidence}%`;
-    
-    const confidenceText = predictions.confidenceLevel === 'high' ? 'High' : 
-                          predictions.confidenceLevel === 'medium' ? 'Medium' : 'Low';
-    document.getElementById('period-confidence-label').textContent = `Confidence: ${confidenceText}`;
-    document.getElementById('ovulation-confidence-label').textContent = `Confidence: ${confidenceText}`;
 }
 
 // Calendar functions

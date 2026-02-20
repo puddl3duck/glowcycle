@@ -72,7 +72,7 @@ export class GlowCycleStack extends cdk.Stack {
       handler: 'journal.handler.lambda_handler',
       code: lambda.Code.fromAsset('../backend'),
       environment: {
-        TABLE_NAME: table.tableName,
+        DYNAMODB_TABLE_NAME: table.tableName,
       },
     });
 
