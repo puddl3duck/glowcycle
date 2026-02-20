@@ -521,11 +521,14 @@ function startAIAnalysis() {
 }
 
 // Complete Analysis
-function completeAnalysis() {
+async function completeAnalysis() {
     const overlay = document.getElementById('ai-analysis-overlay');
     const title = document.getElementById('analysis-title');
     
     title.textContent = 'Analysis Complete! ✨';
+    
+    // Upload selfie to S3
+    await uploadSelfie();
     
     setTimeout(() => {
         overlay.style.display = 'none';
@@ -535,6 +538,57 @@ function completeAnalysis() {
         // Reset for next use
         resetAnalysisOverlay();
     }, 1000);
+}
+
+// Upload Selfie to S3
+async function uploadSelfie() {
+    if (!capturedImageData) {
+        console.error('No image data to upload');
+        return;
+    }
+    
+    try {
+        const userName = localStorage.getItem('userName') || 'User';
+        
+        // Get current date in DD-MM-YYYY format
+        const now = new Date();
+        const day = String(now.getDate()).padStart(2, '0');
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const year = now.getFullYear();
+        const formattedDate = `${day}-${month}-${year}`;
+        
+        // Extract base64 data (remove "data:image/jpeg;base64," prefix)
+        const base64Data = capturedImageData.split(',')[1];
+        
+        const payload = {
+            user: userName,
+            date: formattedDate,
+            file: base64Data
+        };
+        
+        const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.SKIN}`, {
+            method: 'POST',
+            mode: 'cors',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.error('Upload failed:', errorData);
+            throw new Error(errorData.error || 'Failed to upload selfie');
+        }
+        
+        const data = await response.json();
+        console.log('Selfie uploaded successfully:', data);
+        
+    } catch (error) {
+        console.error('Error uploading selfie:', error);
+        // Don't block the UI, just log the error
+    }
 }
 
 // Reset Analysis Overlay
