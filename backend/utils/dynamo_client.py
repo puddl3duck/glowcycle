@@ -11,11 +11,11 @@ def get_dynamodb_client(resource: bool = True, region_name: str = None):
     
     Parameters:
     - resource: bool, if True returns boto3.resource, else boto3.client
-    - region_name: AWS region (defaults to AWS_DEFAULT_REGION env var or us-east-1)
+    - region_name: AWS region (defaults to AWS_DEFAULT_REGION env var or ap-southeast-2)
     
     """
     if region_name is None:
-        region_name = os.environ.get("AWS_DEFAULT_REGION", "us-east-1")
+        region_name = os.environ.get("AWS_DEFAULT_REGION", "ap-southeast-2")
     
     try:
         config = Config(

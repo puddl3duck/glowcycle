@@ -5,6 +5,7 @@ const API_URL = 'https://7ofiibs7k7.execute-api.ap-southeast-2.amazonaws.com/pro
 
 let selectedMood = null;
 let selectedTags = [];
+let customTags = [];
 let currentUser = null;
 
 // Time-based functionality
@@ -65,7 +66,7 @@ function applyTheme() {
 }
 
 function updateJournalPrompt() {
-    const promptElement = document.querySelector('.journal-prompt');
+    const promptElement = document.getElementById('journal-prompt');
     if (promptElement) {
         promptElement.textContent = getJournalPrompt();
     }
@@ -95,6 +96,7 @@ document.addEventListener('DOMContentLoaded', function() {
     getUserName();
     updateUserProfile(); // Update profile on load
     loadEntries();
+    loadCustomTags(); // Load saved custom tags
 });
 
 function getUserName() {
@@ -146,6 +148,15 @@ function setupEventListeners() {
         const words = this.value.trim().split(/\s+/).filter(word => word.length > 0);
         wordCount.textContent = words.length + ' words';
     });
+    
+    // Custom tag input - Enter key
+    const customTagInput = document.getElementById('custom-tag-input');
+    customTagInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            addCustomTag();
+        }
+    });
 }
 
 function selectMood(mood) {
@@ -162,10 +173,16 @@ function selectMood(mood) {
 
 function toggleTag(button) {
     button.classList.toggle('active');
-    const tagText = button.textContent.trim();
+    
+    // Get tag text without the × symbol
+    const tagContent = button.querySelector('span:first-child') || button;
+    const tagText = tagContent.textContent.trim();
     
     if (button.classList.contains('active')) {
-        selectedTags.push(tagText);
+        // Add only if not already in array
+        if (!selectedTags.includes(tagText)) {
+            selectedTags.push(tagText);
+        }
     } else {
         selectedTags = selectedTags.filter(tag => tag !== tagText);
     }
@@ -250,6 +267,7 @@ async function saveEntry() {
             document.getElementById('word-count').textContent = '0 words';
             document.querySelectorAll('.mood-option').forEach(opt => opt.classList.remove('selected'));
             document.querySelectorAll('.tag-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.custom-tag-btn').forEach(btn => btn.classList.remove('active'));
             selectedMood = null;
             selectedTags = [];
             
@@ -293,8 +311,15 @@ async function loadEntries() {
         
         if (entries.length === 0) {
             entriesList.innerHTML = '<p style="text-align: center; color: var(--text-light);">No entries yet. Start journaling!</p>';
+            updateStats(entries);
             return;
         }
+        
+        // Update stats
+        updateStats(entries);
+        
+        // Extract unique custom tags from all entries to suggest them
+        suggestTagsFromHistory(entries);
         
         entriesList.innerHTML = entries.slice(0, 5).map(entry => {
             const dateStr = entry.date;
@@ -302,8 +327,30 @@ async function loadEntries() {
             const displayDate = timeStr ? `${dateStr} ${timeStr}` : dateStr;
             const moodEmoji = getMoodEmoji(entry.feeling);
             const snippet = entry.thoughts.substring(0, 100) + (entry.thoughts.length > 100 ? '...' : '');
-            const tagsHtml = entry.tags && entry.tags.length > 0 
-                ? entry.tags.map(tag => `<span class="entry-tag">${tag}</span>`).join('')
+            
+            // Handle tags - ensure it's an array and properly formatted
+            let tags = [];
+            if (entry.tags) {
+                if (Array.isArray(entry.tags)) {
+                    // Tags is already an array
+                    tags = entry.tags.map(tag => {
+                        // If tag is an object like {S: "value"}, extract the value
+                        if (typeof tag === 'object' && tag.S) {
+                            return tag.S;
+                        }
+                        return tag;
+                    });
+                } else if (typeof entry.tags === 'string') {
+                    try {
+                        tags = JSON.parse(entry.tags);
+                    } catch (e) {
+                        tags = [entry.tags];
+                    }
+                }
+            }
+            
+            const tagsHtml = tags.length > 0 
+                ? tags.map(tag => `<span class="entry-tag">${tag}</span>`).join('')
                 : '';
             
             return `
@@ -321,6 +368,115 @@ async function loadEntries() {
         console.error('Error loading entries:', error);
         entriesList.innerHTML = `<p style="text-align: center; color: var(--accent-coral);">Error loading entries: ${error.message}</p>`;
     }
+}
+
+function suggestTagsFromHistory(entries) {
+    // Get all tags from entries
+    const allTags = new Set();
+    const defaultTags = ['💪 Workout', '🧘 Meditation', '😴 Good Sleep', '🍎 Healthy Eating', 
+                         '💧 Hydrated', '🎉 Social', '📚 Productive', '🌸 Self-care'];
+    const deletedTags = getDeletedTags(); // Get list of tags user has deleted
+    
+    entries.forEach(entry => {
+        let tags = [];
+        
+        // Handle different tag formats
+        if (entry.tags) {
+            if (Array.isArray(entry.tags)) {
+                tags = entry.tags.map(tag => {
+                    // If tag is an object like {S: "value"}, extract the value
+                    if (typeof tag === 'object' && tag.S) {
+                        return tag.S;
+                    }
+                    return tag;
+                });
+            } else if (typeof entry.tags === 'string') {
+                try {
+                    tags = JSON.parse(entry.tags);
+                } catch (e) {
+                    tags = [entry.tags];
+                }
+            }
+        }
+        
+        tags.forEach(tag => {
+            // Only add if it's not a default tag AND not in deleted tags list
+            if (!defaultTags.includes(tag) && !deletedTags.includes(tag)) {
+                allTags.add(tag);
+            }
+        });
+    });
+    
+    // Add these tags to custom tags (they were used before)
+    allTags.forEach(tag => {
+        if (!customTags.includes(tag)) {
+            customTags.push(tag);
+            renderCustomTag(tag);
+        }
+    });
+    
+    // Save the updated custom tags
+    if (allTags.size > 0) {
+        saveCustomTags();
+    }
+}
+
+function updateStats(entries) {
+    const now = new Date();
+    
+    // Calculate entries this week
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay());
+    startOfWeek.setHours(0, 0, 0, 0);
+    
+    const entriesThisWeek = entries.filter(entry => {
+        const entryDate = parseEntryDate(entry.date);
+        return entryDate >= startOfWeek;
+    }).length;
+    
+    // Calculate entries this month
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const entriesThisMonth = entries.filter(entry => {
+        const entryDate = parseEntryDate(entry.date);
+        return entryDate >= startOfMonth;
+    }).length;
+    
+    // Calculate streak (consecutive days with entries)
+    const sortedEntries = entries.sort((a, b) => {
+        const dateA = parseEntryDate(a.date);
+        const dateB = parseEntryDate(b.date);
+        return dateB - dateA;
+    });
+    
+    let streak = 0;
+    let checkDate = new Date(now);
+    checkDate.setHours(0, 0, 0, 0);
+    
+    for (const entry of sortedEntries) {
+        const entryDate = parseEntryDate(entry.date);
+        entryDate.setHours(0, 0, 0, 0);
+        
+        if (entryDate.getTime() === checkDate.getTime()) {
+            streak++;
+            checkDate.setDate(checkDate.getDate() - 1);
+        } else if (entryDate < checkDate) {
+            break;
+        }
+    }
+    
+    // Update UI
+    document.getElementById('entries-this-week').textContent = entriesThisWeek;
+    document.getElementById('entries-this-month').textContent = entriesThisMonth;
+    document.getElementById('current-streak').textContent = streak;
+}
+
+function parseEntryDate(dateStr) {
+    // Parse DD-MM-YYYY format
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+        return new Date(parts[2], parts[1] - 1, parts[0]);
+    }
+    return new Date(dateStr);
 }
 
 function getMoodEmoji(mood) {
@@ -407,3 +563,170 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+
+// Custom Tags Functionality
+function addCustomTag() {
+    const input = document.getElementById('custom-tag-input');
+    const tagText = input.value.trim();
+    
+    if (!tagText) {
+        return; // Just clear, no error
+    }
+    
+    if (tagText.length > 30) {
+        showNotification('Tag is too long (max 30 characters)', 'error');
+        return;
+    }
+    
+    // Check if tag already exists
+    if (customTags.includes(tagText)) {
+        // If it exists, just select it
+        const existingBtn = Array.from(document.querySelectorAll('.custom-tag-btn')).find(btn => {
+            const span = btn.querySelector('span:first-child');
+            return span && span.textContent === tagText;
+        });
+        if (existingBtn && !existingBtn.classList.contains('active')) {
+            existingBtn.click(); // Select it
+        }
+        input.value = '';
+        return;
+    }
+    
+    // Add to custom tags array
+    customTags.push(tagText);
+    
+    // Save to localStorage
+    saveCustomTags();
+    
+    // Render the tag
+    const newTagBtn = renderCustomTag(tagText);
+    
+    // Auto-select the new tag
+    if (newTagBtn && !newTagBtn.classList.contains('active')) {
+        newTagBtn.click();
+    }
+    
+    // Clear input
+    input.value = '';
+    
+    // Show success
+    showNotification('Tag added! ✨', 'success');
+}
+
+function renderCustomTag(tagText) {
+    const container = document.getElementById('custom-tags-container');
+    
+    // Check if tag already rendered
+    const existingTags = Array.from(container.querySelectorAll('.custom-tag-btn'));
+    const existing = existingTags.find(btn => {
+        const span = btn.querySelector('span:first-child');
+        return span && span.textContent === tagText;
+    });
+    
+    if (existing) {
+        return existing; // Return existing button
+    }
+    
+    const tagBtn = document.createElement('button');
+    tagBtn.className = 'custom-tag-btn';
+    tagBtn.onclick = function() { toggleTag(this); };
+    
+    const tagContent = document.createElement('span');
+    tagContent.textContent = tagText;
+    
+    const removeBtn = document.createElement('span');
+    removeBtn.className = 'remove-tag';
+    removeBtn.innerHTML = '&times;'; // Use HTML entity
+    removeBtn.title = 'Delete this tag permanently';
+    removeBtn.onclick = function(e) {
+        e.stopPropagation();
+        removeCustomTag(tagText, tagBtn);
+    };
+    
+    tagBtn.appendChild(tagContent);
+    tagBtn.appendChild(removeBtn);
+    container.appendChild(tagBtn);
+    
+    return tagBtn; // Return the button so we can select it
+}
+
+function removeCustomTag(tagText, tagElement) {
+    // Remove from array
+    customTags = customTags.filter(tag => tag !== tagText);
+    
+    // Remove from selected tags if it was selected
+    selectedTags = selectedTags.filter(tag => tag !== tagText);
+    
+    // Add to deleted tags list so it doesn't come back from history
+    addToDeletedTags(tagText);
+    
+    // Save to localStorage
+    saveCustomTags();
+    
+    // Remove from DOM with animation
+    tagElement.style.transform = 'scale(0)';
+    tagElement.style.opacity = '0';
+    setTimeout(() => {
+        tagElement.remove();
+    }, 300);
+    
+    showNotification('Tag removed', 'success');
+}
+
+function addToDeletedTags(tagText) {
+    if (!currentUser) return;
+    
+    let deletedTags = [];
+    const saved = localStorage.getItem(`deletedTags_${currentUser}`);
+    if (saved) {
+        try {
+            deletedTags = JSON.parse(saved);
+        } catch (e) {
+            deletedTags = [];
+        }
+    }
+    
+    if (!deletedTags.includes(tagText)) {
+        deletedTags.push(tagText);
+        localStorage.setItem(`deletedTags_${currentUser}`, JSON.stringify(deletedTags));
+    }
+}
+
+function getDeletedTags() {
+    if (!currentUser) return [];
+    
+    const saved = localStorage.getItem(`deletedTags_${currentUser}`);
+    if (saved) {
+        try {
+            return JSON.parse(saved);
+        } catch (e) {
+            return [];
+        }
+    }
+    return [];
+}
+
+function saveCustomTags() {
+    if (!currentUser) return;
+    localStorage.setItem(`customTags_${currentUser}`, JSON.stringify(customTags));
+}
+
+function loadCustomTags() {
+    if (!currentUser) {
+        currentUser = localStorage.getItem('userName');
+    }
+    
+    if (!currentUser) return;
+    
+    const saved = localStorage.getItem(`customTags_${currentUser}`);
+    if (saved) {
+        try {
+            customTags = JSON.parse(saved);
+            customTags.forEach(tag => renderCustomTag(tag));
+        } catch (e) {
+            console.error('Error loading custom tags:', e);
+            customTags = [];
+        }
+    }
+}

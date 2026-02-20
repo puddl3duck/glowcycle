@@ -129,12 +129,21 @@ def get_entries(event):
         )
 
         items = response.get("Items", [])
-        logger.info(f"Found {len(items)} entries for user: {user}")
+        logger.info(f"Found {len(items)} total items for user: {user}")
 
-        entries = [
-            JournalTableObject._from_dynamo_representation(item).to_dict()
-            for item in items
-        ]
+        # Filter out PERIOD entries (only keep journal entries)
+        journal_items = [item for item in items if not item.get("date", "").startswith("PERIOD#")]
+        logger.info(f"Found {len(journal_items)} journal entries after filtering")
+
+        # Convert items to entries, skipping any that fail
+        entries = []
+        for item in journal_items:
+            try:
+                entry = JournalTableObject._from_dynamo_representation(item).to_dict()
+                entries.append(entry)
+            except Exception as e:
+                logger.warning(f"Skipping malformed entry: {item.get('date', 'unknown')}, error: {str(e)}")
+                continue
 
         return {
             "entries": entries,

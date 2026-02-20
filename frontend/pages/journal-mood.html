@@ -42,99 +42,180 @@
         <!-- Header -->
         <div class="page-header">
             <h1>Daily Journal</h1>
-            <p id="current-date">Saturday, February 14, 2026</p>
-            <p class="journal-prompt" style="font-size: 1.1rem; color: var(--text-medium); margin-top: 0.5rem;">How is your day going?</p>
-        </div>
-
-        <!-- Mood Selector -->
-        <div class="mood-card">
-            <h3>How are you feeling today?</h3>
-            <div class="mood-options">
-                <div class="mood-option" data-mood="amazing" onclick="selectMood('amazing')">
-                    <div class="mood-emoji">🤩</div>
-                    <span>Amazing</span>
-                </div>
-                <div class="mood-option" data-mood="happy" onclick="selectMood('happy')">
-                    <div class="mood-emoji">😊</div>
-                    <span>Happy</span>
-                </div>
-                <div class="mood-option" data-mood="okay" onclick="selectMood('okay')">
-                    <div class="mood-emoji">😐</div>
-                    <span>Okay</span>
-                </div>
-                <div class="mood-option" data-mood="tired" onclick="selectMood('tired')">
-                    <div class="mood-emoji">😴</div>
-                    <span>Tired</span>
-                </div>
-                <div class="mood-option" data-mood="sad" onclick="selectMood('sad')">
-                    <div class="mood-emoji">😢</div>
-                    <span>Sad</span>
-                </div>
+            <div class="current-status">
+                <span id="current-date">Saturday, February 14, 2026</span>
+                <span class="status-separator">•</span>
+                <span class="journal-prompt" id="journal-prompt">How is your day going?</span>
             </div>
         </div>
 
-        <!-- Energy Level -->
-        <div class="energy-card">
-            <h3>Energy Level</h3>
-            <div class="energy-slider-container">
-                <div class="energy-labels">
-                    <span>Low</span>
-                    <span>Medium</span>
-                    <span>High</span>
-                </div>
-                <input type="range" min="0" max="100" value="70" class="energy-slider" id="energy-level">
-                <div class="energy-value" id="energy-display">70%</div>
-            </div>
-        </div>
-
-        <!-- Journal Entry -->
-        <div class="journal-card">
-            <h3>Today's Thoughts</h3>
-            <textarea 
-                id="journal-entry" 
-                class="journal-textarea" 
-                placeholder="How was your day? What are you grateful for? Any thoughts or feelings you want to remember..."></textarea>
-            <div class="journal-footer">
-                <span class="word-count" id="word-count">0 words</span>
-            </div>
-        </div>
-
-        <!-- Quick Tags -->
-        <div class="tags-card">
-            <h3>Quick Tags</h3>
-            <div class="tags-grid">
-                <button class="tag-btn" onclick="toggleTag(this)">💪 Workout</button>
-                <button class="tag-btn" onclick="toggleTag(this)">🧘 Meditation</button>
-                <button class="tag-btn" onclick="toggleTag(this)">😴 Good Sleep</button>
-                <button class="tag-btn" onclick="toggleTag(this)">🍎 Healthy Eating</button>
-                <button class="tag-btn" onclick="toggleTag(this)">💧 Hydrated</button>
-                <button class="tag-btn" onclick="toggleTag(this)">🎉 Social</button>
-                <button class="tag-btn" onclick="toggleTag(this)">📚 Productive</button>
-                <button class="tag-btn" onclick="toggleTag(this)">🌸 Self-care</button>
-            </div>
-        </div>
-
-        <!-- Save Button -->
-        <button class="save-entry-btn" onclick="saveEntry()">Save Entry</button>
-
-        <!-- Past Entries -->
-        <div class="past-entries-card">
-            <h3>Recent Entries</h3>
-            <div id="entries-list" class="entries-list">
-                <div class="entry-preview">
-                    <div class="entry-header">
-                        <span class="entry-date">Feb 13, 2026</span>
-                        <span class="entry-mood">😊</span>
+        <!-- Main Grid Layout -->
+        <div class="main-grid">
+            
+            <!-- Left Column: Today's Entry -->
+            <div class="left-column">
+                
+                <!-- Today's Entry Card -->
+                <div class="entry-card">
+                    <h3>Today's Entry</h3>
+                    
+                    <!-- Mood Selector -->
+                    <div class="mood-section">
+                        <h4>How are you feeling?</h4>
+                        <div class="mood-options">
+                            <div class="mood-option" data-mood="amazing" onclick="selectMood('amazing')">
+                                <div class="mood-emoji">🤩</div>
+                                <span>Amazing</span>
+                            </div>
+                            <div class="mood-option" data-mood="happy" onclick="selectMood('happy')">
+                                <div class="mood-emoji">😊</div>
+                                <span>Happy</span>
+                            </div>
+                            <div class="mood-option" data-mood="okay" onclick="selectMood('okay')">
+                                <div class="mood-emoji">😐</div>
+                                <span>Okay</span>
+                            </div>
+                            <div class="mood-option" data-mood="tired" onclick="selectMood('tired')">
+                                <div class="mood-emoji">😴</div>
+                                <span>Tired</span>
+                            </div>
+                            <div class="mood-option" data-mood="sad" onclick="selectMood('sad')">
+                                <div class="mood-emoji">😢</div>
+                                <span>Sad</span>
+                            </div>
+                        </div>
                     </div>
-                    <p class="entry-snippet">Had a great day! Feeling energized and my skin is glowing...</p>
-                    <div class="entry-tags">
-                        <span class="entry-tag">💪 Workout</span>
-                        <span class="entry-tag">💧 Hydrated</span>
+
+                    <!-- Energy Level -->
+                    <div class="energy-section">
+                        <h4>Energy Level</h4>
+                        <div class="energy-slider-container">
+                            <div class="energy-labels">
+                                <span>Low</span>
+                                <span>Medium</span>
+                                <span>High</span>
+                            </div>
+                            <input type="range" min="0" max="100" value="70" class="energy-slider" id="energy-level">
+                            <div class="energy-value" id="energy-display">70%</div>
+                        </div>
+                    </div>
+
+                    <!-- Journal Entry -->
+                    <div class="journal-section">
+                        <h4>Today's Thoughts</h4>
+                        <textarea 
+                            id="journal-entry" 
+                            class="journal-textarea" 
+                            placeholder="How was your day? What are you grateful for? Any thoughts or feelings you want to remember..."></textarea>
+                        <div class="journal-footer">
+                            <span class="word-count" id="word-count">0 words</span>
+                        </div>
                     </div>
                 </div>
+
+                <!-- Quick Tags -->
+                <div class="tags-card">
+                    <h3>Quick Tags</h3>
+                    <div class="tags-grid" id="tags-grid">
+                        <button class="tag-btn" onclick="toggleTag(this)">💪 Workout</button>
+                        <button class="tag-btn" onclick="toggleTag(this)">🧘 Meditation</button>
+                        <button class="tag-btn" onclick="toggleTag(this)">😴 Good Sleep</button>
+                        <button class="tag-btn" onclick="toggleTag(this)">🍎 Healthy Eating</button>
+                        <button class="tag-btn" onclick="toggleTag(this)">💧 Hydrated</button>
+                        <button class="tag-btn" onclick="toggleTag(this)">🎉 Social</button>
+                        <button class="tag-btn" onclick="toggleTag(this)">📚 Productive</button>
+                        <button class="tag-btn" onclick="toggleTag(this)">🌸 Self-care</button>
+                    </div>
+                    
+                    <!-- Custom Tag Input -->
+                    <div class="custom-tag-section">
+                        <div class="custom-tag-input-wrapper">
+                            <input 
+                                type="text" 
+                                id="custom-tag-input" 
+                                class="custom-tag-input" 
+                                placeholder="Type and press Enter to add... (e.g., 🎨 Creative)"
+                                maxlength="30"
+                            />
+                            <button class="add-tag-btn" onclick="addCustomTag()">
+                                <span class="add-icon">+</span>
+                            </button>
+                        </div>
+                        <p class="custom-tag-hint">💡 Press Enter or click + to add. Click × to delete a tag permanently.</p>
+                    </div>
+                    
+                    <!-- Custom Tags Container -->
+                    <div class="custom-tags-container" id="custom-tags-container"></div>
+                    
+                    <!-- Save Button -->
+                    <button class="save-entry-btn" onclick="saveEntry()">Save Entry</button>
+                </div>
+                
+            </div>
+
+            <!-- Right Column: History & Stats -->
+            <div class="right-column">
+                
+                <!-- Journal Stats -->
+                <div class="stats-card">
+                    <h3>Your Journal Stats</h3>
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="stat-value" id="entries-this-week">0</div>
+                            <div class="stat-label">This Week</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="entries-this-month">0</div>
+                            <div class="stat-label">This Month</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="current-streak">0</div>
+                            <div class="stat-label">Day Streak</div>
+                        </div>
+                    </div>
+                    <p class="stat-message">
+                        Keep journaling to track your wellness journey ✨
+                    </p>
+                </div>
+
+                <!-- Past Entries -->
+                <div class="past-entries-card">
+                    <h3>Recent Entries</h3>
+                    <div id="entries-list" class="entries-list">
+                        <div class="entry-preview">
+                            <div class="entry-header">
+                                <span class="entry-date">Feb 13, 2026</span>
+                                <span class="entry-mood">😊</span>
+                            </div>
+                            <p class="entry-snippet">Had a great day! Feeling energized and my skin is glowing...</p>
+                            <div class="entry-tags">
+                                <span class="entry-tag">💪 Workout</span>
+                                <span class="entry-tag">💧 Hydrated</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
             </div>
         </div>
     </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content-wrapper">
+            <p class="footer-text">
+                <strong>Medical Disclaimer:</strong> Glow Cycle is a wellness tracking tool, not a medical device. 
+                Information provided is for educational purposes only and does not constitute medical advice. 
+                Always consult a qualified healthcare professional for medical concerns.
+            </p>
+            <p class="footer-links">
+                <a href="../index.html#privacy">Privacy</a> · 
+                <a href="../index.html#terms">Terms</a> · 
+                <a href="../index.html#contact">Contact</a>
+            </p>
+            <p class="footer-copyright">© 2026 Glow Cycle. Made with 💜 in Australia.</p>
+        </div>
+    </footer>
 
     <script src="../js/journal-mood.js"></script>
 </body>

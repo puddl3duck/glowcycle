@@ -84,6 +84,7 @@
                     <h2 class="question-title">What's your name?</h2>
                     <p class="question-subtitle">Let's make this personal ✨</p>
                     <input type="text" id="user-name" class="input-field" placeholder="Enter your name">
+                    <div class="error-message" id="name-error"></div>
                     <button class="btn-next" onclick="nextQuestion(2)">Continue</button>
                 </div>
                 
@@ -92,21 +93,28 @@
                     <h2 class="question-title">How old are you?</h2>
                     <p class="question-subtitle">This helps us personalise your experience</p>
                     <input type="number" id="age" class="input-field" placeholder="Enter your age" min="13" max="60">
+                    <div class="error-message" id="age-error"></div>
                     <button class="btn-next" onclick="nextQuestion(3)">Continue</button>
                 </div>
                 
                 <!-- Question 3: Last Period -->
                 <div class="question-card" data-question="3">
                     <h2 class="question-title">When was your last period?</h2>
-                    <p class="question-subtitle">We'll use this to track your cycle</p>
+                    <p class="question-subtitle">We'll use this to track your cycle and predict your next one</p>
                     <input type="date" id="last-period" class="input-field" max="">
+                    <div class="error-message" id="period-error"></div>
                     <button class="btn-next" onclick="nextQuestion(4)">Continue</button>
                 </div>
                 
                 <!-- Question 4: Cycle Length -->
                 <div class="question-card" data-question="4">
                     <h2 class="question-title">How many days is your cycle?</h2>
-                    <p class="question-subtitle">Average cycle length (typically 21-35 days)</p>
+                    <p class="question-subtitle">This is the number of days from the first day of your period to the day before your next period starts</p>
+                    <div class="cycle-info-box">
+                        <p><strong>💡 Don't know?</strong> Most cycles are between 21-35 days. The average is 28 days.</p>
+                        <p><strong>How to count:</strong> Day 1 = First day of bleeding → Count until the day before your next period starts</p>
+                        <p style="margin-top: 0.5rem; font-size: 0.9rem; opacity: 0.8;">Don't worry if you're not sure! We'll help you track and calculate your actual cycle length as you use the app.</p>
+                    </div>
                     <div class="cycle-selector">
                         <button class="cycle-btn" onclick="adjustCycle(-1)">−</button>
                         <div class="cycle-display">
@@ -138,6 +146,7 @@
             <div class="nav-profile">
                 <div class="profile-avatar" id="profile-avatar"></div>
                 <span class="profile-name" id="profile-name"></span>
+                <button class="profile-settings-btn" onclick="openProfileSettings()" title="Edit Profile">⚙️</button>
             </div>
         </nav>
 
@@ -664,11 +673,17 @@
         <footer class="footer">
             <div class="container">
                 <div class="footer-content">
-                    <div class="footer-logo">✦ Glow Cycle</div>
-                    <p class="footer-disclaimer">
-                        Glow Cycle provides wellness insights, not medical advice.<br>
-                        Please consult with a healthcare provider for medical concerns.
+                    <p class="footer-text">
+                        <strong>Medical Disclaimer:</strong> Glow Cycle is a wellness tracking tool, not a medical device. 
+                        Information provided is for educational purposes only and does not constitute medical advice. 
+                        Always consult a qualified healthcare professional for medical concerns.
                     </p>
+                    <p class="footer-links">
+                        <a href="#privacy">Privacy</a> · 
+                        <a href="#terms">Terms</a> · 
+                        <a href="#contact">Contact</a>
+                    </p>
+                    <p class="footer-copyright">© 2026 Glow Cycle. Made with 💜 in Australia.</p>
                 </div>
             </div>
         </footer>
@@ -709,6 +724,57 @@
                 <button class="modal-cta-button" onclick="closeHowItWorksModal(); startQuestionnaire();">
                     Let's Start!
                     <span class="button-arrow">→</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Settings Modal -->
+    <div id="profileSettingsModal" class="modal-overlay" onclick="closeProfileSettings()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <button class="modal-close" onclick="closeProfileSettings()">×</button>
+            
+            <div class="modal-header">
+                <h2 class="modal-title">Profile Settings</h2>
+                <p style="color: var(--text-medium); font-size: 0.9rem; margin-top: 0.5rem;">Update your information anytime</p>
+            </div>
+            
+            <div class="profile-settings-form">
+                <div class="form-group">
+                    <label for="settings-name">Name <span style="color: var(--accent-coral);">*</span></label>
+                    <input type="text" id="settings-name" class="input-field" placeholder="Your name" required>
+                    <div class="error-message" id="settings-name-error"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="settings-age">Age <span style="color: var(--accent-coral);">*</span></label>
+                    <input type="number" id="settings-age" class="input-field" placeholder="Your age" min="13" max="60" required>
+                    <div class="error-message" id="settings-age-error"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="settings-last-period">Last Period Date <span style="color: var(--accent-coral);">*</span></label>
+                    <input type="date" id="settings-last-period" class="input-field" required>
+                    <div class="error-message" id="settings-period-error"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="settings-cycle-length">Cycle Length <span style="color: var(--accent-coral);">*</span></label>
+                    <p style="font-size: 0.85rem; color: var(--text-medium); margin: 0.5rem 0;">Days from first day of period to day before next period starts (typically 21-35 days)</p>
+                    <div class="cycle-selector" style="margin-top: 0.5rem;">
+                        <button class="cycle-btn" onclick="adjustSettingsCycle(-1)">−</button>
+                        <div class="cycle-display">
+                            <span id="settings-cycle-days">28</span>
+                            <span class="cycle-label">days</span>
+                        </div>
+                        <button class="cycle-btn" onclick="adjustSettingsCycle(1)">+</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="modal-cta-button" onclick="saveProfileSettings()">
+                    Save Changes
                 </button>
             </div>
         </div>

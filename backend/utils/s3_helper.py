@@ -43,15 +43,17 @@ class S3:
         client: Optional[boto3.client] = None,
         resource: Optional[boto3.resource] = None,
     ) -> None:
-        self.client = client if client else self._get_client()
+        region = os.environ.get("AWS_DEFAULT_REGION", "ap-southeast-2")
+        self.client = client if client else self._get_client(region)
         self.resource = (
             resource
             if resource
-            else boto3.resource("s3", region_name=os.environ["AWS_DEFAULT_REGION"])
+            else boto3.resource("s3", region_name=region)
         )
 
-    def _get_client(self) -> boto3.client:
-        region_name = os.environ["AWS_DEFAULT_REGION"]
+    def _get_client(self, region_name=None) -> boto3.client:
+        if region_name is None:
+            region_name = os.environ.get("AWS_DEFAULT_REGION", "ap-southeast-2")
         return boto3.client("s3", region_name=region_name)
 
     # ---------- JSON ----------

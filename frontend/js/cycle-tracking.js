@@ -1,32 +1,213 @@
 // Cycle Tracking JavaScript
 
+// API Configuration
+const API_BASE_URL = API_CONFIG?.BASE_URL || 'https://YOUR-API-ID.execute-api.YOUR-REGION.amazonaws.com/prod';
+const PERIOD_ENDPOINT = API_CONFIG?.ENDPOINTS?.PERIOD || '/period';
+
 // Time-based functionality
 let timeMode = 'morning';
 let currentCalendarDate = new Date();
 let periodHistory = [];
 let userCycleLength = 28; // Default, will load from localStorage
-let userName = 'Sofia';
+let userName = 'User';
 let userAge = null;
+let isLoadingFromBackend = false;
 
 // Load user data from onboarding
-function loadUserData() {
-    userName = localStorage.getItem('userName') || 'Sofia';
+async function loadUserData() {
+    userName = localStorage.getItem('userName') || 'User';
     userAge = localStorage.getItem('userAge') || null;
     userCycleLength = parseInt(localStorage.getItem('cycleDays')) || 28;
     
-    // Load initial period from onboarding
-    const initialPeriod = localStorage.getItem('lastPeriod');
-    if (initialPeriod) {
-        // Check if we already have this in history
-        const saved = localStorage.getItem('periodHistory');
-        if (!saved) {
-            // First time - add the onboarding period
-            periodHistory = [new Date(initialPeriod)];
-            savePeriodHistory();
+    // Update profile display
+    updateUserProfile();
+    
+    // Try to load from backend first
+    const backendLoaded = await loadPeriodsFromBackend();
+    
+    // If backend failed or no data, use localStorage as fallback
+    if (!backendLoaded || periodHistory.length === 0) {
+        console.log('Using localStorage fallback for period data');
+        loadPeriodHistory(); // Load from localStorage
+        
+        // If still no data, check for initial period from onboarding
+        if (periodHistory.length === 0) {
+            const initialPeriod = localStorage.getItem('lastPeriod');
+            if (initialPeriod) {
+                console.log('Adding initial period from onboarding:', initialPeriod);
+                const date = new Date(initialPeriod);
+                date.setHours(0, 0, 0, 0);
+                periodHistory.push(date);
+                savePeriodHistory(); // Save to localStorage
+                
+                // Try to save to backend (but don't wait)
+                savePeriodToBackend(date).catch(err => {
+                    console.log('Could not save to backend, using localStorage only');
+                });
+            }
         }
     }
     
-    loadPeriodHistory();
+    // Update cycle length from history if we have data
+    if (periodHistory.length >= 2) {
+        updateCycleLengthFromHistory();
+    }
+}
+
+// Save period to backend (DynamoDB)
+async function savePeriodToBackend(date) {
+    try {
+        const periodDate = new Date(date);
+        periodDate.setHours(0, 0, 0, 0);
+        
+        // Format date as DD-MM-YYYY
+        const day = String(periodDate.getDate()).padStart(2, '0');
+        const month = String(periodDate.getMonth() + 1).padStart(2, '0');
+        const year = periodDate.getFullYear();
+        const formattedDate = `${day}-${month}-${year}`;
+        
+        const response = await fetch(`${API_BASE_URL}${PERIOD_ENDPOINT}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                user: userName,
+                period_date: formattedDate,
+                user_age: userAge,
+                cycle_length: userCycleLength
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('Period saved to backend:', data);
+        
+        // Add to local history
+        if (!periodHistory.some(d => d.getTime() === periodDate.getTime())) {
+            periodHistory.push(periodDate);
+            periodHistory.sort((a, b) => b - a);
+            savePeriodHistory(); // Save to localStorage as backup
+        }
+        
+        return true;
+    } catch (error) {
+        console.error('Error saving period to backend:', error);
+        console.log('Saving to localStorage only');
+        
+        // Fallback: save to localStorage
+        const periodDate = new Date(date);
+        periodDate.setHours(0, 0, 0, 0);
+        
+        if (!periodHistory.some(d => d.getTime() === periodDate.getTime())) {
+            periodHistory.push(periodDate);
+            periodHistory.sort((a, b) => b - a);
+            savePeriodHistory();
+        }
+        
+        return true; // Return true even if backend failed, since we saved to localStorage
+    }
+}
+
+// Load periods from backend (DynamoDB)
+async function loadPeriodsFromBackend() {
+    if (isLoadingFromBackend) return false;
+    isLoadingFromBackend = true;
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}${PERIOD_ENDPOINT}?user=${encodeURIComponent(userName)}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('Periods loaded from backend:', data);
+        
+        // Parse periods from backend
+        if (data.periods && Array.isArray(data.periods)) {
+            periodHistory = data.periods.map(p => {
+                // Parse DD-MM-YYYY format
+                const [day, month, year] = p.period_date.split('-');
+                const date = new Date(year, month - 1, day);
+                date.setHours(0, 0, 0, 0);
+                return date;
+            });
+            periodHistory.sort((a, b) => b - a);
+            
+            // Update cycle length from history
+            updateCycleLengthFromHistory();
+            
+            // Also save to localStorage as backup
+            savePeriodHistory();
+            
+            isLoadingFromBackend = false;
+            return true;
+        }
+        
+        isLoadingFromBackend = false;
+        return false;
+    } catch (error) {
+        console.error('Error loading periods from backend:', error);
+        console.log('Will use localStorage fallback');
+        isLoadingFromBackend = false;
+        return false;
+    }
+}
+
+// Delete period from backend
+async function deletePeriodFromBackend(date) {
+    try {
+        const periodDate = new Date(date);
+        
+        // Format date as DD-MM-YYYY
+        const day = String(periodDate.getDate()).padStart(2, '0');
+        const month = String(periodDate.getMonth() + 1).padStart(2, '0');
+        const year = periodDate.getFullYear();
+        const formattedDate = `${day}-${month}-${year}`;
+        
+        const response = await fetch(`${API_BASE_URL}${PERIOD_ENDPOINT}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                user: userName,
+                period_date: formattedDate
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        console.log('Period deleted from backend');
+        return true;
+    } catch (error) {
+        console.error('Error deleting period from backend:', error);
+        return false;
+    }
+}
+
+function updateUserProfile() {
+    const profileNameElement = document.getElementById('profile-name');
+    const profileAvatarElement = document.getElementById('profile-avatar');
+    
+    if (profileNameElement) {
+        profileNameElement.textContent = userName;
+    }
+    
+    if (profileAvatarElement) {
+        profileAvatarElement.textContent = userName.charAt(0).toUpperCase();
+    }
 }
 
 function detectTimeMode() {
@@ -89,22 +270,26 @@ function savePeriodHistory() {
 }
 
 // Add a new period date
-function addPeriodDate(date) {
+async function addPeriodDate(date) {
     const newDate = new Date(date);
     newDate.setHours(0, 0, 0, 0);
     
     // Check if date already exists
     const exists = periodHistory.some(d => d.getTime() === newDate.getTime());
-    if (!exists) {
-        periodHistory.push(newDate);
-        periodHistory.sort((a, b) => b - a);
-        savePeriodHistory();
-        
+    if (exists) {
+        return false;
+    }
+    
+    // Save to backend
+    const success = await savePeriodToBackend(newDate);
+    
+    if (success) {
         // Recalculate cycle length if we have enough data
         updateCycleLengthFromHistory();
         updateAllUI();
         return true;
     }
+    
     return false;
 }
 
@@ -567,11 +752,13 @@ function createCalendarDay(day, date, otherMonth, today, predictions) {
             const dateStr = date.toISOString().split('T')[0];
             const formattedDate = date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
             if (confirm(`Mark ${formattedDate} as period start date?`)) {
-                if (addPeriodDate(dateStr)) {
-                    showNotification('Period date added! 🌸');
-                } else {
-                    showNotification('This date is already logged');
-                }
+                addPeriodDate(dateStr).then(success => {
+                    if (success) {
+                        showNotification('Period date added! 🌸');
+                    } else {
+                        showNotification('This date is already logged');
+                    }
+                });
             }
         });
     }
@@ -598,9 +785,10 @@ function toggleQuickAction() {
     menu.classList.toggle('active');
 }
 
-function markPeriodToday() {
+async function markPeriodToday() {
     const today = new Date().toISOString().split('T')[0];
-    if (addPeriodDate(today)) {
+    const success = await addPeriodDate(today);
+    if (success) {
         showNotification('Period logged for today! 🌸');
         toggleQuickAction();
     } else {
@@ -636,23 +824,27 @@ function selectDateOption(option) {
     
     if (option === 'today') {
         dateToLog = today.toISOString().split('T')[0];
-        if (addPeriodDate(dateToLog)) {
-            showNotification('Period logged for today! 🌸');
-            closeCalendarModal();
-        } else {
-            showNotification('Today is already logged');
-        }
+        addPeriodDate(dateToLog).then(success => {
+            if (success) {
+                showNotification('Period logged for today! 🌸');
+                closeCalendarModal();
+            } else {
+                showNotification('Today is already logged');
+            }
+        });
     } else if (option === 'yesterday') {
         const yesterday = new Date(today);
         yesterday.setDate(yesterday.getDate() - 1);
         dateToLog = yesterday.toISOString().split('T')[0];
         const formattedDate = yesterday.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
-        if (addPeriodDate(dateToLog)) {
-            showNotification(`Period logged for ${formattedDate}! 🌸`);
-            closeCalendarModal();
-        } else {
-            showNotification('Yesterday is already logged');
-        }
+        addPeriodDate(dateToLog).then(success => {
+            if (success) {
+                showNotification(`Period logged for ${formattedDate}! 🌸`);
+                closeCalendarModal();
+            } else {
+                showNotification('Yesterday is already logged');
+            }
+        });
     } else if (option === 'custom') {
         // Show custom date picker
         document.getElementById('custom-date-section').style.display = 'block';
@@ -679,13 +871,15 @@ function savePeriodFromModal() {
     const selectedDate = new Date(date);
     const formattedDate = selectedDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
     
-    if (addPeriodDate(date)) {
-        showNotification(`Period logged for ${formattedDate}! 🌸`);
-        closeCalendarModal();
-        dateInput.value = '';
-    } else {
-        showNotification('This date is already logged');
-    }
+    addPeriodDate(date).then(success => {
+        if (success) {
+            showNotification(`Period logged for ${formattedDate}! 🌸`);
+            closeCalendarModal();
+            dateInput.value = '';
+        } else {
+            showNotification('This date is already logged');
+        }
+    });
 }
 
 // Notification system
@@ -770,9 +964,9 @@ function updateHistorySummary() {
 }
 
 // Initialize on page load
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     applyTheme();
-    loadUserData();
+    await loadUserData();
     updateAllUI();
     
     // Close quick action menu when clicking outside

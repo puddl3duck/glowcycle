@@ -326,10 +326,8 @@ aws s3 sync frontend/ s3://your-bucket-name/ --delete
 
 ### Environment Variables
 
-Create a `.env` file (not committed to git):
-
 ```env
-AWS_REGION=us-east-1
+AWS_REGION=ap-southeast-2
 AWS_ACCOUNT_ID=123456789012
 DYNAMODB_TABLE_NAME=glow-cycle-data
 S3_BUCKET_NAME=glow-cycle-assets
