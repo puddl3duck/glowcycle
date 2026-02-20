@@ -285,6 +285,67 @@
 
                 <button class="save-btn">Save Report</button>
             </div>
+            <p class="score-message">Your skin is glowing! ✨</p>
+          </div>
+
+          <div class="radar-chart">
+            <canvas id="skinRadar"></canvas>
+          </div>
+
+          <div class="skin-metrics">
+            <div class="metric-item">
+              <span class="metric-value">85</span>
+              <span class="metric-label">Radiance</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-value">90</span>
+              <span class="metric-label">Spots</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-value">94</span>
+              <span class="metric-label">Wrinkles</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-value">88</span>
+              <span class="metric-label">Texture</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-value">78</span>
+              <span class="metric-label">Dark Circles</span>
+            </div>
+          </div>
+
+          <div class="recommendations">
+            <h3 class="routine-title">☀️ AM Routine</h3>
+            <div class="routine-steps">
+              <div class="routine-step">✓ Gentle Cleanser</div>
+              <div class="routine-step">✓ Vitamin C Serum</div>
+              <div class="routine-step">✓ Moisturizer</div>
+              <div class="routine-step">✓ SPF 30+ Sunscreen</div>
+            </div>
+
+            <h3 style="margin-top: 2rem">Recommended for You</h3>
+            <div class="recommendation-card">
+              <div class="rec-icon">✨</div>
+              <div class="rec-content">
+                <h4>Vitamin C Serum</h4>
+                <p>
+                  Perfect for your ovulation phase - boost that natural glow!
+                </p>
+              </div>
+            </div>
+            <div class="recommendation-card">
+              <div class="rec-icon">💧</div>
+              <div class="rec-content">
+                <h4>Hydrating Moisturizer</h4>
+                <p>Keep your skin balanced and hydrated.</p>
+              </div>
+            </div>
+            <div id="ai-tips" style="margin-top: 1rem"></div>
+            <p id="ai-disclaimer" style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.8"></p>
+          </div>
+
+          <button class="save-btn">Save Report</button>
         </div>
     </div>
 
@@ -304,7 +365,7 @@
             <p class="footer-copyright">© 2026 Glow Cycle. Made with 💜 in Australia.</p>
         </div>
     </footer>
-
+    <script src="../js/config.js"></script>
     <script src="../js/skin-tracking.js"></script>
 </body>
 </html>

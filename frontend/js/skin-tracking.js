@@ -1,742 +1,766 @@
 // Time-based functionality
-let timeMode = 'morning'; // 'morning', 'afternoon', or 'night'
+let timeMode = "morning"; // 'morning', 'afternoon', or 'night'
 
 function detectTimeMode() {
-    const hour = new Date().getHours();
-    // Morning: 05:00–11:59, Afternoon: 12:00–17:59, Night: 18:00–04:59
-    if (hour >= 5 && hour < 12) {
-        return 'morning';
-    } else if (hour >= 12 && hour < 18) {
-        return 'afternoon';
-    } else {
-        return 'night';
-    }
+  const hour = new Date().getHours();
+  // Morning: 05:00–11:59, Afternoon: 12:00–17:59, Night: 18:00–04:59
+  if (hour >= 5 && hour < 12) {
+    return "morning";
+  } else if (hour >= 12 && hour < 18) {
+    return "afternoon";
+  } else {
+    return "night";
+  }
 }
 
 function applyTheme() {
-    timeMode = detectTimeMode();
-    const body = document.body;
-    const themeOverride = localStorage.getItem('themeOverride');
-    
-    if (themeOverride) {
-        body.classList.remove('light-theme', 'dark-theme');
-        body.classList.add(`${themeOverride}-theme`);
+  timeMode = detectTimeMode();
+  const body = document.body;
+  const themeOverride = localStorage.getItem("themeOverride");
+
+  if (themeOverride) {
+    body.classList.remove("light-theme", "dark-theme");
+    body.classList.add(`${themeOverride}-theme`);
+  } else {
+    body.classList.remove("light-theme", "dark-theme");
+    if (timeMode === "night") {
+      body.classList.add("dark-theme");
     } else {
-        body.classList.remove('light-theme', 'dark-theme');
-        if (timeMode === 'night') {
-            body.classList.add('dark-theme');
-        } else {
-            body.classList.add('light-theme');
-        }
+      body.classList.add("light-theme");
     }
-    
-    updateSkincareRoutine();
+  }
+
+  updateSkincareRoutine();
 }
 
 function toggleTheme() {
-    const body = document.body;
-    let themeOverride;
-    
-    if (body.classList.contains('light-theme')) {
-        body.classList.remove('light-theme');
-        body.classList.add('dark-theme');
-        themeOverride = 'dark';
-    } else {
-        body.classList.remove('dark-theme');
-        body.classList.add('light-theme');
-        themeOverride = 'light';
-    }
-    localStorage.setItem('themeOverride', themeOverride);
+  const body = document.body;
+  let themeOverride;
+
+  if (body.classList.contains("light-theme")) {
+    body.classList.remove("light-theme");
+    body.classList.add("dark-theme");
+    themeOverride = "dark";
+  } else {
+    body.classList.remove("dark-theme");
+    body.classList.add("light-theme");
+    themeOverride = "light";
+  }
+  localStorage.setItem("themeOverride", themeOverride);
 }
 
 function updateSkincareRoutine() {
-    const routineTitle = document.querySelector('.routine-title');
-    const routineSteps = document.querySelector('.routine-steps');
-    
-    if (!routineTitle || !routineSteps) return;
-    
-    if (timeMode === 'morning') {
-        routineTitle.innerHTML = '☀️ AM Routine';
-        routineSteps.innerHTML = `
-            <div class="routine-step">✓ Gentle Cleanser</div>
-            <div class="routine-step">✓ Vitamin C Serum</div>
-            <div class="routine-step">✓ Moisturizer</div>
-            <div class="routine-step">✓ SPF 30+ Sunscreen</div>
-        `;
-    } else if (timeMode === 'afternoon') {
-        routineTitle.innerHTML = '🌸 Light Refresh';
-        routineSteps.innerHTML = `
-            <div class="routine-step">✓ Facial Mist</div>
-            <div class="routine-step">✓ Reapply SPF</div>
-            <div class="routine-step">✓ Hydrating Serum</div>
-            <div class="routine-step">✓ Light Moisturizer</div>
-        `;
-    } else {
-        routineTitle.innerHTML = '🌙 PM Routine';
-        routineSteps.innerHTML = `
-            <div class="routine-step">✓ Oil Cleanser</div>
-            <div class="routine-step">✓ Treatment Serum</div>
-            <div class="routine-step">✓ Night Moisturizer</div>
-            <div class="routine-step">✓ Eye Cream</div>
-        `;
-    }
+  const routineTitle = document.querySelector(".routine-title");
+  const routineSteps = document.querySelector(".routine-steps");
+
+  if (!routineTitle || !routineSteps) return;
+
+  if (timeMode === "morning") {
+    routineTitle.innerHTML = "☀️ AM Routine";
+    routineSteps.innerHTML = `
+      <div class="routine-step">✓ Gentle Cleanser</div>
+      <div class="routine-step">✓ Vitamin C Serum</div>
+      <div class="routine-step">✓ Moisturizer</div>
+      <div class="routine-step">✓ SPF 30+ Sunscreen</div>
+    `;
+  } else if (timeMode === "afternoon") {
+    routineTitle.innerHTML = "🌸 Light Refresh";
+    routineSteps.innerHTML = `
+      <div class="routine-step">✓ Facial Mist</div>
+      <div class="routine-step">✓ Reapply SPF</div>
+      <div class="routine-step">✓ Hydrating Serum</div>
+      <div class="routine-step">✓ Light Moisturizer</div>
+    `;
+  } else {
+    routineTitle.innerHTML = "🌙 PM Routine";
+    routineSteps.innerHTML = `
+      <div class="routine-step">✓ Oil Cleanser</div>
+      <div class="routine-step">✓ Treatment Serum</div>
+      <div class="routine-step">✓ Night Moisturizer</div>
+      <div class="routine-step">✓ Eye Cream</div>
+    `;
+  }
 }
 
 // Show Consent Popup
 function showConsentPopup() {
-    document.getElementById('consent-popup').style.display = 'flex';
+  document.getElementById("consent-popup").style.display = "flex";
 }
 
 // Close Consent Popup
 function closeConsentPopup() {
-    document.getElementById('consent-popup').style.display = 'none';
-    document.getElementById('consent-check').checked = false;
-    document.getElementById('accept-btn').disabled = true;
+  document.getElementById("consent-popup").style.display = "none";
+  document.getElementById("consent-check").checked = false;
+  document.getElementById("accept-btn").disabled = true;
 }
 
 // Accept Consent and Show Scanner
 function acceptConsent() {
-    closeConsentPopup();
-    showScanner();
+  closeConsentPopup();
+  showScanner();
 }
 
 // Enable/disable accept button based on checkbox
-document.addEventListener('DOMContentLoaded', () => {
-    applyTheme(); // Apply theme on load
-    updateUserProfile(); // Update user profile
-    
-    const consentCheck = document.getElementById('consent-check');
-    const acceptBtn = document.getElementById('accept-btn');
-    
-    if (consentCheck && acceptBtn) {
-        consentCheck.addEventListener('change', (e) => {
-            acceptBtn.disabled = !e.target.checked;
-        });
-    }
-});
+document.addEventListener("DOMContentLoaded", () => {
+  applyTheme();
 
-function updateUserProfile() {
-    const userName = localStorage.getItem('userName') || 'User';
-    const profileNameElement = document.getElementById('profile-name');
-    const profileAvatarElement = document.getElementById('profile-avatar');
-    
-    if (profileNameElement) {
-        profileNameElement.textContent = userName;
-    }
-    
-    if (profileAvatarElement) {
-        profileAvatarElement.textContent = userName.charAt(0).toUpperCase();
-    }
-}
+  const consentCheck = document.getElementById("consent-check");
+  const acceptBtn = document.getElementById("accept-btn");
+
+  if (consentCheck && acceptBtn) {
+    consentCheck.addEventListener("change", (e) => {
+      acceptBtn.disabled = !e.target.checked;
+    });
+  }
+});
 
 // Camera variables
 let stream = null;
-let currentFacingMode = 'user'; // 'user' for front camera, 'environment' for back camera
+let currentFacingMode = "user";
 let capturedImageData = null;
 let faceDetectionInterval = null;
 let faceDetector = null;
 
 // Initialize Face Detector
 async function initFaceDetector() {
-    try {
-        // Check if Face Detection API is available
-        if ('FaceDetector' in window) {
-            faceDetector = new FaceDetector({ fastMode: true, maxDetectedFaces: 1 });
-            return true;
-        }
-    } catch (error) {
-        // Face Detection API not available, using fallback
+  try {
+    if ("FaceDetector" in window) {
+      faceDetector = new FaceDetector({ fastMode: true, maxDetectedFaces: 1 });
+      return true;
     }
-    return false;
+  } catch (error) {
+    // Face Detection API not available, using fallback
+  }
+  return false;
 }
 
 // Start Camera
 async function startCamera() {
-    try {
-        const constraints = {
-            video: {
-                facingMode: currentFacingMode,
-                width: { ideal: 1280 },
-                height: { ideal: 720 }
-            },
-            audio: false
-        };
-        
-        stream = await navigator.mediaDevices.getUserMedia(constraints);
-        const video = document.getElementById('camera-video');
-        video.srcObject = stream;
-        
-        // Wait for video to be ready
-        video.onloadedmetadata = () => {
-            video.play();
-            // Start face detection after a short delay
-            setTimeout(() => {
-                startFaceDetection();
-            }, 500);
-        };
-        
-        updateCameraStatus('Initializing camera...', '⏳', 'info');
-    } catch (error) {
-        console.error('Error accessing camera:', error);
-        updateCameraStatus('Camera access denied', '⚠️', 'error');
-    }
+  try {
+    const constraints = {
+      video: {
+        facingMode: currentFacingMode,
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+      },
+      audio: false,
+    };
+
+    stream = await navigator.mediaDevices.getUserMedia(constraints);
+    const video = document.getElementById("camera-video");
+    video.srcObject = stream;
+
+    video.onloadedmetadata = () => {
+      video.play();
+      setTimeout(() => {
+        startFaceDetection();
+      }, 500);
+    };
+
+    updateCameraStatus("Initializing camera...", "⏳", "info");
+  } catch (error) {
+    console.error("Error accessing camera:", error);
+    updateCameraStatus("Camera access denied", "⚠️", "error");
+  }
 }
 
 // Start Face Detection
 function startFaceDetection() {
-    const video = document.getElementById('camera-video');
-    const guideOval = document.querySelector('.face-guide-oval');
-    
-    // Always use the fallback method as it's more reliable
-    faceDetectionInterval = setInterval(() => {
-        if (video.readyState === video.HAVE_ENOUGH_DATA) {
-            detectFaceInVideo(video, guideOval);
-        }
-    }, 300); // Check every 300ms for better responsiveness
+  const video = document.getElementById("camera-video");
+  const guideOval = document.querySelector(".face-guide-oval");
+
+  faceDetectionInterval = setInterval(() => {
+    if (video.readyState === video.HAVE_ENOUGH_DATA) {
+      detectFaceInVideo(video, guideOval);
+    }
+  }, 300);
 }
 
 // Enhanced face detection using image analysis
 function detectFaceInVideo(video, guideOval) {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    
-    // Use smaller canvas for faster processing
-    canvas.width = 320;
-    canvas.height = 240;
-    
-    // Draw current video frame
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const data = imageData.data;
-    
-    // Define oval region (center of frame, matching the visual oval)
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-    const ovalWidth = canvas.width * 0.35; // 35% of width
-    const ovalHeight = ovalWidth * 1.33; // 3:4 aspect ratio
-    const radiusX = ovalWidth / 2;
-    const radiusY = ovalHeight / 2;
-    
-    // Divide oval into regions for better face detection
-    const topRegion = { y: centerY - radiusY, height: radiusY * 0.4 }; // Top 40% (forehead/hair)
-    const middleRegion = { y: centerY - radiusY * 0.2, height: radiusY * 0.6 }; // Middle 60% (eyes, nose)
-    const bottomRegion = { y: centerY + radiusY * 0.4, height: radiusY * 0.6 }; // Bottom 60% (mouth, chin)
-    
-    let topSkinPixels = 0, topTotalPixels = 0;
-    let middleSkinPixels = 0, middleTotalPixels = 0;
-    let bottomSkinPixels = 0, bottomTotalPixels = 0;
-    let topBrightness = 0, middleBrightness = 0, bottomBrightness = 0;
-    let edgeCount = 0;
-    let symmetryScore = 0;
-    
-    // Scan the oval region
-    for (let y = Math.floor(centerY - radiusY); y < Math.floor(centerY + radiusY); y++) {
-        for (let x = Math.floor(centerX - radiusX); x < Math.floor(centerX + radiusX); x++) {
-            if (x >= 0 && x < canvas.width && y >= 0 && y < canvas.height) {
-                // Check if point is inside oval
-                const normalizedX = (x - centerX) / radiusX;
-                const normalizedY = (y - centerY) / radiusY;
-                const isInsideOval = (normalizedX * normalizedX + normalizedY * normalizedY) <= 1;
-                
-                if (isInsideOval) {
-                    const i = (y * canvas.width + x) * 4;
-                    const r = data[i];
-                    const g = data[i + 1];
-                    const b = data[i + 2];
-                    
-                    const brightness = (r + g + b) / 3;
-                    
-                    // Detect skin tones (improved algorithm)
-                    const isSkinTone = (
-                        r > 60 && g > 40 && b > 20 && // Minimum values
-                        r > b && r > g - 20 && // Red dominant
-                        Math.abs(r - g) < 50 && // R and G similar
-                        r - b > 10 && r - b < 80 // R greater than B but not too much
-                    ) || (
-                        // Darker skin tones
-                        r > 40 && g > 30 && b > 20 &&
-                        r >= g && r >= b &&
-                        r - b < 60
-                    );
-                    
-                    // Classify by region
-                    if (y >= topRegion.y && y < topRegion.y + topRegion.height) {
-                        topTotalPixels++;
-                        topBrightness += brightness;
-                        if (isSkinTone) topSkinPixels++;
-                    }
-                    
-                    if (y >= middleRegion.y && y < middleRegion.y + middleRegion.height) {
-                        middleTotalPixels++;
-                        middleBrightness += brightness;
-                        if (isSkinTone) middleSkinPixels++;
-                    }
-                    
-                    if (y >= bottomRegion.y && y < bottomRegion.y + bottomRegion.height) {
-                        bottomTotalPixels++;
-                        bottomBrightness += brightness;
-                        if (isSkinTone) bottomSkinPixels++;
-                    }
-                    
-                    // Edge detection (facial features)
-                    if (x < canvas.width - 1 && y < canvas.height - 1) {
-                        const nextI = (y * canvas.width + (x + 1)) * 4;
-                        const diff = Math.abs(r - data[nextI]);
-                        if (diff > 35) edgeCount++;
-                    }
-                    
-                    // Symmetry check (compare left and right sides)
-                    if (x < centerX) {
-                        const mirrorX = Math.floor(centerX + (centerX - x));
-                        if (mirrorX < canvas.width) {
-                            const mirrorI = (y * canvas.width + mirrorX) * 4;
-                            const mirrorR = data[mirrorI];
-                            const colorDiff = Math.abs(r - mirrorR);
-                            if (colorDiff < 40) symmetryScore++;
-                        }
-                    }
-                }
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+
+  canvas.width = 320;
+  canvas.height = 240;
+
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imageData.data;
+
+  const centerX = canvas.width / 2;
+  const centerY = canvas.height / 2;
+  const ovalWidth = canvas.width * 0.35;
+  const ovalHeight = ovalWidth * 1.33;
+  const radiusX = ovalWidth / 2;
+  const radiusY = ovalHeight / 2;
+
+  const topRegion = { y: centerY - radiusY, height: radiusY * 0.4 };
+  const middleRegion = { y: centerY - radiusY * 0.2, height: radiusY * 0.6 };
+  const bottomRegion = { y: centerY + radiusY * 0.4, height: radiusY * 0.6 };
+
+  let topSkinPixels = 0, topTotalPixels = 0;
+  let middleSkinPixels = 0, middleTotalPixels = 0;
+  let bottomSkinPixels = 0, bottomTotalPixels = 0;
+  let topBrightness = 0, middleBrightness = 0, bottomBrightness = 0;
+  let edgeCount = 0;
+  let symmetryScore = 0;
+
+  for (let y = Math.floor(centerY - radiusY); y < Math.floor(centerY + radiusY); y++) {
+    for (let x = Math.floor(centerX - radiusX); x < Math.floor(centerX + radiusX); x++) {
+      if (x >= 0 && x < canvas.width && y >= 0 && y < canvas.height) {
+        const normalizedX = (x - centerX) / radiusX;
+        const normalizedY = (y - centerY) / radiusY;
+        const isInsideOval = normalizedX * normalizedX + normalizedY * normalizedY <= 1;
+
+        if (isInsideOval) {
+          const i = (y * canvas.width + x) * 4;
+          const r = data[i];
+          const g = data[i + 1];
+          const b = data[i + 2];
+          const brightness = (r + g + b) / 3;
+
+          const isSkinTone =
+            (r > 60 && g > 40 && b > 20 &&
+              r > b && r > g - 20 &&
+              Math.abs(r - g) < 50 &&
+              r - b > 10 && r - b < 80) ||
+            (r > 40 && g > 30 && b > 20 && r >= g && r >= b && r - b < 60);
+
+          if (y >= topRegion.y && y < topRegion.y + topRegion.height) {
+            topTotalPixels++;
+            topBrightness += brightness;
+            if (isSkinTone) topSkinPixels++;
+          }
+          if (y >= middleRegion.y && y < middleRegion.y + middleRegion.height) {
+            middleTotalPixels++;
+            middleBrightness += brightness;
+            if (isSkinTone) middleSkinPixels++;
+          }
+          if (y >= bottomRegion.y && y < bottomRegion.y + bottomRegion.height) {
+            bottomTotalPixels++;
+            bottomBrightness += brightness;
+            if (isSkinTone) bottomSkinPixels++;
+          }
+
+          if (x < canvas.width - 1 && y < canvas.height - 1) {
+            const nextI = (y * canvas.width + (x + 1)) * 4;
+            const diff = Math.abs(r - data[nextI]);
+            if (diff > 35) edgeCount++;
+          }
+
+          if (x < centerX) {
+            const mirrorX = Math.floor(centerX + (centerX - x));
+            if (mirrorX < canvas.width) {
+              const mirrorI = (y * canvas.width + mirrorX) * 4;
+              const mirrorR = data[mirrorI];
+              if (Math.abs(r - mirrorR) < 40) symmetryScore++;
             }
+          }
         }
+      }
     }
-    
-    // Calculate ratios and averages
-    const topSkinRatio = topTotalPixels > 0 ? topSkinPixels / topTotalPixels : 0;
-    const middleSkinRatio = middleTotalPixels > 0 ? middleSkinPixels / middleTotalPixels : 0;
-    const bottomSkinRatio = bottomTotalPixels > 0 ? bottomSkinPixels / bottomTotalPixels : 0;
-    
-    topBrightness = topTotalPixels > 0 ? topBrightness / topTotalPixels : 0;
-    middleBrightness = middleTotalPixels > 0 ? middleBrightness / middleTotalPixels : 0;
-    bottomBrightness = bottomTotalPixels > 0 ? bottomBrightness / bottomTotalPixels : 0;
-    
-    const avgBrightness = (topBrightness + middleBrightness + bottomBrightness) / 3;
-    const totalPixels = topTotalPixels + middleTotalPixels + bottomTotalPixels;
-    const symmetryRatio = totalPixels > 0 ? symmetryScore / (totalPixels / 2) : 0;
-    
-    // STRICT face detection criteria
-    const faceDetected = (
-        // Good lighting
-        avgBrightness > 50 && avgBrightness < 210 &&
-        
-        // All three regions must have skin tone (complete face)
-        topSkinRatio > 0.20 &&      // Top region (forehead/hair area)
-        middleSkinRatio > 0.30 &&   // Middle region (eyes, nose) - highest requirement
-        bottomSkinRatio > 0.25 &&   // Bottom region (mouth, chin)
-        
-        // Sufficient facial features detected
-        edgeCount > 80 &&
-        
-        // Face should be relatively symmetrical
-        symmetryRatio > 0.4 &&
-        
-        // Brightness should be consistent across regions (not just showing part of face)
-        Math.abs(topBrightness - middleBrightness) < 60 &&
-        Math.abs(middleBrightness - bottomBrightness) < 60
-    );
-    
-    if (faceDetected) {
-        guideOval.classList.add('face-detected');
-        updateCameraStatus('Ready to capture', '✓', 'success');
-        
-        // Enable capture button
-        const captureBtn = document.getElementById('capture-btn');
-        if (captureBtn) {
-            captureBtn.disabled = false;
-        }
+  }
+
+  const topSkinRatio = topTotalPixels > 0 ? topSkinPixels / topTotalPixels : 0;
+  const middleSkinRatio = middleTotalPixels > 0 ? middleSkinPixels / middleTotalPixels : 0;
+  const bottomSkinRatio = bottomTotalPixels > 0 ? bottomSkinPixels / bottomTotalPixels : 0;
+
+  topBrightness = topTotalPixels > 0 ? topBrightness / topTotalPixels : 0;
+  middleBrightness = middleTotalPixels > 0 ? middleBrightness / middleTotalPixels : 0;
+  bottomBrightness = bottomTotalPixels > 0 ? bottomBrightness / bottomTotalPixels : 0;
+
+  const avgBrightness = (topBrightness + middleBrightness + bottomBrightness) / 3;
+  const totalPixels = topTotalPixels + middleTotalPixels + bottomTotalPixels;
+  const symmetryRatio = totalPixels > 0 ? symmetryScore / (totalPixels / 2) : 0;
+
+  const faceDetected =
+    avgBrightness > 50 && avgBrightness < 210 &&
+    topSkinRatio > 0.2 &&
+    middleSkinRatio > 0.3 &&
+    bottomSkinRatio > 0.25 &&
+    edgeCount > 80 &&
+    symmetryRatio > 0.4 &&
+    Math.abs(topBrightness - middleBrightness) < 60 &&
+    Math.abs(middleBrightness - bottomBrightness) < 60;
+
+  if (faceDetected) {
+    guideOval.classList.add("face-detected");
+    updateCameraStatus("Ready to capture", "✓", "success");
+    const captureBtn = document.getElementById("capture-btn");
+    if (captureBtn) captureBtn.disabled = false;
+  } else {
+    guideOval.classList.remove("face-detected");
+    const captureBtn = document.getElementById("capture-btn");
+    if (captureBtn) captureBtn.disabled = true;
+
+    if (avgBrightness < 50) {
+      updateCameraStatus("Need more light", "💡", "warning");
+    } else if (avgBrightness > 210) {
+      updateCameraStatus("Too bright, adjust lighting", "☀️", "warning");
+    } else if (topSkinRatio < 0.15 || bottomSkinRatio < 0.15) {
+      updateCameraStatus("Center your face in the oval", "👤", "info");
+    } else if (middleSkinRatio < 0.25) {
+      updateCameraStatus("Move closer to the camera", "📷", "info");
+    } else if (symmetryRatio < 0.3) {
+      updateCameraStatus("Face the camera directly", "↔️", "info");
     } else {
-        guideOval.classList.remove('face-detected');
-        
-        // Disable capture button
-        const captureBtn = document.getElementById('capture-btn');
-        if (captureBtn) {
-            captureBtn.disabled = true;
-        }
-        
-        // Provide specific feedback
-        if (avgBrightness < 50) {
-            updateCameraStatus('Need more light', '💡', 'warning');
-        } else if (avgBrightness > 210) {
-            updateCameraStatus('Too bright, adjust lighting', '☀️', 'warning');
-        } else if (topSkinRatio < 0.15 || bottomSkinRatio < 0.15) {
-            updateCameraStatus('Center your face in the oval', '👤', 'info');
-        } else if (middleSkinRatio < 0.25) {
-            updateCameraStatus('Move closer to the camera', '📷', 'info');
-        } else if (symmetryRatio < 0.3) {
-            updateCameraStatus('Face the camera directly', '↔️', 'info');
-        } else {
-            updateCameraStatus('Position your face in the oval', '📷', 'info');
-        }
+      updateCameraStatus("Position your face in the oval", "📷", "info");
     }
+  }
 }
 
-// Fallback: Simple motion/brightness detection (removed, using enhanced detection above)
+// Kept for compatibility (no longer used)
 let lastImageData = null;
-function detectMotion(video) {
-    // This function is no longer used, kept for compatibility
-}
+function detectMotion(video) {}
 
 // Stop Face Detection
 function stopFaceDetection() {
-    if (faceDetectionInterval) {
-        clearInterval(faceDetectionInterval);
-        faceDetectionInterval = null;
-    }
-    lastImageData = null;
+  if (faceDetectionInterval) {
+    clearInterval(faceDetectionInterval);
+    faceDetectionInterval = null;
+  }
+  lastImageData = null;
 }
 
 // Show Scanner View
 function showScanner() {
-    document.querySelector('.method-selection-single').style.display = 'none';
-    document.getElementById('scanner-view').style.display = 'block';
-    startCamera();
+  document.querySelector(".method-selection-single").style.display = "none";
+  document.getElementById("scanner-view").style.display = "block";
+  startCamera();
 }
 
 // Close Scanner
 function closeScanner() {
-    stopCamera();
-    hideViews();
+  stopCamera();
+  hideViews();
 }
 
 // Hide all views and show method selection
 function hideViews() {
-    const methodSelection = document.querySelector('.method-selection-single');
-    if (methodSelection) {
-        methodSelection.style.display = 'flex';
-    }
-    document.getElementById('scanner-view').style.display = 'none';
-    document.getElementById('results-view').style.display = 'none';
+  const methodSelection = document.querySelector(".method-selection-single");
+  if (methodSelection) {
+    methodSelection.style.display = "flex";
+  }
+  document.getElementById("scanner-view").style.display = "none";
+  document.getElementById("results-view").style.display = "none";
 }
 
 // Stop Camera
 function stopCamera() {
-    stopFaceDetection();
-    
-    if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-        stream = null;
-    }
-    const video = document.getElementById('camera-video');
-    if (video) {
-        video.srcObject = null;
-    }
-    
-    // Remove face detected class
-    const guideOval = document.querySelector('.face-guide-oval');
-    if (guideOval) {
-        guideOval.classList.remove('face-detected');
-    }
+  stopFaceDetection();
+
+  if (stream) {
+    stream.getTracks().forEach((track) => track.stop());
+    stream = null;
+  }
+  const video = document.getElementById("camera-video");
+  if (video) video.srcObject = null;
+
+  const guideOval = document.querySelector(".face-guide-oval");
+  if (guideOval) guideOval.classList.remove("face-detected");
 }
 
 // Flip Camera
 async function flipCamera() {
-    currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
-    stopCamera();
-    await startCamera();
+  currentFacingMode = currentFacingMode === "user" ? "environment" : "user";
+  stopCamera();
+  await startCamera();
 }
 
 // Update Camera Status
-function updateCameraStatus(text, icon, type = 'info') {
-    const statusElement = document.getElementById('camera-status');
-    if (statusElement) {
-        statusElement.innerHTML = `
-            <span class="status-icon">${icon}</span>
-            <span class="status-text ${type}">${text}</span>
-        `;
-    }
+function updateCameraStatus(text, icon, type = "info") {
+  const statusElement = document.getElementById("camera-status");
+  if (statusElement) {
+    statusElement.innerHTML = `
+      <span class="status-icon">${icon}</span>
+      <span class="status-text ${type}">${text}</span>
+    `;
+  }
+}
+
+// Helper: Convert dataURL to Blob
+function dataURLtoBlob(dataurl) {
+  const arr = dataurl.split(",");
+  const mime = arr[0].match(/:(.*?);/)[1];
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n);
+  }
+  return new Blob([u8arr], { type: mime });
 }
 
 // Capture Photo
 function capturePhoto() {
-    // Stop face detection
-    stopFaceDetection();
-    
-    const video = document.getElementById('camera-video');
-    const canvas = document.getElementById('camera-canvas');
-    const ctx = canvas.getContext('2d');
-    
-    // Set canvas size to match video
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    
-    // Draw video frame to canvas
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    
-    // Store captured image
-    capturedImageData = canvas.toDataURL('image/jpeg', 0.9);
-    
-    // Show captured image
-    canvas.style.display = 'block';
-    video.style.display = 'none';
-    
-    // Hide camera overlay and status
-    document.querySelector('.camera-overlay').style.display = 'none';
-    document.getElementById('camera-status').style.display = 'none';
-    
-    // Update UI
-    document.getElementById('capture-btn').style.display = 'none';
-    document.getElementById('retake-btn').style.display = 'flex';
-    
-    // Start AI analysis animation
-    startAIAnalysis();
+  stopFaceDetection();
+
+  const video = document.getElementById("camera-video");
+  const canvas = document.getElementById("camera-canvas");
+  const ctx = canvas.getContext("2d");
+
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+  capturedImageData = canvas.toDataURL("image/jpeg", 0.9);
+
+  // Kick off upload + analysis (Sam's new flow), don't await here
+  sendCapturedImageToBackend(capturedImageData);
+
+  canvas.style.display = "block";
+  video.style.display = "none";
+  document.querySelector(".camera-overlay").style.display = "none";
+  document.getElementById("camera-status").style.display = "none";
+  document.getElementById("capture-btn").style.display = "none";
+  document.getElementById("retake-btn").style.display = "flex";
+
+  startAIAnalysis();
+}
+
+// Send captured image to backend: presign → S3 upload → AI analyze (Sam's flow)
+async function sendCapturedImageToBackend(dataUrl) {
+  try {
+    const apiConfig = typeof API_CONFIG !== "undefined" ? API_CONFIG : window.API_CONFIG;
+
+    const user =
+      document.querySelector(".profile-name")?.textContent?.trim() ||
+      localStorage.getItem("userName") ||
+      "anonymous";
+
+    const blob = dataURLtoBlob(dataUrl);
+    const contentType = blob.type || "image/jpeg";
+
+    // 1) Get presigned URL from backend
+    updateCameraStatus("Preparing secure upload...", "🔐", "info");
+    const presignResp = await fetch(apiConfig.BASE_URL + apiConfig.ENDPOINTS.SKIN_UPLOAD_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ contentType }),
+    });
+    if (!presignResp.ok) throw new Error("Failed to get upload URL");
+    const { uploadUrl, s3Key } = await presignResp.json();
+
+    // 2) Upload directly to S3
+    updateCameraStatus("Uploading photo...", "⬆️", "info");
+    const putResp = await fetch(uploadUrl, {
+      method: "PUT",
+      headers: { "Content-Type": contentType },
+      body: blob,
+    });
+    if (!putResp.ok) throw new Error("Failed to upload to S3");
+
+    // 3) Trigger AI analysis
+    updateCameraStatus("Analyzing with AI...", "✨", "info");
+    const analyzeResp = await fetch(apiConfig.BASE_URL + apiConfig.ENDPOINTS.SKIN_ANALYZE, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        s3Key,
+        timeOfDay: detectTimeMode(),
+        cyclePhase: "unknown",
+        skinGoals: ["hydration", "texture"],
+      }),
+    });
+    if (!analyzeResp.ok) {
+      const err = await analyzeResp.text();
+      throw new Error(err || "Analyze failed");
+    }
+
+    const analysis = await analyzeResp.json();
+    window.__skinAnalysisResult = analysis;
+  } catch (err) {
+    console.error("Error in sendCapturedImageToBackend:", err);
+    updateCameraStatus("Something went wrong. Please try again.", "⚠️", "error");
+  }
 }
 
 // Start AI Analysis Animation
 function startAIAnalysis() {
-    const overlay = document.getElementById('ai-analysis-overlay');
-    const progressBar = document.getElementById('analysis-progress');
-    
-    overlay.style.display = 'flex';
-    
-    // Animate progress bar
-    let progress = 0;
-    const progressInterval = setInterval(() => {
-        progress += 1;
-        progressBar.style.width = progress + '%';
-        
-        if (progress >= 100) {
-            clearInterval(progressInterval);
-        }
-    }, 40); // 4 seconds total
-    
-    // Animate steps
-    const steps = ['step-1', 'step-2', 'step-3', 'step-4'];
-    steps.forEach((stepId, index) => {
-        setTimeout(() => {
-            const step = document.getElementById(stepId);
-            step.classList.add('active');
-            
-            // Add completion checkmark after a moment
-            setTimeout(() => {
-                step.classList.add('completed');
-                const icon = step.querySelector('.step-icon');
-                icon.textContent = '✓';
-            }, 800);
-        }, index * 1000);
-    });
-    
-    // Complete analysis
+  const overlay = document.getElementById("ai-analysis-overlay");
+  const progressBar = document.getElementById("analysis-progress");
+
+  overlay.style.display = "flex";
+
+  let progress = 0;
+  const progressInterval = setInterval(() => {
+    progress += 1;
+    progressBar.style.width = progress + "%";
+    if (progress >= 100) clearInterval(progressInterval);
+  }, 40);
+
+  const steps = ["step-1", "step-2", "step-3", "step-4"];
+  steps.forEach((stepId, index) => {
     setTimeout(() => {
-        completeAnalysis();
-    }, 4500);
+      const step = document.getElementById(stepId);
+      step.classList.add("active");
+      setTimeout(() => {
+        step.classList.add("completed");
+        step.querySelector(".step-icon").textContent = "✓";
+      }, 800);
+    }, index * 1000);
+  });
+
+  setTimeout(() => {
+    completeAnalysis();
+  }, 4500);
 }
 
 // Complete Analysis
-async function completeAnalysis() {
-    const overlay = document.getElementById('ai-analysis-overlay');
-    const title = document.getElementById('analysis-title');
-    
-    title.textContent = 'Analysis Complete! ✨';
-    
-    // Upload selfie to S3
-    await uploadSelfie();
-    
-    setTimeout(() => {
-        overlay.style.display = 'none';
-        stopCamera();
-        showResults();
-        
-        // Reset for next use
-        resetAnalysisOverlay();
-    }, 1000);
-}
+function completeAnalysis() {
+  const overlay = document.getElementById("ai-analysis-overlay");
+  const title = document.getElementById("analysis-title");
 
-// Upload Selfie to S3
-async function uploadSelfie() {
-    if (!capturedImageData) {
-        console.error('No image data to upload');
-        return;
-    }
-    
-    try {
-        const userName = localStorage.getItem('userName') || 'User';
-        
-        // Get current date in DD-MM-YYYY format
-        const now = new Date();
-        const day = String(now.getDate()).padStart(2, '0');
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const year = now.getFullYear();
-        const formattedDate = `${day}-${month}-${year}`;
-        
-        // Extract base64 data (remove "data:image/jpeg;base64," prefix)
-        const base64Data = capturedImageData.split(',')[1];
-        
-        const payload = {
-            user: userName,
-            date: formattedDate,
-            file: base64Data
-        };
-        
-        const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.SKIN}`, {
-            method: 'POST',
-            mode: 'cors',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify(payload)
-        });
-        
-        if (!response.ok) {
-            const errorData = await response.json();
-            console.error('Upload failed:', errorData);
-            throw new Error(errorData.error || 'Failed to upload selfie');
-        }
-        
-        const data = await response.json();
-        console.log('Selfie uploaded successfully:', data);
-        
-    } catch (error) {
-        console.error('Error uploading selfie:', error);
-        // Don't block the UI, just log the error
-    }
+  title.textContent = "Analysis Complete! ✨";
+
+  setTimeout(() => {
+    overlay.style.display = "none";
+    stopCamera();
+    showResults();
+    resetAnalysisOverlay();
+  }, 1000);
 }
 
 // Reset Analysis Overlay
 function resetAnalysisOverlay() {
-    const progressBar = document.getElementById('analysis-progress');
-    progressBar.style.width = '0%';
-    
-    const steps = ['step-1', 'step-2', 'step-3', 'step-4'];
-    const icons = ['🔍', '✨', '💎', '🎯'];
-    
-    steps.forEach((stepId, index) => {
-        const step = document.getElementById(stepId);
-        step.classList.remove('active', 'completed');
-        const icon = step.querySelector('.step-icon');
-        icon.textContent = icons[index];
-    });
-    
-    document.getElementById('analysis-title').textContent = 'Analyzing Your Skin';
+  document.getElementById("analysis-progress").style.width = "0%";
+
+  const steps = ["step-1", "step-2", "step-3", "step-4"];
+  const icons = ["🔍", "✨", "💎", "🎯"];
+
+  steps.forEach((stepId, index) => {
+    const step = document.getElementById(stepId);
+    step.classList.remove("active", "completed");
+    step.querySelector(".step-icon").textContent = icons[index];
+  });
+
+  document.getElementById("analysis-title").textContent = "Analyzing Your Skin";
 }
 
 // Retake Photo
 function retakePhoto() {
-    const video = document.getElementById('camera-video');
-    const canvas = document.getElementById('camera-canvas');
-    
-    canvas.style.display = 'none';
-    video.style.display = 'block';
-    
-    // Show camera overlay and status
-    document.querySelector('.camera-overlay').style.display = 'flex';
-    document.getElementById('camera-status').style.display = 'flex';
-    
-    document.getElementById('capture-btn').style.display = 'flex';
-    document.getElementById('retake-btn').style.display = 'none';
-    
-    capturedImageData = null;
-    
-    // Restart face detection
-    setTimeout(() => {
-        startFaceDetection();
-    }, 300);
+  const video = document.getElementById("camera-video");
+  const canvas = document.getElementById("camera-canvas");
+
+  canvas.style.display = "none";
+  video.style.display = "block";
+  document.querySelector(".camera-overlay").style.display = "flex";
+  document.getElementById("camera-status").style.display = "flex";
+  document.getElementById("capture-btn").style.display = "flex";
+  document.getElementById("retake-btn").style.display = "none";
+
+  capturedImageData = null;
+
+  setTimeout(() => {
+    startFaceDetection();
+  }, 300);
 }
 
 // Show Results View
 function showResults() {
-    document.getElementById('scanner-view').style.display = 'none';
-    document.getElementById('results-view').style.display = 'block';
-    
-    // Draw radar chart
-    drawRadarChart();
+  document.getElementById("scanner-view").style.display = "none";
+  document.getElementById("results-view").style.display = "block";
+
+  renderSkinAnalysisResult();
+  drawRadarChart();
+}
+
+// Render AI analysis result into the UI (Sam's new feature)
+function renderSkinAnalysisResult() {
+  const result = window.__skinAnalysisResult;
+  if (!result) return;
+
+  // Summary
+  const msgEl = document.querySelector(".score-message");
+  if (msgEl && result.summary) msgEl.textContent = result.summary;
+
+  // Overall score from metrics
+  const m = result.metrics || {};
+  const metricValues = Object.values(m).filter((v) => typeof v === "number");
+  const avgScore = metricValues.length
+    ? Math.round(metricValues.reduce((a, b) => a + b, 0) / metricValues.length)
+    : 75;
+
+  const scoreEl = document.querySelector(".score-number");
+  if (scoreEl) scoreEl.textContent = avgScore;
+
+  const scoreCircle = document.querySelector(".score-circle circle:nth-child(2)");
+  if (scoreCircle) {
+    scoreCircle.setAttribute("stroke-dashoffset", 314 - (314 * avgScore) / 100);
+  }
+
+  // Metric cards
+  const metricItems = document.querySelectorAll(".metric-item");
+  const metricMap = [
+    { label: "Radiance", key: "radiance" },
+    { label: "Moisture", key: "moisture" },
+    { label: "Texture", key: "texture" },
+    { label: "Pores", key: "pores" },
+    { label: "Dark Circles", key: "dark_circles" },
+  ];
+  metricItems.forEach((item, i) => {
+    if (metricMap[i]) {
+      const val = m[metricMap[i].key];
+      const valEl = item.querySelector(".metric-value");
+      const labelEl = item.querySelector(".metric-label");
+      if (valEl && val !== undefined) valEl.textContent = val;
+      if (labelEl) labelEl.textContent = metricMap[i].label;
+    }
+  });
+
+  // AM/PM routine
+  const routineSteps = document.querySelector(".routine-steps");
+  const routineTitle = document.querySelector(".routine-title");
+  const isNight = detectTimeMode() === "night";
+  const steps = isNight ? result.pm_routine : result.am_routine;
+  if (routineTitle) routineTitle.textContent = isNight ? "🌙 PM Routine" : "☀️ AM Routine";
+  if (routineSteps && Array.isArray(steps)) {
+    routineSteps.innerHTML = steps.map((s) => `<div class="routine-step">✓ ${s}</div>`).join("");
+  }
+
+  // Remove static hardcoded recommendation cards
+  document.querySelectorAll(".recommendations .recommendation-card").forEach((el) => el.remove());
+
+  // Tips
+  const tipsEl = document.getElementById("ai-tips");
+  if (tipsEl && Array.isArray(result.tips)) {
+    tipsEl.innerHTML = `
+      <h3 style="margin-top: 1.5rem">Tips for You</h3>
+      ${result.tips
+        .map(
+          (t) => `
+        <div class="recommendation-card">
+          <div class="rec-icon">✨</div>
+          <div class="rec-content"><p>${t}</p></div>
+        </div>`
+        )
+        .join("")}
+    `;
+  }
+
+  // Concerns detected
+  if (Array.isArray(result.concerns_detected) && result.concerns_detected.length) {
+    const tipsEl = document.getElementById("ai-tips");
+    if (tipsEl) {
+      tipsEl.innerHTML += `
+        <h3 style="margin-top: 1.5rem">Concerns Detected</h3>
+        ${result.concerns_detected
+          .map(
+            (c) => `
+          <div class="recommendation-card">
+            <div class="rec-icon">🔍</div>
+            <div class="rec-content"><p>${c}</p></div>
+          </div>`
+          )
+          .join("")}
+      `;
+    }
+  }
+
+  // Disclaimer
+  const disEl = document.getElementById("ai-disclaimer");
+  if (disEl && result.disclaimer) disEl.textContent = result.disclaimer;
 }
 
 // Draw Radar Chart
 function drawRadarChart() {
-    const canvas = document.getElementById('skinRadar');
-    if (!canvas) return;
-    
-    const ctx = canvas.getContext('2d');
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-    const radius = Math.min(centerX, centerY) - 40;
-    
-    // Data points
-    const data = [85, 70, 88, 73, 78, 67, 82];
-    const labels = ['Radiance', 'Moisture', 'Texture', 'Pores', 'Dark Circles', 'Oiliness', 'Redness'];
-    const numPoints = data.length;
-    
-    // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // Draw background circles
-    ctx.strokeStyle = '#E8E4F3';
-    ctx.lineWidth = 1;
-    for (let i = 1; i <= 5; i++) {
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, (radius / 5) * i, 0, Math.PI * 2);
-        ctx.stroke();
-    }
-    
-    // Draw axes
-    ctx.strokeStyle = '#E8E4F3';
-    ctx.lineWidth = 1;
-    for (let i = 0; i < numPoints; i++) {
-        const angle = (Math.PI * 2 * i) / numPoints - Math.PI / 2;
-        const x = centerX + radius * Math.cos(angle);
-        const y = centerY + radius * Math.sin(angle);
-        
-        ctx.beginPath();
-        ctx.moveTo(centerX, centerY);
-        ctx.lineTo(x, y);
-        ctx.stroke();
-        
-        // Draw labels
-        const labelX = centerX + (radius + 30) * Math.cos(angle);
-        const labelY = centerY + (radius + 30) * Math.sin(angle);
-        ctx.fillStyle = '#7A7A8E';
-        ctx.font = '12px Outfit';
-        ctx.textAlign = 'center';
-        ctx.fillText(labels[i], labelX, labelY);
-    }
-    
-    // Draw data polygon
+  const canvas = document.getElementById("skinRadar");
+  if (!canvas) return;
+
+  const ctx = canvas.getContext("2d");
+  const centerX = canvas.width / 2;
+  const centerY = canvas.height / 2;
+  const radius = Math.min(centerX, centerY) - 40;
+
+  const labels = ["Radiance", "Moisture", "Texture", "Pores", "Dark Circles", "Oiliness", "Redness"];
+
+  // Use real analysis data if available, otherwise fall back to defaults
+  const result = window.__skinAnalysisResult;
+  const m = result?.metrics || {};
+  const data = [
+    m.radiance ?? 70,
+    m.moisture ?? 70,
+    m.texture ?? 70,
+    m.pores ?? 70,
+    m.dark_circles ?? 70,
+    m.oiliness ?? 70,
+    m.redness ?? 70,
+  ];
+  const numPoints = data.length;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Background circles
+  ctx.strokeStyle = "#E8E4F3";
+  ctx.lineWidth = 1;
+  for (let i = 1; i <= 5; i++) {
     ctx.beginPath();
-    for (let i = 0; i < numPoints; i++) {
-        const angle = (Math.PI * 2 * i) / numPoints - Math.PI / 2;
-        const value = data[i] / 100;
-        const x = centerX + radius * value * Math.cos(angle);
-        const y = centerY + radius * value * Math.sin(angle);
-        
-        if (i === 0) {
-            ctx.moveTo(x, y);
-        } else {
-            ctx.lineTo(x, y);
-        }
-    }
-    ctx.closePath();
-    
-    // Fill with gradient
-    const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-    gradient.addColorStop(0, 'rgba(168, 230, 207, 0.3)');
-    gradient.addColorStop(1, 'rgba(255, 182, 217, 0.3)');
-    ctx.fillStyle = gradient;
-    ctx.fill();
-    
-    // Stroke
-    ctx.strokeStyle = '#FFB6D9';
-    ctx.lineWidth = 2;
+    ctx.arc(centerX, centerY, (radius / 5) * i, 0, Math.PI * 2);
     ctx.stroke();
-    
-    // Draw data points
-    for (let i = 0; i < numPoints; i++) {
-        const angle = (Math.PI * 2 * i) / numPoints - Math.PI / 2;
-        const value = data[i] / 100;
-        const x = centerX + radius * value * Math.cos(angle);
-        const y = centerY + radius * value * Math.sin(angle);
-        
-        ctx.beginPath();
-        ctx.arc(x, y, 4, 0, Math.PI * 2);
-        ctx.fillStyle = '#FFB6D9';
-        ctx.fill();
-    }
+  }
+
+  // Axes + labels
+  ctx.strokeStyle = "#E8E4F3";
+  ctx.lineWidth = 1;
+  for (let i = 0; i < numPoints; i++) {
+    const angle = (Math.PI * 2 * i) / numPoints - Math.PI / 2;
+    const x = centerX + radius * Math.cos(angle);
+    const y = centerY + radius * Math.sin(angle);
+
+    ctx.beginPath();
+    ctx.moveTo(centerX, centerY);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+
+    const labelX = centerX + (radius + 30) * Math.cos(angle);
+    const labelY = centerY + (radius + 30) * Math.sin(angle);
+    ctx.fillStyle = "#7A7A8E";
+    ctx.font = "12px Outfit";
+    ctx.textAlign = "center";
+    ctx.fillText(labels[i], labelX, labelY);
+  }
+
+  // Data polygon
+  ctx.beginPath();
+  for (let i = 0; i < numPoints; i++) {
+    const angle = (Math.PI * 2 * i) / numPoints - Math.PI / 2;
+    const value = data[i] / 100;
+    const x = centerX + radius * value * Math.cos(angle);
+    const y = centerY + radius * value * Math.sin(angle);
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+
+  const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+  gradient.addColorStop(0, "rgba(168, 230, 207, 0.3)");
+  gradient.addColorStop(1, "rgba(255, 182, 217, 0.3)");
+  ctx.fillStyle = gradient;
+  ctx.fill();
+  ctx.strokeStyle = "#FFB6D9";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Data points
+  for (let i = 0; i < numPoints; i++) {
+    const angle = (Math.PI * 2 * i) / numPoints - Math.PI / 2;
+    const value = data[i] / 100;
+    const x = centerX + radius * value * Math.cos(angle);
+    const y = centerY + radius * value * Math.sin(angle);
+
+    ctx.beginPath();
+    ctx.arc(x, y, 4, 0, Math.PI * 2);
+    ctx.fillStyle = "#FFB6D9";
+    ctx.fill();
+  }
 }
 
 // Set canvas size on load
-window.addEventListener('load', () => {
-    const canvas = document.getElementById('skinRadar');
-    if (canvas) {
-        canvas.width = 400;
-        canvas.height = 400;
-    }
+window.addEventListener("load", () => {
+  const canvas = document.getElementById("skinRadar");
+  if (canvas) {
+    canvas.width = 400;
+    canvas.height = 400;
+  }
 });
