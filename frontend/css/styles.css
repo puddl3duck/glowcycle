@@ -398,6 +398,202 @@ body {
     text-align: center;
 }
 
+/* Skin Type Selection */
+.skin-type-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+@media (max-width: 968px) {
+    .skin-type-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .skin-type-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.6rem;
+    }
+}
+
+/* Period Question Alternatives */
+.period-date-section {
+    margin-bottom: 1.5rem;
+}
+
+.period-label {
+    display: block;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 0.5rem;
+}
+
+.period-alternatives {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 2px solid rgba(212, 197, 232, 0.3);
+}
+
+.alternatives-label {
+    font-size: 0.9rem;
+    color: var(--text-medium);
+    text-align: center;
+    margin-bottom: 1rem;
+    font-weight: 500;
+}
+
+.alternative-options {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+.alternative-btn {
+    background: rgba(255, 255, 255, 0.8);
+    border: 2px solid rgba(212, 197, 232, 0.3);
+    border-radius: 15px;
+    padding: 1.2rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: 'Outfit', sans-serif;
+}
+
+.alternative-btn:hover {
+    border-color: var(--lavender);
+    background: rgba(212, 197, 232, 0.1);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(184, 168, 208, 0.15);
+}
+
+.alternative-btn.selected {
+    border-color: var(--accent-purple);
+    background: linear-gradient(135deg, rgba(155, 126, 189, 0.1), rgba(255, 182, 217, 0.1));
+    box-shadow: 0 10px 30px rgba(155, 126, 189, 0.2);
+}
+
+.alt-icon {
+    font-size: 2rem;
+}
+
+.alt-text {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    text-align: center;
+}
+
+.skin-type-option {
+    background: rgba(255, 255, 255, 0.8);
+    border: 2px solid rgba(212, 197, 232, 0.3);
+    border-radius: 15px;
+    padding: 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 140px;
+}
+
+@media (max-width: 968px) {
+    .skin-type-option {
+        padding: 1.2rem 0.8rem;
+        min-height: 130px;
+    }
+}
+
+@media (max-width: 480px) {
+    .skin-type-option {
+        padding: 1rem 0.5rem;
+        min-height: 110px;
+        border-radius: 12px;
+    }
+}
+
+.skin-type-option:hover {
+    border-color: var(--lavender);
+    background: rgba(212, 197, 232, 0.1);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(184, 168, 208, 0.15);
+}
+
+.skin-type-option.selected {
+    border-color: var(--accent-purple);
+    background: linear-gradient(135deg, rgba(155, 126, 189, 0.1), rgba(255, 182, 217, 0.1));
+    box-shadow: 0 10px 30px rgba(155, 126, 189, 0.2);
+}
+
+.skin-type-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+}
+
+@media (max-width: 968px) {
+    .skin-type-icon {
+        font-size: 2rem;
+        margin-bottom: 0.3rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .skin-type-icon {
+        font-size: 1.8rem;
+        margin-bottom: 0.2rem;
+    }
+}
+
+.skin-type-option h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 0.3rem;
+}
+
+@media (max-width: 968px) {
+    .skin-type-option h3 {
+        font-size: 1rem;
+        margin-bottom: 0.2rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .skin-type-option h3 {
+        font-size: 0.9rem;
+        margin-bottom: 0.15rem;
+    }
+}
+
+.skin-type-option p {
+    font-size: 0.85rem;
+    color: var(--text-medium);
+    line-height: 1.4;
+}
+
+@media (max-width: 968px) {
+    .skin-type-option p {
+        font-size: 0.75rem;
+        line-height: 1.3;
+    }
+}
+
+@media (max-width: 480px) {
+    .skin-type-option p {
+        font-size: 0.7rem;
+        line-height: 1.2;
+    }
+}
+
 #cycle-days {
     display: block;
     font-size: 4rem;
@@ -1640,6 +1836,24 @@ body {
         font-size: 5rem;
     }
     
+    /* Period alternatives responsive */
+    .alternative-options {
+        grid-template-columns: 1fr;
+    }
+    
+    .alternative-btn {
+        padding: 1rem;
+    }
+    
+    .alt-icon {
+        font-size: 1.8rem;
+    }
+    
+    .alt-text {
+        font-size: 0.9rem;
+    }
+    }
+    
     .motivational-quote::before {
         top: -20px;
         left: -10px;
@@ -1671,8 +1885,29 @@ body {
         font-size: 2rem;
     }
     
+    .question-subtitle {
+        font-size: 0.95rem;
+        margin-bottom: 1.5rem;
+    }
+    
     .question-card {
         padding: 2rem;
+    }
+    
+    @media (max-width: 480px) {
+        .question-title {
+            font-size: 1.6rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .question-subtitle {
+            font-size: 0.85rem;
+            margin-bottom: 1.2rem;
+        }
+        
+        .question-card {
+            padding: 1.5rem 1rem;
+        }
     }
     
     .features-grid {

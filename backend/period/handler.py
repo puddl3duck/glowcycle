@@ -4,11 +4,40 @@ import json
 from typing import List, Optional
 import boto3
 from boto3.dynamodb.conditions import Key
+from decimal import Decimal
 import os
 
 DYNAMODB_TABLE_NAME = os.environ.get("DYNAMODB_TABLE_NAME", "GlowCycleTable")
 dynamodb = boto3.resource('dynamodb')
 period_table = dynamodb.Table(DYNAMODB_TABLE_NAME)
+
+
+# Custom JSON encoder for Decimal objects
+class DecimalEncoder(json.JSONEncoder):
+    """JSON encoder that converts Decimal to int or float"""
+    def default(self, obj):
+        if isinstance(obj, Decimal):
+            return int(obj) if obj % 1 == 0 else float(obj)
+        return super(DecimalEncoder, self).default(obj)
+
+
+# Helper function to convert Decimal to int/float for JSON serialization
+def decimal_to_number(obj):
+    """Convert Decimal objects to int or float for JSON serialization"""
+    if isinstance(obj, Decimal):
+        return int(obj) if obj % 1 == 0 else float(obj)
+    return obj
+
+
+def convert_decimals(data):
+    """Recursively convert all Decimal objects in a data structure"""
+    if isinstance(data, list):
+        return [convert_decimals(item) for item in data]
+    elif isinstance(data, dict):
+        return {key: convert_decimals(value) for key, value in data.items()}
+    elif isinstance(data, Decimal):
+        return decimal_to_number(data)
+    return data
 
 @dataclass
 class PeriodEntry:
@@ -122,19 +151,31 @@ def get_periods(event):
         periods = []
         for item in items:
             try:
+                # Ensure period_date exists
+                if "period_date" not in item:
+                    print(f"Skipping entry without period_date: {item.get('date', 'unknown')}")
+                    continue
+                
+                # Convert all Decimals in the item
+                item = convert_decimals(item)
+                
                 period_data = {
                     "period_date": item.get("period_date"),
-                    "created_at": item.get("created_at")
+                    "created_at": item.get("created_at", "")
                 }
+                
                 # Add optional fields only if they exist
-                if "user_age" in item:
+                if "user_age" in item and item.get("user_age") is not None:
                     period_data["user_age"] = item.get("user_age")
-                if "cycle_length" in item:
+                
+                if "cycle_length" in item and item.get("cycle_length") is not None:
                     period_data["cycle_length"] = item.get("cycle_length")
                 
                 periods.append(period_data)
             except Exception as e:
                 print(f"Skipping malformed period entry: {item.get('date', 'unknown')}, error: {str(e)}")
+                import traceback
+                traceback.print_exc()
                 continue
 
         return {
@@ -207,7 +248,7 @@ def lambda_handler(event, context):
                     "Access-Control-Allow-Methods": "GET,POST,DELETE,OPTIONS",
                     "Access-Control-Allow-Headers": "Content-Type"
                 },
-                "body": json.dumps({"status": "ok", "message": "CORS preflight"})
+                "body": json.dumps({"status": "ok", "message": "CORS preflight"}, cls=DecimalEncoder)
             }
 
         result = None
@@ -228,7 +269,7 @@ def lambda_handler(event, context):
                 "Access-Control-Allow-Methods": "GET,POST,DELETE,OPTIONS",
                 "Access-Control-Allow-Headers": "Content-Type"
             },
-            "body": json.dumps(result)
+            "body": json.dumps(result, cls=DecimalEncoder)
         }
     
     except ValueError as e:
@@ -239,7 +280,7 @@ def lambda_handler(event, context):
                 "Access-Control-Allow-Origin": "*",
                 "Access-Control-Allow-Headers": "Content-Type"
             },
-            "body": json.dumps({"error": str(e)})
+            "body": json.dumps({"error": str(e)}, cls=DecimalEncoder)
         }
     except Exception as e:
         print(f"Lambda handler error: {str(e)}")
@@ -251,5 +292,5 @@ def lambda_handler(event, context):
                 "Access-Control-Allow-Origin": "*",
                 "Access-Control-Allow-Headers": "Content-Type"
             },
-            "body": json.dumps({"error": "Internal server error", "details": str(e)})
+            "body": json.dumps({"error": "Internal server error", "details": str(e)}, cls=DecimalEncoder)
         }

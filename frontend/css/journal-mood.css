@@ -702,7 +702,6 @@ body {
     .navbar {
         padding: 1rem 1.5rem;
         flex-wrap: wrap;
-        gap: 1rem;
     }
     
     .nav-logo {
@@ -710,6 +709,10 @@ body {
     }
     
     .nav-links {
+        order: 3;
+        width: 100%;
+        justify-content: center;
+        margin-top: 1rem;
         gap: 1.5rem;
     }
     
@@ -733,6 +736,10 @@ body {
     
     .journal-container {
         padding: 1.5rem 1rem 3rem;
+    }
+    
+    .page-header {
+        margin-bottom: 2rem;
     }
     
     .page-header h1 {
@@ -788,6 +795,11 @@ body {
         gap: 0.6rem;
     }
     
+    .custom-tag-input {
+        font-size: 0.9rem;
+        padding: 0.8rem 1rem;
+    }
+    
     .add-tag-btn {
         width: 45px;
         height: 45px;
@@ -807,25 +819,41 @@ body {
     }
     
     .save-entry-btn {
-        padding: 1rem;
+        padding: 1.1rem;
         font-size: 1rem;
     }
     
     .stats-grid {
-        grid-template-columns: 1fr;
-        gap: 0.8rem;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
     }
     
     .stat-box {
-        padding: 1rem;
+        padding: 1.2rem;
     }
     
     .stat-value {
         font-size: 1.8rem;
     }
     
+    .stat-label {
+        font-size: 0.85rem;
+    }
+    
     .entry-preview {
-        padding: 1rem;
+        padding: 1.2rem;
+    }
+    
+    .entry-date {
+        font-size: 0.8rem;
+    }
+    
+    .entry-mood {
+        font-size: 1.5rem;
+    }
+    
+    .entry-text {
+        font-size: 0.9rem;
     }
     
     .theme-toggle {
@@ -855,6 +883,7 @@ body {
         width: 100%;
         justify-content: center;
         gap: 1rem;
+        margin-top: 0.8rem;
     }
     
     .nav-link {
@@ -867,6 +896,10 @@ body {
     
     .journal-container {
         padding: 1rem 0.8rem 2rem;
+    }
+    
+    .page-header {
+        margin-bottom: 1.5rem;
     }
     
     .page-header h1 {
@@ -908,6 +941,23 @@ body {
         gap: 0.6rem;
     }
     
+    .tag-btn,
+    .custom-tag-btn {
+        padding: 0.7rem;
+        font-size: 0.8rem;
+    }
+    
+    .custom-tag-input {
+        font-size: 0.85rem;
+        padding: 0.7rem 0.9rem;
+    }
+    
+    .add-tag-btn {
+        width: 42px;
+        height: 42px;
+        font-size: 1.2rem;
+    }
+    
     .energy-labels {
         font-size: 0.8rem;
     }
@@ -919,11 +969,64 @@ body {
     .journal-textarea {
         min-height: 180px;
         font-size: 0.9rem;
+        padding: 1rem;
+    }
+    
+    .word-count {
+        font-size: 0.75rem;
     }
     
     .save-entry-btn {
-        padding: 0.9rem;
+        padding: 1rem;
         font-size: 0.95rem;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 0.8rem;
+    }
+    
+    .stat-box {
+        padding: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .stat-value {
+        font-size: 1.8rem;
+        order: 2;
+    }
+    
+    .stat-label {
+        font-size: 0.9rem;
+        order: 1;
+        text-align: left;
+    }
+    
+    .entry-preview {
+        padding: 1rem;
+    }
+    
+    .entry-date {
+        font-size: 0.75rem;
+    }
+    
+    .entry-mood {
+        font-size: 1.3rem;
+    }
+    
+    .entry-text {
+        font-size: 0.85rem;
+    }
+    
+    .entry-tags {
+        gap: 0.4rem;
+    }
+    
+    .entry-tag {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.7rem;
     }
     
     .theme-toggle {
@@ -932,6 +1035,11 @@ body {
         width: 45px;
         height: 45px;
         font-size: 1.3rem;
+    }
+    
+    .back-link {
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
     }
 }
 

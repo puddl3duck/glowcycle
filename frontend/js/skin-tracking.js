@@ -595,9 +595,53 @@ function showResults() {
 
   renderSkinAnalysisResult();
   drawRadarChart();
+  
+  // Generate and display product recommendations
+  const skinType = localStorage.getItem('skinType') || 'normal';
+  const cyclePhase = calculateCurrentCyclePhase();
+  
+  // Get skin analysis from backend result
+  const result = window.__skinAnalysisResult;
+  const skinAnalysis = {
+    acne_detected: result?.concerns_detected?.some(c => c.toLowerCase().includes('acne')) || false,
+    dryness_detected: result?.concerns_detected?.some(c => c.toLowerCase().includes('dry')) || false,
+    oiliness_detected: result?.concerns_detected?.some(c => c.toLowerCase().includes('oil')) || false,
+    redness_detected: result?.concerns_detected?.some(c => c.toLowerCase().includes('red')) || false
+  };
+  
+  displayProductRecommendations(skinAnalysis, cyclePhase, skinType);
 }
 
-// Toggle for routine step proudct section 
+function calculateCurrentCyclePhase() {
+  const lastPeriod = localStorage.getItem('lastPeriod');
+  const cycleDays = parseInt(localStorage.getItem('cycleDays')) || 28;
+  
+  if (!lastPeriod) {
+    return 'follicular';
+  }
+  
+  try {
+    const lastPeriodDate = new Date(lastPeriod);
+    const today = new Date();
+    const daysSince = Math.floor((today - lastPeriodDate) / (1000 * 60 * 60 * 24));
+    const cycleDay = (daysSince % cycleDays) + 1;
+    
+    if (cycleDay <= 5) {
+      return 'menstrual';
+    } else if (cycleDay <= Math.floor(cycleDays * 0.43)) {
+      return 'follicular';
+    } else if (cycleDay <= Math.floor(cycleDays * 0.57)) {
+      return 'ovulation';
+    } else {
+      return 'luteal';
+    }
+  } catch (error) {
+    console.error('Error calculating cycle phase:', error);
+    return 'follicular';
+  }
+}
+
+// Toggle for routine step product section 
 function toggleRoutineStep(index, stepText) {
   const expanded = document.getElementById(`routine-step-expanded-${index}`);
   const card = document.getElementById(`routine-step-${index}`);
@@ -659,26 +703,26 @@ function renderSkinAnalysisResult() {
   const steps = isNight ? result.pm_routine : result.am_routine;
   if (routineTitle) routineTitle.textContent = isNight ? "🌙 Night Skincare Routine" : "☀️ Day Skincare Routine";
   if (routineSteps && Array.isArray(steps))  {
-  routineSteps.innerHTML = steps.map((s, i) => `
-    <div class="routine-step" id="routine-step-${i}" onclick="toggleRoutineStep(${i}, '${s.replace(/'/g, "\\'")}')">
-      <div class="routine-step-header">
-        <span class="routine-step-check">✓</span>
-        <span class="routine-step-text">${s}</span>
-        <span class="routine-step-chevron">›</span>
-      </div>
-      <div class="routine-step-expanded" id="routine-step-expanded-${i}" style="display:none;">
-        <div class="suggested-product">
-          <span class="suggested-label">🛍️ Suggested product</span>
-          <a href="https://www.amazon.com.au/s?k=${encodeURIComponent(s)}" 
-             target="_blank" 
-             class="amazon-link">
-            Search "${s}" on Amazon →
-          </a>
+    routineSteps.innerHTML = steps.map((s, i) => `
+      <div class="routine-step" id="routine-step-${i}" onclick="toggleRoutineStep(${i}, '${s.replace(/'/g, "\\'")}')">
+        <div class="routine-step-header">
+          <span class="routine-step-check">✓</span>
+          <span class="routine-step-text">${s}</span>
+          <span class="routine-step-chevron">›</span>
+        </div>
+        <div class="routine-step-expanded" id="routine-step-expanded-${i}" style="display:none;">
+          <div class="suggested-product">
+            <span class="suggested-label">🛍️ Suggested product</span>
+            <a href="https://www.amazon.com.au/s?k=${encodeURIComponent(s)}" 
+               target="_blank" 
+               class="amazon-link">
+              Search "${s}" on Amazon →
+            </a>
+          </div>
         </div>
       </div>
-    </div>
-  `).join("");
-}
+    `).join("");
+  }
 
   // Remove static hardcoded recommendation cards
   document.querySelectorAll(".recommendations .recommendation-card").forEach((el) => el.remove());
@@ -720,6 +764,14 @@ function renderSkinAnalysisResult() {
 function drawRadarChart() {
   const canvas = document.getElementById("skinRadar");
   if (!canvas) return;
+
+  // Make canvas responsive
+  const container = canvas.parentElement;
+  const containerWidth = container.clientWidth;
+  const size = Math.min(containerWidth - 40, 400);
+  
+  canvas.width = size;
+  canvas.height = size;
 
   const ctx = canvas.getContext("2d");
   const centerX = canvas.width / 2;
@@ -808,6 +860,55 @@ function drawRadarChart() {
   }
 }
 
+// Set canvas size on load and resize
+function initRadarChart() {
+  const canvas = document.getElementById('skinRadar');
+  if (canvas) {
+    drawRadarChart();
+  }
+}
+
+window.addEventListener('load', initRadarChart);
+window.addEventListener('resize', drawRadarChart);Align = "center";
+    ctx.fillText(labels[i], labelX, labelY);
+  }
+
+  // Data polygon
+  ctx.beginPath();
+  for (let i = 0; i < numPoints; i++) {
+    const angle = (Math.PI * 2 * i) / numPoints - Math.PI / 2;
+    const value = data[i] / 100;
+    const x = centerX + radius * value * Math.cos(angle);
+    const y = centerY + radius * value * Math.sin(angle);
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+
+  const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+  gradient.addColorStop(0, "rgba(168, 230, 207, 0.3)");
+  gradient.addColorStop(1, "rgba(255, 182, 217, 0.3)");
+  ctx.fillStyle = gradient;
+  ctx.fill();
+  ctx.strokeStyle = "#FFB6D9";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Data points
+  for (let i = 0; i < numPoints; i++) {
+    const angle = (Math.PI * 2 * i) / numPoints - Math.PI / 2;
+    const value = data[i] / 100;
+    const x = centerX + radius * value * Math.cos(angle);
+    const y = centerY + radius * value * Math.sin(angle);
+
+    ctx.beginPath();
+    ctx.arc(x, y, 4, 0, Math.PI * 2);
+    ctx.fillStyle = "#FFB6D9";
+    ctx.fill();
+  }
+}
+
+<<<<<<< HEAD
 // Set canvas size on load
 window.addEventListener("load", () => {
   const canvas = document.getElementById("skinRadar");
@@ -816,3 +917,375 @@ window.addEventListener("load", () => {
     canvas.height = 400;
   }
 });
+=======
+// Set canvas size on load and resize
+function initRadarChart() {
+    const canvas = document.getElementById('skinRadar');
+    if (canvas) {
+        drawRadarChart();
+    }
+}
+
+window.addEventListener('load', initRadarChart);
+window.addEventListener('resize', drawRadarChart);
+
+
+// ===== PRODUCT RECOMMENDATIONS =====
+
+function generateProductRecommendations(skinAnalysis, cyclePhase, skinType) {
+    /**
+     * Generate personalized product recommendations based on:
+     * - Skin analysis results (acne, dryness, oiliness, etc.)
+     * - Cycle phase (menstrual, follicular, ovulation, luteal)
+     * - Skin type (from user profile)
+     */
+    
+    const products = [];
+    
+    // Get skin type from localStorage if not provided
+    if (!skinType) {
+        skinType = localStorage.getItem('skinType') || 'normal';
+    }
+    
+    // Get cycle phase (simplified - you can enhance this)
+    if (!cyclePhase) {
+        cyclePhase = 'follicular'; // Default
+    }
+    
+    // PRODUCT DATABASE
+    const productDatabase = {
+        // CLEANSERS
+        gentle_cleanser: {
+            name: "CeraVe Hydrating Facial Cleanser",
+            category: "Cleanser",
+            icon: "🧼",
+            description: "A mild, non-stripping cleanser that removes impurities while maintaining skin's natural moisture barrier.",
+            benefits: ["Hydrating", "pH-Balanced", "Fragrance-Free"],
+            ingredients: "Ceramides, Hyaluronic Acid, Glycerin",
+            forSkinTypes: ["dry", "sensitive", "normal"],
+            forConcerns: ["dryness", "sensitivity"],
+            cyclePhases: ["menstrual", "luteal"],
+            price: "$14.99",
+            rating: 4.6,
+            reviews: 45000,
+            amazonLink: "AMAZON_LINK_PLACEHOLDER_1" // Tu compañera reemplazará esto
+        },
+        foaming_cleanser: {
+            name: "La Roche-Posay Effaclar Cleanser",
+            category: "Cleanser",
+            icon: "🫧",
+            description: "Deep-cleansing formula that removes excess oil and unclogs pores without over-drying.",
+            benefits: ["Oil Control", "Pore Cleansing", "Refreshing"],
+            ingredients: "Salicylic Acid, Zinc, Glycerin",
+            forSkinTypes: ["oily", "combination", "acne-prone"],
+            forConcerns: ["oiliness", "acne", "large_pores"],
+            cyclePhases: ["ovulation", "follicular"],
+            price: "$15.99",
+            rating: 4.5,
+            reviews: 32000,
+            amazonLink: "AMAZON_LINK_PLACEHOLDER_2"
+        },
+        
+        // SERUMS
+        vitamin_c_serum: {
+            name: "TruSkin Vitamin C Serum",
+            category: "Serum",
+            icon: "✨",
+            description: "Powerful antioxidant serum that brightens skin, evens tone, and boosts radiance.",
+            benefits: ["Brightening", "Antioxidant", "Anti-Aging"],
+            ingredients: "Vitamin C 20%, Hyaluronic Acid, Vitamin E",
+            forSkinTypes: ["normal", "dry", "combination"],
+            forConcerns: ["dullness", "dark_spots", "uneven_tone"],
+            cyclePhases: ["ovulation", "follicular"],
+            price: "$19.99",
+            rating: 4.3,
+            reviews: 78000,
+            amazonLink: "AMAZON_LINK_PLACEHOLDER_3"
+        },
+        hyaluronic_serum: {
+            name: "The Ordinary Hyaluronic Acid 2% + B5",
+            category: "Serum",
+            icon: "💧",
+            description: "Intense hydration serum that plumps skin and reduces the appearance of fine lines.",
+            benefits: ["Deep Hydration", "Plumping", "Soothing"],
+            ingredients: "Hyaluronic Acid, Vitamin B5",
+            forSkinTypes: ["dry", "sensitive", "normal", "combination"],
+            forConcerns: ["dryness", "fine_lines", "dehydration"],
+            cyclePhases: ["menstrual", "luteal"],
+            price: "$7.99",
+            rating: 4.5,
+            reviews: 95000,
+            amazonLink: "AMAZON_LINK_PLACEHOLDER_4"
+        },
+        niacinamide_serum: {
+            name: "The Ordinary Niacinamide 10% + Zinc 1%",
+            category: "Serum",
+            icon: "🌟",
+            description: "Multi-tasking serum that controls oil, minimizes pores, and reduces inflammation.",
+            benefits: ["Oil Control", "Pore Minimizing", "Anti-Inflammatory"],
+            ingredients: "Niacinamide 10%, Zinc 1%",
+            forSkinTypes: ["oily", "combination", "acne-prone"],
+            forConcerns: ["oiliness", "acne", "large_pores", "redness"],
+            cyclePhases: ["luteal", "ovulation"],
+            price: "$5.99",
+            rating: 4.4,
+            reviews: 120000,
+            amazonLink: "AMAZON_LINK_PLACEHOLDER_5"
+        },
+        retinol_serum: {
+            name: "RoC Retinol Correxion Deep Wrinkle Serum",
+            category: "Treatment",
+            icon: "🔬",
+            description: "Anti-aging powerhouse that accelerates cell turnover and reduces wrinkles.",
+            benefits: ["Anti-Aging", "Smoothing", "Acne Prevention"],
+            ingredients: "Retinol, Hyaluronic Acid, Glycerin",
+            forSkinTypes: ["normal", "oily", "combination", "acne-prone"],
+            forConcerns: ["wrinkles", "acne", "texture"],
+            cyclePhases: ["follicular", "ovulation"],
+            price: "$22.99",
+            rating: 4.4,
+            reviews: 28000,
+            amazonLink: "AMAZON_LINK_PLACEHOLDER_6"
+        },
+        
+        // MOISTURIZERS
+        rich_moisturizer: {
+            name: "CeraVe Moisturizing Cream",
+            category: "Moisturizer",
+            icon: "🧴",
+            description: "Deeply nourishing cream that repairs and strengthens the skin barrier.",
+            benefits: ["Intense Hydration", "Barrier Repair", "Soothing"],
+            ingredients: "Ceramides, Hyaluronic Acid, Petrolatum",
+            forSkinTypes: ["dry", "sensitive"],
+            forConcerns: ["dryness", "sensitivity", "barrier_damage"],
+            cyclePhases: ["menstrual", "luteal"],
+            price: "$16.99",
+            rating: 4.7,
+            reviews: 67000,
+            amazonLink: "AMAZON_LINK_PLACEHOLDER_7"
+        },
+        lightweight_moisturizer: {
+            name: "Neutrogena Hydro Boost Water Gel",
+            category: "Moisturizer",
+            icon: "💦",
+            description: "Oil-free gel formula that hydrates without clogging pores or adding shine.",
+            benefits: ["Oil-Free", "Non-Comedogenic", "Lightweight"],
+            ingredients: "Hyaluronic Acid, Glycerin, Dimethicone",
+            forSkinTypes: ["oily", "combination", "acne-prone"],
+            forConcerns: ["oiliness", "acne"],
+            cyclePhases: ["ovulation", "follicular"],
+            price: "$17.99",
+            rating: 4.5,
+            reviews: 52000,
+            amazonLink: "AMAZON_LINK_PLACEHOLDER_8"
+        },
+        
+        // TREATMENTS
+        salicylic_treatment: {
+            name: "Paula's Choice 2% BHA Liquid Exfoliant",
+            category: "Treatment",
+            icon: "🎯",
+            description: "Targeted treatment that quickly reduces breakouts and prevents new ones.",
+            benefits: ["Acne Fighting", "Pore Clearing", "Exfoliating"],
+            ingredients: "Salicylic Acid 2%, Green Tea Extract",
+            forSkinTypes: ["oily", "combination", "acne-prone"],
+            forConcerns: ["acne", "breakouts"],
+            cyclePhases: ["luteal", "menstrual"],
+            price: "$32.00",
+            rating: 4.5,
+            reviews: 41000,
+            amazonLink: "AMAZON_LINK_PLACEHOLDER_9"
+        },
+        azelaic_acid: {
+            name: "The Ordinary Azelaic Acid Suspension 10%",
+            category: "Treatment",
+            icon: "🌸",
+            description: "Multi-benefit treatment for acne, redness, and hyperpigmentation.",
+            benefits: ["Anti-Acne", "Brightening", "Anti-Redness"],
+            ingredients: "Azelaic Acid 10%",
+            forSkinTypes: ["sensitive", "acne-prone", "combination"],
+            forConcerns: ["acne", "redness", "dark_spots"],
+            cyclePhases: ["luteal", "menstrual"],
+            price: "$12.99",
+            rating: 4.3,
+            reviews: 38000,
+            amazonLink: "AMAZON_LINK_PLACEHOLDER_10"
+        },
+        
+        // SUNSCREEN
+        mineral_sunscreen: {
+            name: "EltaMD UV Clear Broad-Spectrum SPF 46",
+            category: "Sunscreen",
+            icon: "☀️",
+            description: "Gentle mineral sunscreen that protects without irritation.",
+            benefits: ["Broad Spectrum", "Oil-Free", "Lightweight"],
+            ingredients: "Zinc Oxide 9%, Niacinamide, Hyaluronic Acid",
+            forSkinTypes: ["sensitive", "dry", "normal"],
+            forConcerns: ["sensitivity", "sun_protection"],
+            cyclePhases: ["menstrual", "follicular", "ovulation", "luteal"],
+            price: "$39.00",
+            rating: 4.6,
+            reviews: 15000,
+            amazonLink: "AMAZON_LINK_PLACEHOLDER_11"
+        },
+        chemical_sunscreen: {
+            name: "La Roche-Posay Anthelios Melt-In Milk SPF 60",
+            category: "Sunscreen",
+            icon: "🌞",
+            description: "Invisible, lightweight sunscreen perfect for oily skin.",
+            benefits: ["Matte Finish", "Oil-Free", "Water-Resistant"],
+            ingredients: "Avobenzone, Homosalate, Octisalate",
+            forSkinTypes: ["oily", "combination", "acne-prone"],
+            forConcerns: ["oiliness", "sun_protection"],
+            cyclePhases: ["menstrual", "follicular", "ovulation", "luteal"],
+            price: "$35.99",
+            rating: 4.5,
+            reviews: 22000,
+            amazonLink: "AMAZON_LINK_PLACEHOLDER_12"
+        }
+    };
+    
+    // RECOMMENDATION LOGIC
+    
+    // 1. CLEANSER - Based on skin type
+    if (skinType === 'dry' || skinType === 'sensitive') {
+        products.push({
+            ...productDatabase.gentle_cleanser,
+            why: `Perfect for ${skinType} skin. Your skin needs gentle cleansing to avoid stripping natural oils, especially during ${cyclePhase} phase.`
+        });
+    } else if (skinType === 'oily' || skinType === 'acne-prone' || skinType === 'combination') {
+        products.push({
+            ...productDatabase.foaming_cleanser,
+            why: `Ideal for ${skinType} skin. Controls excess oil and prevents breakouts, especially important during ${cyclePhase} phase.`
+        });
+    }
+    
+    // 2. SERUM - Based on skin analysis + cycle phase
+    if (skinAnalysis && skinAnalysis.acne_detected) {
+        // Acne detected
+        if (cyclePhase === 'luteal' || cyclePhase === 'menstrual') {
+            products.push({
+                ...productDatabase.niacinamide_serum,
+                why: "Acne detected + hormonal phase. Niacinamide reduces inflammation and controls oil production during PMS/period."
+            });
+            products.push({
+                ...productDatabase.salicylic_treatment,
+                why: "Target active breakouts with this spot treatment. Hormonal acne needs targeted care during luteal/menstrual phase."
+            });
+        } else {
+            products.push({
+                ...productDatabase.retinol_serum,
+                why: "Acne detected + follicular/ovulation phase. Perfect time for retinol - prevents future breakouts and improves texture."
+            });
+        }
+    } else if (skinAnalysis && skinAnalysis.dryness_detected) {
+        // Dryness detected
+        products.push({
+            ...productDatabase.hyaluronic_serum,
+            why: "Dryness detected. Hyaluronic acid provides intense hydration without heaviness."
+        });
+    } else if (cyclePhase === 'ovulation' || cyclePhase === 'follicular') {
+        // Peak glow phase
+        products.push({
+            ...productDatabase.vitamin_c_serum,
+            why: `${cyclePhase} phase = peak glow time! Vitamin C boosts your natural radiance and evens skin tone.`
+        });
+    } else {
+        // Default serum
+        products.push({
+            ...productDatabase.niacinamide_serum,
+            why: "Multi-tasking serum that balances oil, minimizes pores, and reduces redness. Perfect for all skin types."
+        });
+    }
+    
+    // 3. MOISTURIZER - Based on skin type
+    if (skinType === 'dry' || skinType === 'sensitive') {
+        products.push({
+            ...productDatabase.rich_moisturizer,
+            why: `${skinType} skin needs rich hydration. This cream repairs your skin barrier and locks in moisture.`
+        });
+    } else if (skinType === 'oily' || skinType === 'acne-prone' || skinType === 'combination') {
+        products.push({
+            ...productDatabase.lightweight_moisturizer,
+            why: `${skinType} skin needs hydration without heaviness. This gel moisturizer won't clog pores or add shine.`
+        });
+    }
+    
+    // 4. SUNSCREEN - Always recommend (based on skin type)
+    if (skinType === 'sensitive' || skinType === 'dry') {
+        products.push({
+            ...productDatabase.mineral_sunscreen,
+            why: "Gentle mineral sunscreen perfect for sensitive skin. Protects without irritation. Non-negotiable daily step!"
+        });
+    } else {
+        products.push({
+            ...productDatabase.chemical_sunscreen,
+            why: "Lightweight, invisible sunscreen that won't make your skin greasy. Essential daily protection!"
+        });
+    }
+    
+    // 5. SPECIAL TREATMENTS - Based on specific concerns
+    if (skinAnalysis && skinAnalysis.redness_detected && skinType === 'sensitive') {
+        products.push({
+            ...productDatabase.azelaic_acid,
+            why: "Redness detected. Azelaic acid calms inflammation and reduces redness without irritation."
+        });
+    }
+    
+    return products;
+}
+
+function displayProductRecommendations(skinAnalysis, cyclePhase, skinType) {
+    const productsGrid = document.getElementById('products-grid');
+    if (!productsGrid) return;
+    
+    // Generate recommendations
+    const products = generateProductRecommendations(skinAnalysis, cyclePhase, skinType);
+    
+    // Clear existing products
+    productsGrid.innerHTML = '';
+    
+    // Display products
+    products.forEach(product => {
+        const productCard = document.createElement('div');
+        productCard.className = 'product-card';
+        
+        productCard.innerHTML = `
+            <div class="product-header">
+                <div class="product-icon">${product.icon}</div>
+                <div class="product-info">
+                    <div class="product-name">${product.name}</div>
+                    <div class="product-category">${product.category}</div>
+                </div>
+            </div>
+            <div class="product-rating">
+                <div class="stars">${'⭐'.repeat(Math.floor(product.rating))}${product.rating % 1 >= 0.5 ? '½' : ''}</div>
+                <span class="rating-count">(${(product.reviews / 1000).toFixed(1)}k reviews)</span>
+            </div>
+            <p class="product-description">${product.description}</p>
+            <div class="product-benefits">
+                ${product.benefits.map(benefit => `<span class="benefit-tag">${benefit}</span>`).join('')}
+            </div>
+            <div class="product-why">
+                <div class="product-why-title">💜 Why this product for you?</div>
+                <div class="product-why-text">${product.why}</div>
+            </div>
+            <div class="product-ingredients">
+                <div class="ingredients-title">Key Ingredients:</div>
+                <div class="ingredients-list">${product.ingredients}</div>
+            </div>
+            <div class="product-footer">
+                <div class="product-price">${product.price}</div>
+                <a href="${product.amazonLink}" target="_blank" rel="noopener noreferrer" class="amazon-buy-btn">
+                    <span class="amazon-icon">🛒</span>
+                    <span>Buy on Amazon</span>
+                </a>
+            </div>
+        `;
+        
+        productsGrid.appendChild(productCard);
+    });
+}
+
+// Call this function when showing results
+// Example: displayProductRecommendations(skinAnalysisData, 'luteal', 'acne-prone');
