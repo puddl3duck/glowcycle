@@ -1297,6 +1297,88 @@ body {
     }
 }
 
+.routine-step-card {
+    background: rgba(255, 255, 255, 0.6);
+    border: 2px solid #D4C5E8;
+    border-radius: 14px;
+    padding: 1rem 1.2rem;
+    margin-bottom: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.routine-step-card:hover {
+    border-color: #FFB6D9;
+    background: rgba(255, 255, 255, 0.9);
+}
+
+.routine-step-card.expanded {
+    border-color: #9B7EBD;
+    background: rgba(255, 255, 255, 0.9);
+}
+
+.routine-step-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.routine-step-check {
+    color: #A8E6CF;
+    font-weight: 700;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.routine-step-text {
+    flex: 1;
+    color: var(--text-dark);
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.routine-step-chevron {
+    color: #9B7EBD;
+    font-size: 1.3rem;
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+}
+
+.routine-step-expanded {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(212, 197, 232, 0.4);
+}
+
+.suggested-product {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.suggested-label {
+    font-size: 0.85rem;
+    color: var(--text-medium);
+    font-weight: 500;
+}
+
+.amazon-link {
+    display: inline-block;
+    padding: 0.6rem 1rem;
+    background: linear-gradient(135deg, rgba(255, 182, 217, 0.2), rgba(155, 126, 189, 0.15));
+    border: 2px solid #D4C5E8;
+    border-radius: 10px;
+    color: #9B7EBD;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.amazon-link:hover {
+    border-color: #9B7EBD;
+    background: linear-gradient(135deg, rgba(255, 182, 217, 0.3), rgba(155, 126, 189, 0.25));
+}
 
 /* Routine Steps */
 .routine-title {

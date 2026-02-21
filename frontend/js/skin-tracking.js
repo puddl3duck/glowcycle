@@ -597,6 +597,18 @@ function showResults() {
   drawRadarChart();
 }
 
+// Toggle for routine step proudct section 
+function toggleRoutineStep(index, stepText) {
+  const expanded = document.getElementById(`routine-step-expanded-${index}`);
+  const card = document.getElementById(`routine-step-${index}`);
+  const chevron = card.querySelector('.routine-step-chevron');
+  
+  const isOpen = expanded.style.display !== 'none';
+  expanded.style.display = isOpen ? 'none' : 'block';
+  chevron.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(90deg)';
+  card.classList.toggle('expanded', !isOpen);
+}
+
 // Render AI analysis result into the UI
 function renderSkinAnalysisResult() {
   const result = window.__skinAnalysisResult;
@@ -645,10 +657,28 @@ function renderSkinAnalysisResult() {
   const routineTitle = document.querySelector(".routine-title");
   const isNight = detectTimeMode() === "night";
   const steps = isNight ? result.pm_routine : result.am_routine;
-  if (routineTitle) routineTitle.textContent = isNight ? "🌙 Night Skincare Routine" : "☀️ Morning Skincare Routine";
-  if (routineSteps && Array.isArray(steps)) {
-    routineSteps.innerHTML = steps.map((s) => `<div class="routine-step">✓ ${s}</div>`).join("");
-  }
+  if (routineTitle) routineTitle.textContent = isNight ? "🌙 Night Skincare Routine" : "☀️ Day Skincare Routine";
+  if (routineSteps && Array.isArray(steps))  {
+  routineSteps.innerHTML = steps.map((s, i) => `
+    <div class="routine-step" id="routine-step-${i}" onclick="toggleRoutineStep(${i}, '${s.replace(/'/g, "\\'")}')">
+      <div class="routine-step-header">
+        <span class="routine-step-check">✓</span>
+        <span class="routine-step-text">${s}</span>
+        <span class="routine-step-chevron">›</span>
+      </div>
+      <div class="routine-step-expanded" id="routine-step-expanded-${i}" style="display:none;">
+        <div class="suggested-product">
+          <span class="suggested-label">🛍️ Suggested product</span>
+          <a href="https://www.amazon.com.au/s?k=${encodeURIComponent(s)}" 
+             target="_blank" 
+             class="amazon-link">
+            Search "${s}" on Amazon →
+          </a>
+        </div>
+      </div>
+    </div>
+  `).join("");
+}
 
   // Remove static hardcoded recommendation cards
   document.querySelectorAll(".recommendations .recommendation-card").forEach((el) => el.remove());
