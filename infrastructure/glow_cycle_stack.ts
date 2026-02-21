@@ -23,7 +23,7 @@ export class GlowCycleStack extends cdk.Stack {
       cors: [
         {
           allowedMethods: [s3.HttpMethods.PUT, s3.HttpMethods.GET, s3.HttpMethods.HEAD],
-          allowedOrigins: ["http://localhost:8000"], // local dev
+          allowedOrigins: ["*"], // Allow all origins for development
           allowedHeaders: ["*"],
           exposedHeaders: ["ETag"],
           maxAge: 3000,

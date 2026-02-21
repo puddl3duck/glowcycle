@@ -1,6 +1,21 @@
 // Time-based functionality
 let timeMode = "morning"; // 'morning', 'afternoon', or 'night'
 
+// Load user profile
+function loadUserProfile() {
+  const userName = localStorage.getItem('userName') || 'User';
+  const profileNameElement = document.getElementById('profile-name');
+  const profileAvatarElement = document.getElementById('profile-avatar');
+  
+  if (profileNameElement) {
+    profileNameElement.textContent = userName;
+  }
+  
+  if (profileAvatarElement) {
+    profileAvatarElement.textContent = userName.charAt(0).toUpperCase();
+  }
+}
+
 function detectTimeMode() {
   const hour = new Date().getHours();
   // Morning: 05:00–11:59, Afternoon: 12:00–17:59, Night: 18:00–04:59
@@ -112,6 +127,7 @@ function acceptConsent() {
 // Enable/disable accept button based on checkbox
 document.addEventListener("DOMContentLoaded", () => {
   applyTheme();
+  loadUserProfile(); // Load user name and avatar
 
   const consentCheck = document.getElementById("consent-check");
   const acceptBtn = document.getElementById("accept-btn");
@@ -869,55 +885,10 @@ function initRadarChart() {
 }
 
 window.addEventListener('load', initRadarChart);
-window.addEventListener('resize', drawRadarChart);Align = "center";
-    ctx.fillText(labels[i], labelX, labelY);
-  }
+window.addEventListener('resize', drawRadarChart);
 
-  // Data polygon
-  ctx.beginPath();
-  for (let i = 0; i < numPoints; i++) {
-    const angle = (Math.PI * 2 * i) / numPoints - Math.PI / 2;
-    const value = data[i] / 100;
-    const x = centerX + radius * value * Math.cos(angle);
-    const y = centerY + radius * value * Math.sin(angle);
-    if (i === 0) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
-  }
-  ctx.closePath();
 
-  const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-  gradient.addColorStop(0, "rgba(168, 230, 207, 0.3)");
-  gradient.addColorStop(1, "rgba(255, 182, 217, 0.3)");
-  ctx.fillStyle = gradient;
-  ctx.fill();
-  ctx.strokeStyle = "#FFB6D9";
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
-  // Data points
-  for (let i = 0; i < numPoints; i++) {
-    const angle = (Math.PI * 2 * i) / numPoints - Math.PI / 2;
-    const value = data[i] / 100;
-    const x = centerX + radius * value * Math.cos(angle);
-    const y = centerY + radius * value * Math.sin(angle);
-
-    ctx.beginPath();
-    ctx.arc(x, y, 4, 0, Math.PI * 2);
-    ctx.fillStyle = "#FFB6D9";
-    ctx.fill();
-  }
-}
-
-<<<<<<< HEAD
-// Set canvas size on load
-window.addEventListener("load", () => {
-  const canvas = document.getElementById("skinRadar");
-  if (canvas) {
-    canvas.width = 400;
-    canvas.height = 400;
-  }
-});
-=======
+// ===== PRODUCT RECOMMENDATIONS =====
 // Set canvas size on load and resize
 function initRadarChart() {
     const canvas = document.getElementById('skinRadar');
@@ -1224,60 +1195,55 @@ function generateProductRecommendations(skinAnalysis, cyclePhase, skinType) {
         });
     }
     
-    // 5. SPECIAL TREATMENTS - Based on specific concerns
-    if (skinAnalysis && skinAnalysis.redness_detected && skinType === 'sensitive') {
-        products.push({
-            ...productDatabase.azelaic_acid,
-            why: "Redness detected. Azelaic acid calms inflammation and reduces redness without irritation."
-        });
-    }
-    
-    return products;
+    // Return only top 3 most important products
+    return products.slice(0, 3);
 }
 
 function displayProductRecommendations(skinAnalysis, cyclePhase, skinType) {
     const productsGrid = document.getElementById('products-grid');
     if (!productsGrid) return;
     
-    // Generate recommendations
+    // Generate recommendations (limited to 3)
     const products = generateProductRecommendations(skinAnalysis, cyclePhase, skinType);
     
     // Clear existing products
     productsGrid.innerHTML = '';
     
-    // Display products
-    products.forEach(product => {
+    // Display products with ranking badges
+    products.forEach((product, index) => {
+        const rankBadges = ['🥇', '🥈', '🥉'];
+        const rankLabels = ['Top Pick', 'Essential', 'Recommended'];
         const productCard = document.createElement('div');
         productCard.className = 'product-card';
         
         productCard.innerHTML = `
+            <div class="product-rank-badge">${rankBadges[index]} <span>${rankLabels[index]}</span></div>
             <div class="product-header">
                 <div class="product-icon">${product.icon}</div>
                 <div class="product-info">
                     <div class="product-name">${product.name}</div>
                     <div class="product-category">${product.category}</div>
+                    <div class="product-rating">
+                        <div class="stars">${'⭐'.repeat(Math.floor(product.rating))}${product.rating % 1 >= 0.5 ? '½' : ''}</div>
+                        <span class="rating-count">(${(product.reviews / 1000).toFixed(1)}k reviews)</span>
+                    </div>
                 </div>
-            </div>
-            <div class="product-rating">
-                <div class="stars">${'⭐'.repeat(Math.floor(product.rating))}${product.rating % 1 >= 0.5 ? '½' : ''}</div>
-                <span class="rating-count">(${(product.reviews / 1000).toFixed(1)}k reviews)</span>
             </div>
             <p class="product-description">${product.description}</p>
             <div class="product-benefits">
                 ${product.benefits.map(benefit => `<span class="benefit-tag">${benefit}</span>`).join('')}
             </div>
             <div class="product-why">
-                <div class="product-why-title">💜 Why this product for you?</div>
+                <div class="product-why-title">💜 Why this for you?</div>
                 <div class="product-why-text">${product.why}</div>
             </div>
             <div class="product-ingredients">
-                <div class="ingredients-title">Key Ingredients:</div>
+                <div class="ingredients-title">Key Ingredients</div>
                 <div class="ingredients-list">${product.ingredients}</div>
             </div>
             <div class="product-footer">
-                <div class="product-price">${product.price}</div>
                 <a href="${product.amazonLink}" target="_blank" rel="noopener noreferrer" class="amazon-buy-btn">
-                    <span class="amazon-icon">🛒</span>
+                    <span class="amazon-icon">🛍️</span>
                     <span>Buy on Amazon</span>
                 </a>
             </div>
