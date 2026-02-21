@@ -84,6 +84,11 @@ function updateSkincareRoutine() {
 
 // Show Consent Popup
 function showConsentPopup() {
+  // Skip popup if user previously consented
+  if (localStorage.getItem("skinConsentGiven") === "true") {
+    showScanner();
+    return;
+  }
   document.getElementById("consent-popup").style.display = "flex";
 }
 
@@ -91,11 +96,15 @@ function showConsentPopup() {
 function closeConsentPopup() {
   document.getElementById("consent-popup").style.display = "none";
   document.getElementById("consent-check").checked = false;
+  document.getElementById("remember-check").checked = false;
   document.getElementById("accept-btn").disabled = true;
 }
 
 // Accept Consent and Show Scanner
 function acceptConsent() {
+  if (document.getElementById("remember-check").checked) {
+    localStorage.setItem("skinConsentGiven", "true");
+  }
   closeConsentPopup();
   showScanner();
 }
@@ -392,8 +401,8 @@ function dataURLtoBlob(dataurl) {
   return new Blob([u8arr], { type: mime });
 }
 
-// Capture Photo
-function capturePhoto() {
+// Capture Photo — async so we can await both animation and API call
+async function capturePhoto() {
   stopFaceDetection();
 
   const video = document.getElementById("camera-video");
@@ -406,9 +415,6 @@ function capturePhoto() {
 
   capturedImageData = canvas.toDataURL("image/jpeg", 0.9);
 
-  // Kick off upload + analysis (Sam's new flow), don't await here
-  sendCapturedImageToBackend(capturedImageData);
-
   canvas.style.display = "block";
   video.style.display = "none";
   document.querySelector(".camera-overlay").style.display = "none";
@@ -416,24 +422,25 @@ function capturePhoto() {
   document.getElementById("capture-btn").style.display = "none";
   document.getElementById("retake-btn").style.display = "flex";
 
-  startAIAnalysis();
+  // Run animation and API call in parallel.
+  // completeAnalysis only fires when BOTH are done — fixes the race condition.
+  await Promise.all([
+    runAnalysisAnimation(4500),
+    sendCapturedImageToBackend(capturedImageData),
+  ]);
+
+  completeAnalysis();
 }
 
-// Send captured image to backend: presign → S3 upload → AI analyze (Sam's flow)
+// Send captured image to backend: presign → S3 upload → AI analyze
 async function sendCapturedImageToBackend(dataUrl) {
   try {
     const apiConfig = typeof API_CONFIG !== "undefined" ? API_CONFIG : window.API_CONFIG;
-
-    const user =
-      document.querySelector(".profile-name")?.textContent?.trim() ||
-      localStorage.getItem("userName") ||
-      "anonymous";
 
     const blob = dataURLtoBlob(dataUrl);
     const contentType = blob.type || "image/jpeg";
 
     // 1) Get presigned URL from backend
-    updateCameraStatus("Preparing secure upload...", "🔐", "info");
     const presignResp = await fetch(apiConfig.BASE_URL + apiConfig.ENDPOINTS.SKIN_UPLOAD_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -443,7 +450,6 @@ async function sendCapturedImageToBackend(dataUrl) {
     const { uploadUrl, s3Key } = await presignResp.json();
 
     // 2) Upload directly to S3
-    updateCameraStatus("Uploading photo...", "⬆️", "info");
     const putResp = await fetch(uploadUrl, {
       method: "PUT",
       headers: { "Content-Type": contentType },
@@ -452,7 +458,6 @@ async function sendCapturedImageToBackend(dataUrl) {
     if (!putResp.ok) throw new Error("Failed to upload to S3");
 
     // 3) Trigger AI analysis
-    updateCameraStatus("Analyzing with AI...", "✨", "info");
     const analyzeResp = await fetch(apiConfig.BASE_URL + apiConfig.ENDPOINTS.SKIN_ANALYZE, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -472,45 +477,71 @@ async function sendCapturedImageToBackend(dataUrl) {
     window.__skinAnalysisResult = analysis;
   } catch (err) {
     console.error("Error in sendCapturedImageToBackend:", err);
-    updateCameraStatus("Something went wrong. Please try again.", "⚠️", "error");
+    // Don't block the UI — results will render with fallback/default values
   }
 }
 
-// Start AI Analysis Animation
-function startAIAnalysis() {
-  const overlay = document.getElementById("ai-analysis-overlay");
-  const progressBar = document.getElementById("analysis-progress");
+// Runs progress bar + step animations for a guaranteed minimum duration,
+// resolves when done so Promise.all can gate on both this and the API call.
+function runAnalysisAnimation(durationMs) {
+  return new Promise((resolve) => {
+    const overlay = document.getElementById("ai-analysis-overlay");
+    const progressBar = document.getElementById("analysis-progress");
 
-  overlay.style.display = "flex";
+    overlay.style.display = "flex";
 
-  let progress = 0;
-  const progressInterval = setInterval(() => {
-    progress += 1;
-    progressBar.style.width = progress + "%";
-    if (progress >= 100) clearInterval(progressInterval);
-  }, 40);
+    // Phase 1: animate to 90% over durationMs
+    let progress = 0;
+    const intervalMs = durationMs / 90;
+    const progressInterval = setInterval(() => {
+      progress += 1;
+      progressBar.style.width = progress + "%";
+      if (progress >= 90) {
+        clearInterval(progressInterval);
+        // Phase 2: crawl slowly from 90% → 99% until API resolves
+        const crawlInterval = setInterval(() => {
+          if (progress < 99) {
+            progress += 0.2;
+            progressBar.style.width = progress + "%";
+          }
+        }, 200);
+        // Store crawl interval so completeAnimation can clear it
+        progressBar._crawlInterval = crawlInterval;
+        resolve(); // signal Promise.all we're "done" — API now controls the gate
+      }
+    }, intervalMs);
 
-  const steps = ["step-1", "step-2", "step-3", "step-4"];
-  steps.forEach((stepId, index) => {
-    setTimeout(() => {
-      const step = document.getElementById(stepId);
-      step.classList.add("active");
+    const steps = ["step-1", "step-2", "step-3", "step-4"];
+    steps.forEach((stepId, index) => {
       setTimeout(() => {
-        step.classList.add("completed");
-        step.querySelector(".step-icon").textContent = "✓";
-      }, 800);
-    }, index * 1000);
+        const step = document.getElementById(stepId);
+        step.classList.add("active");
+        setTimeout(() => {
+          step.classList.add("completed");
+          step.querySelector(".step-icon").textContent = "✓";
+        }, 800);
+      }, (index / steps.length) * durationMs);
+    });
   });
+}
 
-  setTimeout(() => {
-    completeAnalysis();
-  }, 4500);
+// Legacy wrapper — kept in case anything else calls this
+function startAIAnalysis() {
+  runAnalysisAnimation(4500);
 }
 
 // Complete Analysis
 function completeAnalysis() {
   const overlay = document.getElementById("ai-analysis-overlay");
   const title = document.getElementById("analysis-title");
+  const progressBar = document.getElementById("analysis-progress");
+
+  // Clear the crawl interval and snap to 100%
+  if (progressBar._crawlInterval) {
+    clearInterval(progressBar._crawlInterval);
+    progressBar._crawlInterval = null;
+  }
+  progressBar.style.width = "100%";
 
   title.textContent = "Analysis Complete! ✨";
 
@@ -566,7 +597,7 @@ function showResults() {
   drawRadarChart();
 }
 
-// Render AI analysis result into the UI (Sam's new feature)
+// Render AI analysis result into the UI
 function renderSkinAnalysisResult() {
   const result = window.__skinAnalysisResult;
   if (!result) return;
@@ -614,7 +645,7 @@ function renderSkinAnalysisResult() {
   const routineTitle = document.querySelector(".routine-title");
   const isNight = detectTimeMode() === "night";
   const steps = isNight ? result.pm_routine : result.am_routine;
-  if (routineTitle) routineTitle.textContent = isNight ? "🌙 PM Routine" : "☀️ AM Routine";
+  if (routineTitle) routineTitle.textContent = isNight ? "🌙 Night Skincare Routine" : "☀️ Morning Skincare Routine";
   if (routineSteps && Array.isArray(steps)) {
     routineSteps.innerHTML = steps.map((s) => `<div class="routine-step">✓ ${s}</div>`).join("");
   }
@@ -627,15 +658,11 @@ function renderSkinAnalysisResult() {
   if (tipsEl && Array.isArray(result.tips)) {
     tipsEl.innerHTML = `
       <h3 style="margin-top: 1.5rem">Tips for You</h3>
-      ${result.tips
-        .map(
-          (t) => `
+      ${result.tips.map((t) => `
         <div class="recommendation-card">
           <div class="rec-icon">✨</div>
           <div class="rec-content"><p>${t}</p></div>
-        </div>`
-        )
-        .join("")}
+        </div>`).join("")}
     `;
   }
 
@@ -645,15 +672,11 @@ function renderSkinAnalysisResult() {
     if (tipsEl) {
       tipsEl.innerHTML += `
         <h3 style="margin-top: 1.5rem">Concerns Detected</h3>
-        ${result.concerns_detected
-          .map(
-            (c) => `
+        ${result.concerns_detected.map((c) => `
           <div class="recommendation-card">
             <div class="rec-icon">🔍</div>
             <div class="rec-content"><p>${c}</p></div>
-          </div>`
-          )
-          .join("")}
+          </div>`).join("")}
       `;
     }
   }
@@ -675,7 +698,6 @@ function drawRadarChart() {
 
   const labels = ["Radiance", "Moisture", "Texture", "Pores", "Dark Circles", "Oiliness", "Redness"];
 
-  // Use real analysis data if available, otherwise fall back to defaults
   const result = window.__skinAnalysisResult;
   const m = result?.metrics || {};
   const data = [

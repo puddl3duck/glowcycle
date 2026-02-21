@@ -114,44 +114,6 @@ function getJournalPrompt() {
     }
 }
 
-// Get time-based skincare routine
-function getSkincareRoutine() {
-    if (timeMode === 'morning') {
-        return {
-            title: 'AM Routine',
-            icon: '☀️',
-            steps: [
-                'Gentle Cleanser',
-                'Vitamin C Serum',
-                'Moisturizer',
-                'SPF 30+ Sunscreen'
-            ]
-        };
-    } else if (timeMode === 'afternoon') {
-        return {
-            title: 'Light Refresh',
-            icon: '🌸',
-            steps: [
-                'Facial Mist',
-                'Reapply SPF',
-                'Hydrating Serum',
-                'Light Moisturizer'
-            ]
-        };
-    } else {
-        return {
-            title: 'PM Routine',
-            icon: '🌙',
-            steps: [
-                'Oil Cleanser',
-                'Treatment Serum',
-                'Night Moisturizer',
-                'Eye Cream'
-            ]
-        };
-    }
-}
-
 // Get time-based self-care suggestions
 function getSelfCareSuggestions() {
     if (timeMode === 'morning') {
