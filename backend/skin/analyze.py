@@ -70,6 +70,7 @@ Rules:
 - Provide cosmetic skincare insights and routines only.
 - Return ONLY valid JSON (no markdown, no extra text, no code fences).
 - Generate atlease 3 type of product recommendation based on the analysis.
+- Generate exactly 3 tips in the "tips" array, no more, no less.
 - """
 
         schema = """{
@@ -86,7 +87,7 @@ Rules:
             },
             "am_routine": ["..."],
             "pm_routine": ["..."],
-            "tips": ["..."],
+            "tips": ["tip1", "tip2", "tip3"],,
             "disclaimer": "..."
         }"""
 
