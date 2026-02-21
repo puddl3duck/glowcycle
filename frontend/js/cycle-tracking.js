@@ -19,6 +19,8 @@ async function loadUserData() {
     userAge = localStorage.getItem('userAge') || null;
     userCycleLength = parseInt(localStorage.getItem('cycleDays')) || 28;
     
+    console.log('Loading user data:', { userName, userAge, userCycleLength });
+    
     // Update profile display
     updateUserProfile();
     
@@ -43,14 +45,17 @@ async function loadUserData() {
         }
     } catch (error) {
         console.error('Error loading from backend:', error);
-        // If backend fails, check for initial period from onboarding
+        // If backend fails, try to use local data
         const initialPeriod = localStorage.getItem('lastPeriod');
         if (initialPeriod) {
-            console.log('Using initial period from onboarding:', initialPeriod);
+            console.log('Backend failed, using initial period from onboarding:', initialPeriod);
             const date = new Date(initialPeriod);
             date.setHours(0, 0, 0, 0);
             periodHistory.push(date);
         }
+        
+        // Show user-friendly error message
+        console.warn('Could not connect to backend. Using local data only.');
     }
     
     // Update cycle length from history if we have data
@@ -118,8 +123,10 @@ async function loadPeriodsFromBackend() {
         });
         
         if (!response.ok) {
-            console.error(`Backend returned ${response.status}`);
-            throw new Error(`HTTP error! status: ${response.status}`);
+            const errorText = await response.text().catch(() => 'Unknown error');
+            console.error(`Backend returned ${response.status}:`, errorText);
+            isLoadingFromBackend = false;
+            return false; // Don't throw, just return false
         }
         
         const data = await response.json();
@@ -154,7 +161,7 @@ async function loadPeriodsFromBackend() {
     } catch (error) {
         console.error('Error loading periods from backend:', error);
         isLoadingFromBackend = false;
-        throw error;
+        return false; // Don't throw, just return false
     }
 }
 
@@ -196,12 +203,21 @@ function updateUserProfile() {
     const profileNameElement = document.getElementById('profile-name');
     const profileAvatarElement = document.getElementById('profile-avatar');
     
+    console.log('Updating profile with userName:', userName);
+    
     if (profileNameElement) {
         profileNameElement.textContent = userName;
+        console.log('Profile name updated to:', profileNameElement.textContent);
+    } else {
+        console.warn('profile-name element not found');
     }
     
     if (profileAvatarElement) {
-        profileAvatarElement.textContent = userName.charAt(0).toUpperCase();
+        const initial = userName && userName !== 'User' ? userName.charAt(0).toUpperCase() : 'U';
+        profileAvatarElement.textContent = initial;
+        console.log('Profile avatar updated to:', initial);
+    } else {
+        console.warn('profile-avatar element not found');
     }
 }
 
@@ -282,6 +298,16 @@ async function addPeriodDate(date) {
         // Recalculate cycle length if we have enough data
         updateCycleLengthFromHistory();
         updateAllUI();
+        
+        // Refresh wellness message if on dashboard
+        if (typeof loadAIMotivationalMessage === 'function') {
+            const userName = localStorage.getItem('userName');
+            if (userName) {
+                console.log('Refreshing wellness message after period update...');
+                setTimeout(() => loadAIMotivationalMessage(userName), 1000);
+            }
+        }
+        
         return true;
     } catch (error) {
         console.error('Failed to save period:', error);
@@ -589,13 +615,28 @@ function calculatePredictions() {
 function updatePredictionsUI() {
     const predictions = calculatePredictions();
     
+    const nextPeriodEl = document.getElementById('next-period-text');
+    const nextOvulationEl = document.getElementById('next-ovulation-text');
+    
+    if (!nextPeriodEl || !nextOvulationEl) {
+        console.warn('Prediction elements not found in DOM');
+        return;
+    }
+    
     if (!predictions.nextPeriod) {
-        document.getElementById('next-period-text').textContent = 'Log your first period to see predictions';
-        document.getElementById('next-ovulation-text').textContent = 'Log your first period to see predictions';
-        document.getElementById('period-confidence').style.width = '0%';
-        document.getElementById('ovulation-confidence').style.width = '0%';
-        document.getElementById('period-confidence-label').textContent = 'Confidence: N/A';
-        document.getElementById('ovulation-confidence-label').textContent = 'Confidence: N/A';
+        nextPeriodEl.textContent = 'Log your first period to see predictions';
+        nextOvulationEl.textContent = 'Log your first period to see predictions';
+        
+        // Only update confidence elements if they exist
+        const periodConfidence = document.getElementById('period-confidence');
+        const ovulationConfidence = document.getElementById('ovulation-confidence');
+        const periodConfidenceLabel = document.getElementById('period-confidence-label');
+        const ovulationConfidenceLabel = document.getElementById('ovulation-confidence-label');
+        
+        if (periodConfidence) periodConfidence.style.width = '0%';
+        if (ovulationConfidence) ovulationConfidence.style.width = '0%';
+        if (periodConfidenceLabel) periodConfidenceLabel.textContent = 'Confidence: N/A';
+        if (ovulationConfidenceLabel) ovulationConfidenceLabel.textContent = 'Confidence: N/A';
         return;
     }
     

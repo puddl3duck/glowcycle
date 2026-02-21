@@ -251,6 +251,9 @@ async function saveEntry() {
 
         const result = await response.json();
         console.log('Entry saved to backend:', result);
+        
+        // Mark that user has journal entries (no longer first time)
+        localStorage.setItem('hasJournalEntries', 'true');
 
         btn.textContent = '✓ Entry Saved!';
         btn.style.background = 'linear-gradient(135deg, #A8E6CF, #C8E6E6)';
@@ -273,6 +276,15 @@ async function saveEntry() {
             selectedTags = [];
             
             loadEntries();
+            
+            // Refresh wellness message on dashboard if available
+            if (typeof loadAIMotivationalMessage === 'function') {
+                const userName = localStorage.getItem('userName');
+                if (userName) {
+                    console.log('Refreshing wellness message after journal entry...');
+                    loadAIMotivationalMessage(userName);
+                }
+            }
         }, 2000);
     } catch (error) {
         console.error('Error saving entry:', error);
@@ -312,6 +324,11 @@ async function loadEntries() {
         const data = await response.json();
         const entries = data.entries || [];
         console.log('Loaded entries from backend:', entries.length);
+        
+        // Mark that user has journal entries if any exist
+        if (entries.length > 0) {
+            localStorage.setItem('hasJournalEntries', 'true');
+        }
         
         if (entries.length === 0) {
             entriesList.innerHTML = '<p style="text-align: center; color: var(--text-light);">No entries yet. Start journaling!</p>';

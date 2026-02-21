@@ -7,7 +7,8 @@ const API_CONFIG = {
     ENDPOINTS: {
         JOURNAL: '/journal',
         PERIOD: '/period',
-        SKIN: '/skin'
+        SKIN: '/skin',
+        WELLNESS: '/wellness'
     }
 };
 

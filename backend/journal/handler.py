@@ -2,6 +2,7 @@ from datetime import datetime
 from dataclasses import dataclass
 import json
 from typing import List
+from decimal import Decimal
 from utils.dynamo_client import get_dynamodb_client
 from utils.dynamo_helper import JournalTableObject
 from utils.lambda_utils import handle_error_response
@@ -15,6 +16,15 @@ logger = select_powertools_logger("journal-lambda")
 DYNAMODB_TABLE_NAME = os.environ.get("DYNAMODB_TABLE_NAME", "GlowCycleTable")
 dynamodb = get_dynamodb_client()
 journal_table = dynamodb.Table(DYNAMODB_TABLE_NAME)
+
+
+# Custom JSON encoder for Decimal objects
+class DecimalEncoder(json.JSONEncoder):
+    """JSON encoder that converts Decimal to int or float"""
+    def default(self, obj):
+        if isinstance(obj, Decimal):
+            return int(obj) if obj % 1 == 0 else float(obj)
+        return super(DecimalEncoder, self).default(obj)
 
 @dataclass
 class JournalEntry:
