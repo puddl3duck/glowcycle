@@ -2781,8 +2781,6 @@ body.dark-theme .footer-copyright {
     .footer-copyright {
         font-size: 0.7rem;
     }
-}
-    }
     
     .footer-social {
         justify-content: center;
@@ -3137,7 +3135,6 @@ body.dark-theme .footer-copyright {
 
 .amazon-icon {
     font-size: 1.5rem;
-}
     color: var(--text-medium);
 }
 
