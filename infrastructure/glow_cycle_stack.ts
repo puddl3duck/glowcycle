@@ -53,9 +53,9 @@ export class GlowCycleStack extends cdk.Stack {
       },
     });
 
-    const skinAnalyzeLambda = new lambda.Function(this, "SkinAnalyzeLambda", {
+    const skinAnalyseLambda = new lambda.Function(this, "SkinAnalyseLambda", {
       runtime: lambda.Runtime.PYTHON_3_11,
-      handler: "skin/analyze.lambda_handler",
+      handler: "skin/analyse.lambda_handler",
       code: lambda.Code.fromAsset("../backend", { exclude: ["journal/", "period/"] }),
       timeout: cdk.Duration.seconds(30),
       memorySize: 512,
@@ -122,7 +122,7 @@ export class GlowCycleStack extends cdk.Stack {
     glowCycleSecret.grantRead(periodLambda);
     glowCycleSecret.grantRead(wellnessLambda);
     assetsBucket.grantWrite(skinUploadUrlLambda);
-    assetsBucket.grantRead(skinAnalyzeLambda);
+    assetsBucket.grantRead(skinAnalyseLambda);
     assetsBucket.grantPut(skinUploadUrlLambda);
 
     journalLambda.addToRolePolicy(
@@ -131,14 +131,14 @@ export class GlowCycleStack extends cdk.Stack {
         resources: ["*"],
       }),
     );
-    skinAnalyzeLambda.addToRolePolicy(
+    skinAnalyseLambda.addToRolePolicy(
       new iam.PolicyStatement({
         actions: ["rekognition:DetectFaces"],
         resources: ["*"],
       }),
     );
 
-   skinAnalyzeLambda.addToRolePolicy(
+   skinAnalyseLambda.addToRolePolicy(
       new iam.PolicyStatement({
       actions: ["bedrock:InvokeModel", "bedrock:Converse"],
       resources: [
@@ -184,16 +184,16 @@ export class GlowCycleStack extends cdk.Stack {
     const skinResource = api.root.addResource("skin");
 
     const uploadUrlResource = skinResource.addResource("upload-url");
-    const analyzeResource = skinResource.addResource("analyze");
+    const analyseResource = skinResource.addResource("analyse");
 
     const uploadUrlMethod = uploadUrlResource.addMethod(
       "POST",
       new apigateway.LambdaIntegration(skinUploadUrlLambda),
     );
 
-    const analyzeMethod = analyzeResource.addMethod(
+    const analyseMethod = analyseResource.addMethod(
       "POST",
-      new apigateway.LambdaIntegration(skinAnalyzeLambda),
+      new apigateway.LambdaIntegration(skinAnalyseLambda),
     );
     // Journal (ONE resource, multiple methods)
     const journalResource = api.root.addResource('journal');

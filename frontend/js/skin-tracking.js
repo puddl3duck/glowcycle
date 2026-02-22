@@ -448,7 +448,7 @@ async function capturePhoto() {
   completeAnalysis();
 }
 
-// Send captured image to backend: presign → S3 upload → AI analyze
+// Send captured image to backend: presign → S3 upload → AI analyse
 async function sendCapturedImageToBackend(dataUrl) {
   try {
     const apiConfig = typeof API_CONFIG !== "undefined" ? API_CONFIG : window.API_CONFIG;
@@ -474,7 +474,7 @@ async function sendCapturedImageToBackend(dataUrl) {
     if (!putResp.ok) throw new Error("Failed to upload to S3");
 
     // 3) Trigger AI analysis
-    const analyzeResp = await fetch(apiConfig.BASE_URL + apiConfig.ENDPOINTS.SKIN_ANALYZE, {
+    const analyseResp = await fetch(apiConfig.BASE_URL + apiConfig.ENDPOINTS.SKIN_ANALYSE, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -485,12 +485,12 @@ async function sendCapturedImageToBackend(dataUrl) {
         skinType: localStorage.getItem('skinType') || 'normal',
       }),
     });
-    if (!analyzeResp.ok) {
-      const err = await analyzeResp.text();
-      throw new Error(err || "Analyze failed");
+    if (!analyseResp.ok) {
+      const err = await analyseResp.text();
+      throw new Error(err || "Analyse failed");
     }
 
-    const analysis = await analyzeResp.json();
+    const analysis = await analyseResp.json();
     window.__skinAnalysisResult = analysis;
   } catch (err) {
     console.error("Error in sendCapturedImageToBackend:", err);
