@@ -323,6 +323,26 @@ function startQuestionnaire() {
     updateProgress();
 }
 
+function backToLanding() {
+    // Get current active question
+    const activeCard = document.querySelector('.question-card.active');
+    const currentQuestion = parseInt(activeCard.dataset.question);
+    
+    // If on first question, go back to landing page
+    if (currentQuestion === 1) {
+        showPage('landing-page');
+        return;
+    }
+    
+    // Otherwise, go to previous question
+    const previousQuestion = currentQuestion - 1;
+    document.querySelectorAll('.question-card').forEach(card => card.classList.remove('active'));
+    document.querySelector(`.question-card[data-question="${previousQuestion}"]`).classList.add('active');
+    
+    // Update progress bar
+    updateProgress();
+}
+
 function goToDashboard() {
     showPage('dashboard-page');
 }
@@ -508,9 +528,10 @@ function completeOnboarding() {
 
 // Update user profile display
 function updateUserProfile() {
-    const userName = localStorage.getItem('userName') || 'Sofia';
+    const userName = localStorage.getItem('userName') || 'Beautiful';
     const profileNameElement = document.getElementById('profile-name');
     const profileAvatarElement = document.getElementById('profile-avatar');
+    const userNameDisplayElement = document.getElementById('user-name-display');
     
     if (profileNameElement) {
         profileNameElement.textContent = userName;
@@ -519,6 +540,11 @@ function updateUserProfile() {
     if (profileAvatarElement) {
         // Get first letter of name for avatar
         profileAvatarElement.textContent = userName.charAt(0).toUpperCase();
+    }
+    
+    // Update welcome message with user name
+    if (userNameDisplayElement) {
+        userNameDisplayElement.textContent = userName;
     }
 }
 
@@ -605,7 +631,9 @@ function goToDashboard() {
     }
     
     // All validations passed - save data
-    localStorage.setItem('userName', userNameInput.value.trim());
+    const displayName = userNameInput.value.trim();
+    localStorage.setItem('userName', displayName.toLowerCase().replace(/\s+/g, '')); // ID: lowercase, no spaces
+    localStorage.setItem('userDisplayName', displayName); // Display name: as entered
     localStorage.setItem('userAge', ageInput.value);
     
     // Save period data based on selection
@@ -829,7 +857,8 @@ function saveProfileSettings() {
     }
     
     // Save all settings
-    localStorage.setItem('userName', name);
+    localStorage.setItem('userName', name.toLowerCase().replace(/\s+/g, '')); // ID: lowercase, no spaces
+    localStorage.setItem('userDisplayName', name); // Display name: as entered
     localStorage.setItem('userAge', age);
     localStorage.setItem('lastPeriod', lastPeriod);
     localStorage.setItem('cycleDays', cycleDays);

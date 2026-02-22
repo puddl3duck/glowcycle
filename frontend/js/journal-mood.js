@@ -277,6 +277,11 @@ async function saveEntry() {
             
             loadEntries();
             
+            // Mark journal updated for wellness message refresh
+            if (typeof markJournalUpdated === 'function') {
+                markJournalUpdated();
+            }
+            
             // Refresh wellness message on dashboard if available
             if (typeof loadAIMotivationalMessage === 'function') {
                 const userName = localStorage.getItem('userName');

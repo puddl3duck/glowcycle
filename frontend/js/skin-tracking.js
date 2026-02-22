@@ -3,9 +3,11 @@ let timeMode = "morning"; // 'morning', 'afternoon', or 'night'
 
 // Load user profile
 function loadUserProfile() {
-  const userName = localStorage.getItem('userName') || 'User';
+  const userName = localStorage.getItem('userName') || localStorage.getItem('userDisplayName') || 'User';
   const profileNameElement = document.getElementById('profile-name');
   const profileAvatarElement = document.getElementById('profile-avatar');
+  
+  console.log('Loading user profile:', userName);
   
   if (profileNameElement) {
     profileNameElement.textContent = userName;
@@ -99,12 +101,23 @@ function updateSkincareRoutine() {
 
 // Show Consent Popup
 function showConsentPopup() {
+  console.log('showConsentPopup called');
+  console.log('skinConsentGiven:', localStorage.getItem("skinConsentGiven"));
+  
   // Skip popup if user previously consented
   if (localStorage.getItem("skinConsentGiven") === "true") {
+    console.log('User already consented, showing scanner directly');
     showScanner();
     return;
   }
-  document.getElementById("consent-popup").style.display = "flex";
+  
+  const popup = document.getElementById("consent-popup");
+  if (popup) {
+    popup.style.display = "flex";
+    console.log('Consent popup shown');
+  } else {
+    console.error('Consent popup element not found');
+  }
 }
 
 // Close Consent Popup
@@ -126,8 +139,11 @@ function acceptConsent() {
 
 // Enable/disable accept button based on checkbox
 document.addEventListener("DOMContentLoaded", () => {
+  console.log('DOM Content Loaded');
+  
   applyTheme();
   loadUserProfile(); // Load user name and avatar
+  loadScanHistory(); // Load scan history
 
   const consentCheck = document.getElementById("consent-check");
   const acceptBtn = document.getElementById("accept-btn");
@@ -137,6 +153,13 @@ document.addEventListener("DOMContentLoaded", () => {
       acceptBtn.disabled = !e.target.checked;
     });
   }
+  
+  // Make showConsentPopup available globally
+  window.showConsentPopup = showConsentPopup;
+  window.closeConsentPopup = closeConsentPopup;
+  window.acceptConsent = acceptConsent;
+  
+  console.log('Functions attached to window');
 });
 
 // Camera variables
@@ -350,8 +373,24 @@ function stopFaceDetection() {
 
 // Show Scanner View
 function showScanner() {
-  document.querySelector(".method-selection-single").style.display = "none";
-  document.getElementById("scanner-view").style.display = "block";
+  console.log('showScanner called');
+  
+  const dashboardLayout = document.querySelector(".skin-dashboard-layout");
+  const scannerView = document.getElementById("scanner-view");
+  
+  if (!scannerView) {
+    console.error('Scanner view element not found!');
+    return;
+  }
+  
+  if (dashboardLayout) {
+    dashboardLayout.style.display = "none";
+    console.log('Dashboard hidden');
+  }
+  
+  scannerView.style.display = "block";
+  console.log('Scanner view shown');
+  
   startCamera();
 }
 
@@ -361,11 +400,11 @@ function closeScanner() {
   hideViews();
 }
 
-// Hide all views and show method selection
+// Hide all views and show dashboard
 function hideViews() {
-  const methodSelection = document.querySelector(".method-selection-single");
-  if (methodSelection) {
-    methodSelection.style.display = "flex";
+  const dashboardLayout = document.querySelector(".skin-dashboard-layout");
+  if (dashboardLayout) {
+    dashboardLayout.style.display = "grid";
   }
   document.getElementById("scanner-view").style.display = "none";
   document.getElementById("results-view").style.display = "none";
@@ -560,6 +599,11 @@ function completeAnalysis() {
   progressBar.style.width = "100%";
 
   title.textContent = "Analysis Complete! ✨";
+
+  // Mark skin scan updated for wellness message refresh
+  if (typeof markSkinScanUpdated === 'function') {
+    markSkinScanUpdated();
+  }
 
   setTimeout(() => {
     overlay.style.display = "none";
@@ -1255,3 +1299,253 @@ function displayProductRecommendations(skinAnalysis, cyclePhase, skinType) {
 
 // Call this function when showing results
 // Example: displayProductRecommendations(skinAnalysisData, 'luteal', 'acne-prone');
+
+
+// ===== SCAN HISTORY FUNCTIONALITY =====
+
+/**
+ * Load scan history from localStorage
+ * In production, this would fetch from backend API
+ */
+function loadScanHistory() {
+    const userName = localStorage.getItem('userName');
+    if (!userName) {
+        console.log('No user logged in');
+        return;
+    }
+    
+    // Get scans from localStorage (temporary storage)
+    const scansKey = `skinScans_${userName}`;
+    const scans = JSON.parse(localStorage.getItem(scansKey) || '[]');
+    
+    console.log(`Loaded ${scans.length} scans for user ${userName}`);
+    
+    // Update scan count
+    const scanCountEl = document.getElementById('scan-count');
+    if (scanCountEl) {
+        scanCountEl.textContent = `${scans.length} ${scans.length === 1 ? 'scan' : 'scans'}`;
+    }
+    
+    // Display scans
+    displayScanHistory(scans);
+}
+
+/**
+ * Display scan history cards
+ */
+function displayScanHistory(scans) {
+    const historyList = document.getElementById('history-list');
+    const emptyHistory = document.getElementById('empty-history');
+    
+    if (!historyList) return;
+    
+    if (scans.length === 0) {
+        // Show empty state
+        if (emptyHistory) {
+            emptyHistory.style.display = 'block';
+        }
+        return;
+    }
+    
+    // Hide empty state
+    if (emptyHistory) {
+        emptyHistory.style.display = 'none';
+    }
+    
+    // Sort scans by date (newest first)
+    scans.sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    // Create history cards
+    scans.forEach((scan, index) => {
+        const card = createHistoryCard(scan, index);
+        historyList.appendChild(card);
+    });
+}
+
+/**
+ * Create a history card element
+ */
+function createHistoryCard(scan, index) {
+    const card = document.createElement('div');
+    card.className = 'history-card';
+    card.onclick = () => viewScanReport(index);
+    
+    // Determine score class
+    const scoreClass = scan.overallScore >= 80 ? 'score-high' : 
+                       scan.overallScore >= 60 ? 'score-medium' : 'score-low';
+    
+    // Format date
+    const scanDate = new Date(scan.date);
+    const dateStr = scanDate.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric', 
+        year: 'numeric' 
+    });
+    
+    // Get cycle phase emoji
+    const phaseEmoji = {
+        'menstrual': '🌙',
+        'follicular': '🌸',
+        'ovulation': '✨',
+        'luteal': '🌺'
+    }[scan.cyclePhase] || '🌸';
+    
+    card.innerHTML = `
+        <div class="history-score ${scoreClass}">
+            <div class="history-score-number">${scan.overallScore}</div>
+            <div class="history-score-label">/100</div>
+        </div>
+        
+        <div class="history-info">
+            <div class="history-date">${dateStr}</div>
+            <div class="history-cycle">
+                <span>${phaseEmoji}</span>
+                <span>Day ${scan.cycleDay} • ${scan.cyclePhase.charAt(0).toUpperCase() + scan.cyclePhase.slice(1)}</span>
+            </div>
+            <div class="history-metrics">
+                <div class="history-metric">
+                    <div class="history-metric-label">Radiance</div>
+                    <div class="history-metric-value">${scan.metrics.radiance}</div>
+                </div>
+                <div class="history-metric">
+                    <div class="history-metric-label">Texture</div>
+                    <div class="history-metric-value">${scan.metrics.texture}</div>
+                </div>
+                <div class="history-metric">
+                    <div class="history-metric-label">Hydration</div>
+                    <div class="history-metric-value">${scan.metrics.hydration}</div>
+                </div>
+            </div>
+        </div>
+        
+        <button class="history-view-btn" onclick="event.stopPropagation(); viewScanReport(${index})">
+            View Report →
+        </button>
+    `;
+    
+    return card;
+}
+
+/**
+ * View a specific scan report
+ */
+function viewScanReport(scanIndex) {
+    const userName = localStorage.getItem('userName');
+    if (!userName) return;
+    
+    // Get scans from localStorage
+    const scansKey = `skinScans_${userName}`;
+    const scans = JSON.parse(localStorage.getItem(scansKey) || '[]');
+    
+    if (scanIndex < 0 || scanIndex >= scans.length) {
+        console.error('Invalid scan index');
+        return;
+    }
+    
+    const scan = scans[scanIndex];
+    
+    // Store current scan in localStorage for the results view
+    localStorage.setItem('currentScanReport', JSON.stringify(scan));
+    
+    // Load the scan data into the results view
+    loadScanIntoResultsView(scan);
+    
+    // Show results view
+    document.querySelector('.skin-dashboard-layout').style.display = 'none';
+    document.getElementById('results-view').style.display = 'block';
+}
+
+/**
+ * Load scan data into the results view
+ */
+function loadScanIntoResultsView(scan) {
+    // Update report date
+    const reportDateEl = document.querySelector('.report-date');
+    if (reportDateEl) {
+        const phaseEmoji = {
+            'menstrual': '🌙',
+            'follicular': '🌸',
+            'ovulation': '✨',
+            'luteal': '🌺'
+        }[scan.cyclePhase] || '🌸';
+        
+        reportDateEl.textContent = `Day ${scan.cycleDay} • ${scan.cyclePhase.charAt(0).toUpperCase() + scan.cyclePhase.slice(1)} Phase ${phaseEmoji}`;
+    }
+    
+    // Update overall score
+    const scoreNumber = document.querySelector('.score-number');
+    if (scoreNumber) {
+        scoreNumber.textContent = scan.overallScore;
+    }
+    
+    // Update score message
+    const scoreMessage = document.querySelector('.score-message');
+    if (scoreMessage) {
+        if (scan.overallScore >= 80) {
+            scoreMessage.textContent = 'Your skin is glowing! ✨';
+        } else if (scan.overallScore >= 60) {
+            scoreMessage.textContent = 'Your skin is doing well! 🌸';
+        } else {
+            scoreMessage.textContent = 'Let\'s work on improving your skin health 💜';
+        }
+    }
+    
+    // Update metrics
+    const metrics = scan.metrics;
+    const metricItems = document.querySelectorAll('.metric-item');
+    if (metricItems.length >= 5) {
+        metricItems[0].querySelector('.metric-value').textContent = metrics.radiance;
+        metricItems[1].querySelector('.metric-value').textContent = metrics.spots;
+        metricItems[2].querySelector('.metric-value').textContent = metrics.wrinkles;
+        metricItems[3].querySelector('.metric-value').textContent = metrics.texture;
+        metricItems[4].querySelector('.metric-value').textContent = metrics.darkCircles;
+    }
+    
+    // Update radar chart if it exists
+    if (typeof updateRadarChart === 'function') {
+        updateRadarChart(metrics);
+    }
+}
+
+/**
+ * Save a new scan to history
+ */
+function saveScanToHistory(scanData) {
+    const userName = localStorage.getItem('userName');
+    if (!userName) {
+        console.error('No user logged in');
+        return;
+    }
+    
+    // Get existing scans
+    const scansKey = `skinScans_${userName}`;
+    const scans = JSON.parse(localStorage.getItem(scansKey) || '[]');
+    
+    // Add new scan
+    scans.push(scanData);
+    
+    // Save back to localStorage
+    localStorage.setItem(scansKey, JSON.stringify(scans));
+    
+    console.log('Scan saved to history');
+    
+    // Reload history display
+    const historyList = document.getElementById('history-list');
+    if (historyList) {
+        historyList.innerHTML = '<div class="empty-history" id="empty-history" style="display: none;"><div class="empty-icon">📊</div><p>No scans yet</p><p class="empty-subtitle">Start your first skin analysis to track your progress</p></div>';
+        loadScanHistory();
+    }
+}
+
+// Add back button functionality for results view
+document.addEventListener('DOMContentLoaded', () => {
+    const saveBtn = document.querySelector('.save-btn');
+    if (saveBtn) {
+        // Change "Save Report" to "Back to History"
+        saveBtn.textContent = 'Back to History';
+        saveBtn.onclick = () => {
+            document.getElementById('results-view').style.display = 'none';
+            document.querySelector('.skin-dashboard-layout').style.display = 'grid';
+        };
+    }
+});

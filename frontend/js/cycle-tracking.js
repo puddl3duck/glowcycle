@@ -96,6 +96,11 @@ async function savePeriodToBackend(date) {
         const data = await response.json();
         console.log('Period saved to backend:', data);
         
+        // Mark cycle updated for wellness message refresh
+        if (typeof markCycleUpdated === 'function') {
+            markCycleUpdated();
+        }
+        
         // Add to local history
         if (!periodHistory.some(d => d.getTime() === periodDate.getTime())) {
             periodHistory.push(periodDate);

@@ -42,33 +42,59 @@
         <!-- Header -->
         <div class="page-header">
             <h1>Track Your Skin</h1>
-            <p>Use our AI-powered scanner to analyse your skin condition</p>
+            <p>Monitor your skin health journey with AI-powered analysis</p>
         </div>
 
-        <!-- AI Scanner Card (Centered) -->
-        <div class="method-selection-single">
-            <div class="method-card-large" onclick="showConsentPopup()">
-                <div class="method-icon-large">
-                    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <rect x="20" y="15" width="60" height="70" rx="8" fill="url(#camGrad)"/>
-                        <circle cx="50" cy="45" r="18" fill="#FFFFFF" opacity="0.9"/>
-                        <circle cx="50" cy="45" r="12" fill="url(#lensGrad)"/>
-                        <circle cx="70" cy="25" r="4" fill="#FFB6D9"/>
-                        <defs>
-                            <linearGradient id="camGrad" x1="20" y1="15" x2="80" y2="85">
-                                <stop offset="0%" stop-color="#FFE0EC"/>
-                                <stop offset="100%" stop-color="#FFB6D9"/>
-                            </linearGradient>
-                            <linearGradient id="lensGrad" x1="38" y1="33" x2="62" y2="57">
-                                <stop offset="0%" stop-color="#D4C5E8"/>
-                                <stop offset="100%" stop-color="#9B7EBD"/>
-                            </linearGradient>
-                        </defs>
-                    </svg>
+        <!-- Two Column Layout: Scanner Left, History Right -->
+        <div class="skin-dashboard-layout">
+            <!-- Left Column: New Scan Card -->
+            <div class="new-scan-section">
+                <div class="new-scan-card">
+                    <div class="scan-card-icon">
+                        <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="20" y="15" width="60" height="70" rx="8" fill="url(#camGrad)"/>
+                            <circle cx="50" cy="45" r="18" fill="#FFFFFF" opacity="0.9"/>
+                            <circle cx="50" cy="45" r="12" fill="url(#lensGrad)"/>
+                            <circle cx="70" cy="25" r="4" fill="#FFB6D9"/>
+                            <defs>
+                                <linearGradient id="camGrad" x1="20" y1="15" x2="80" y2="85">
+                                    <stop offset="0%" stop-color="#FFE0EC"/>
+                                    <stop offset="100%" stop-color="#FFB6D9"/>
+                                </linearGradient>
+                                <linearGradient id="lensGrad" x1="38" y1="33" x2="62" y2="57">
+                                    <stop offset="0%" stop-color="#D4C5E8"/>
+                                    <stop offset="100%" stop-color="#9B7EBD"/>
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </div>
+                    <h3>AI Skin Scanner</h3>
+                    <p>Take a selfie and let our AI analyse your skin condition, texture, and provide personalised recommendations</p>
+                    <button class="start-scan-btn" onclick="showConsentPopup()">
+                        <span class="btn-icon">+</span>
+                        <span>Start New Scan</span>
+                    </button>
                 </div>
-                <h3>AI Skin Scanner</h3>
-                <p>Take a selfie and let our AI analyse your skin condition, texture, and provide personalised recommendations</p>
-                <button class="method-btn-large" onclick="showConsentPopup()">Start Scan</button>
+            </div>
+
+            <!-- Right Column: Scan History -->
+            <div class="scan-history-section">
+                <div class="history-header">
+                    <h2>Scan History</h2>
+                    <span class="scan-count" id="scan-count">0 scans</span>
+                </div>
+                
+                <!-- History List -->
+                <div class="history-list" id="history-list">
+                    <!-- Empty State -->
+                    <div class="empty-history" id="empty-history">
+                        <div class="empty-icon">📊</div>
+                        <p>No scans yet</p>
+                        <p class="empty-subtitle">Start your first skin analysis to track your progress</p>
+                    </div>
+                    
+                    <!-- History cards will be inserted here dynamically -->
+                </div>
             </div>
         </div>
 

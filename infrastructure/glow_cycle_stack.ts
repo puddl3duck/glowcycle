@@ -131,6 +131,14 @@ export class GlowCycleStack extends cdk.Stack {
         resources: ["*"],
       }),
     );
+    
+    wellnessLambda.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ["bedrock:InvokeModel"],
+        resources: ["*"],
+      }),
+    );
+    
     skinAnalyzeLambda.addToRolePolicy(
       new iam.PolicyStatement({
         actions: ["rekognition:DetectFaces"],

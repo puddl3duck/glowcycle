@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/dark-mode-complete.css">
+    <link rel="stylesheet" href="css/wellness-agent.css">
 </head>
 <body>
     <!-- Landing Page -->
@@ -36,20 +37,6 @@
                         and connect with your body's natural rhythm.
                     </p>
                     
-                    <div class="hero-stats">
-                        <div class="stat-item">
-                            <div class="stat-number">50K+</div>
-                            <div class="stat-label">Women in Our Community</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-number">1M+</div>
-                            <div class="stat-label">Cycles Tracked</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-number">🌸</div>
-                            <div class="stat-label">Made for Women</div>
-                        </div>
-                    </div>
                     
                     <button class="cta-button primary-cta" onclick="openHowItWorksModal()">
                         Start Your Journey
@@ -75,6 +62,11 @@
         
         <div class="questionnaire-content">
             <div class="questionnaire-container">
+                <!-- Close/Back Button -->
+                <button class="questionnaire-close-btn" onclick="backToLanding()" title="Back to home">
+                    ← Back
+                </button>
+                
                 <div class="progress-bar">
                     <div class="progress-fill" id="progress-fill"></div>
                 </div>
@@ -213,21 +205,29 @@
 
         <!-- Dashboard View -->
         <div id="dashboard-view" class="dashboard-content active">
-            <!-- Motivational Hero -->
+            <!-- Motivational Message Section - PRINCIPAL -->
             <section class="motivational-hero">
+                <!-- Decorative floating images - OUTSIDE container for full freedom -->
+                <div class="floating-decoration left">
+                    <img src="images/decoration-sparkle.png" alt="" />
+                </div>
+                <div class="floating-decoration right">
+                    <img src="images/decoration-heart.png" alt="" />
+                </div>
+                
                 <div class="container">
-                    <!-- Decorative floating images -->
-                    <div class="floating-decoration left">
-                        <img src="images/decoration-sparkle.png" alt="" />
+                    <!-- AI Wellness Message - MAIN FOCUS -->
+                    <div id="wellness-message-container"></div>
+                </div>
+            </section>
+            
+            <!-- Welcome Section - Below, where background changes -->
+            <section class="welcome-section">
+                <div class="container">
+                    <div class="welcome-header">
+                        <h2 class="welcome-title">Welcome, <span id="user-name-display">Beautiful</span>! 🌸</h2>
+                        <p class="welcome-subtitle">I'm here to support your skin journey through every phase of your cycle</p>
                     </div>
-                    <div class="floating-decoration right">
-                        <img src="images/decoration-heart.png" alt="" />
-                    </div>
-                    
-                    <h1 class="motivational-quote">
-                        "Let's understand your body's rhythm together 🌸"
-                    </h1>
-                    <p class="motivational-subtext">Your skin isn't broken, it's hormonal - and you're not alone. Let's figure it out together 💜</p>
                 </div>
             </section>
 
@@ -395,33 +395,6 @@
         </section>
 
         <!-- Example Preview -->
-        <section class="preview-section">
-            <div class="container">
-                <div class="section-intro">
-                    <h2 class="section-heading">Your Daily Glow Plan</h2>
-                    <p class="section-description">Here's an example of what your personalised daily guidance looks like</p>
-                </div>
-                
-                <div class="dashboard-card preview-card">
-                    <div class="card-header">
-                        <span class="card-icon">←</span>
-                        <h3>Day 14 — Ovulation Phase</h3>
-                        <span class="card-icon">→</span>
-                    </div>
-                    <div class="cycle-phase">
-                        <h4>✨ Your Glow Phase</h4>
-                        <p>Estrogen peaks — Your skin is radiant and energy is high</p>
-                    </div>
-                    <div class="today-actions">
-                        <h5>Suggested Actions:</h5>
-                        <div class="action-item">✓ Gentle Cleanser & Vitamin C Serum</div>
-                        <div class="action-item">✓ 20-Minute Walk in Nature</div>
-                        <div class="action-item">✓ Hydrate with 8 Glasses of Water</div>
-                    </div>
-                    <button class="preview-cta-btn">Start Tracking Today</button>
-                </div>
-            </div>
-        </section>
         
         </div>
         <!-- End Dashboard View -->
@@ -679,53 +652,6 @@
             </div>
         </section>
 
-        <!-- Testimonials Section -->
-        <section class="testimonials-section">
-            <div class="container">
-                <div class="section-intro">
-                    <h2 class="section-heading">Stories from Our Community</h2>
-                    <p class="section-description">Real women sharing their journey</p>
-                </div>
-                
-                <div class="testimonials-grid">
-                    <div class="testimonial-card">
-                        <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
-                        <p class="testimonial-text">"I finally understand my skin! I used to panic every time I got a breakout. Now I know it's just my luteal phase and I'm prepared. This changed everything for me."</p>
-                        <div class="testimonial-author">
-                            <div class="author-avatar">S</div>
-                            <div class="author-info">
-                                <div class="author-name">Sarah M.</div>
-                                <div class="author-age">28, New York</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="testimonial-card">
-                        <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
-                        <p class="testimonial-text">"This website helped me stop buying random products and start working WITH my body. I feel so much more connected to myself now. Thank you!"</p>
-                        <div class="testimonial-author">
-                            <div class="author-avatar">M</div>
-                            <div class="author-info">
-                                <div class="author-name">Maria L.</div>
-                                <div class="author-age">32, Los Angeles</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="testimonial-card">
-                        <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
-                        <p class="testimonial-text">"I love how it connects my mood, energy, and skin. It's not just tracking—it's understanding myself better every day. Life-changing!"</p>
-                        <div class="testimonial-author">
-                            <div class="author-avatar">E</div>
-                            <div class="author-info">
-                                <div class="author-name">Emma K.</div>
-                                <div class="author-age">25, Chicago</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
         
         </div>
         <!-- End About View -->
@@ -874,6 +800,7 @@
     </div>
 
     <script src="js/config.js"></script>
+    <script src="js/wellness-agent.js"></script>
     <script src="js/script.js"></script>
 </body>
 </html>
