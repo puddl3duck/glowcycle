@@ -69,10 +69,12 @@ Rules:
 - Do NOT mention diseases.
 - Provide cosmetic skincare insights and routines only.
 - Return ONLY valid JSON (no markdown, no extra text, no code fences).
-- Generate atlease 3 type of product recommendation based on the analysis.
+- Generate at least 3 types of product recommendation based on the analysis.
 - Generate exactly 3 tips in the "tips" array, no more, no less.
 - Provide responses with Australian spelling.
 - Provide exactly 2 concerns detected in the "concerns_detected" array.
+- Generate atmost 5 type of product recommendation, Tips and concerns detected based on the analysis. 
+- Use appropriate emoticons at the start of each recommendation to make it look fun.
 - """
 
         schema = """{
@@ -105,7 +107,7 @@ Return JSON in this exact schema (numbers should be 0-100):
 
         req = {
             "anthropic_version": "bedrock-2023-05-31",
-            "max_tokens": 3200,
+            "max_tokens": 2200,
             "system": system_prompt,
             "messages": [
                 {
@@ -137,6 +139,7 @@ Return JSON in this exact schema (numbers should be 0-100):
 
         text = raw["content"][0]["text"].strip()
         print("Claude text output:", text)  # for debugging
+        
 
         # Strip markdown code fences if Claude added them despite instructions
         if text.startswith("```"):
@@ -146,6 +149,10 @@ Return JSON in this exact schema (numbers should be 0-100):
             text = text.strip()
 
         result = json.loads(text)
+        result["face_data"] = {
+            "landmarks": face.get("Landmarks", []),
+            "bounding_box": face.get("BoundingBox", {}),
+            }
         result["image_quality"] = {
             "brightness": brightness,
             "sharpness": sharpness,
