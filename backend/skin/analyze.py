@@ -71,13 +71,13 @@ Rules:
 - Return ONLY valid JSON (no markdown, no extra text, no code fences).
 - Generate atlease 3 type of product recommendation based on the analysis.
 - Generate exactly 3 tips in the "tips" array, no more, no less.
-- Provide responses with Australian spelling
-- For each concern, provide a way to overcome the concern.
+- Provide responses with Australian spelling.
+- Provide exactly 2 concerns detected in the "concerns_detected" array.
 - """
 
         schema = """{
             "summary": "...",
-            "concerns_detected": ["..."],
+            "concerns_detected": ["concern_detected1","concern_detected2"],
             "metrics": {
                 "radiance": 0,
                 "moisture": 0,
@@ -85,8 +85,9 @@ Rules:
                 "pores": 0,
                 "dark_circles": 0,
                 "oiliness": 0,
-                "redness": 0
+                "redness": 0,
             },
+            "overall_skin_health": 0
             "am_routine": ["..."],
             "pm_routine": ["..."],
             "tips": ["tip1", "tip2", "tip3"],,

@@ -649,13 +649,14 @@ function renderSkinAnalysisResult() {
   const avgScore = metricValues.length
     ? Math.round(metricValues.reduce((a, b) => a + b, 0) / metricValues.length)
     : 75;
+  const overallScore = result.overall_skin_health ?? avgScore;
 
   const scoreEl = document.querySelector(".score-number");
-  if (scoreEl) scoreEl.textContent = avgScore;
+  if (scoreEl) scoreEl.textContent = overallScore;
 
   const scoreCircle = document.querySelector(".score-circle circle:nth-child(2)");
   if (scoreCircle) {
-    scoreCircle.setAttribute("stroke-dashoffset", 314 - (314 * avgScore) / 100);
+    scoreCircle.setAttribute("stroke-dashoffset", 314 - (314 * overallScore) / 100);
   }
 
   // Metric cards
@@ -666,6 +667,8 @@ function renderSkinAnalysisResult() {
     { label: "Texture", key: "texture" },
     { label: "Pores", key: "pores" },
     { label: "Dark Circles", key: "dark_circles" },
+    { label: "Redness", key: "redness"},
+    { label: "Oiliness", key: "oiliness"},
   ];
   metricItems.forEach((item, i) => {
     if (metricMap[i]) {
