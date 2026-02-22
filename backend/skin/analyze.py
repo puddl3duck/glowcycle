@@ -71,6 +71,8 @@ Rules:
 - Return ONLY valid JSON (no markdown, no extra text, no code fences).
 - Generate atlease 3 type of product recommendation based on the analysis.
 - Generate exactly 3 tips in the "tips" array, no more, no less.
+- Provide responses with Australian spelling
+- For each concern, provide a way to overcome the concern.
 - """
 
         schema = """{
@@ -91,7 +93,7 @@ Rules:
             "disclaimer": "..."
         }"""
 
-        user_prompt = f"""Analyze the face image and provide skincare recommendations.
+        user_prompt = f"""Analyse the face image and provide skincare recommendations.
         Use the user context and Rekognition quality info to adjust suggestions.
 
 User context:

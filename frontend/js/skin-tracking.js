@@ -609,6 +609,15 @@ function showResults() {
   document.getElementById("scanner-view").style.display = "none";
   document.getElementById("results-view").style.display = "block";
 
+    // Update cycle day dynamically
+  const { day, phase, emoji } = getCycleDayAndPhase();
+  const reportDate = document.querySelector(".report-date");
+  if (reportDate) {
+    reportDate.textContent = day
+      ? `Day ${day} • ${phase} ${emoji}`
+      : `${phase} ${emoji}`;
+  }
+
   renderSkinAnalysisResult();
   drawRadarChart();
   
@@ -774,6 +783,34 @@ function renderSkinAnalysisResult() {
   // Disclaimer
   const disEl = document.getElementById("ai-disclaimer");
   if (disEl && result.disclaimer) disEl.textContent = result.disclaimer;
+}
+
+// Cycle day and phase info 
+function getCycleDayAndPhase() {
+  const lastPeriod = localStorage.getItem('lastPeriod');
+  const cycleLength = parseInt(localStorage.getItem('cycleLength')) || 28;
+
+  if (!lastPeriod) return { day: null, phase: 'Unknown Phase', emoji: '🌸' };
+
+  const start = new Date(lastPeriod);
+  const today = new Date();
+  const diffMs = today - start;
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const currentDay = (diffDays % cycleLength) + 1;
+
+  // Determine phase
+  let phase, emoji;
+  if (currentDay <= 5) {
+    phase = 'Menstrual Phase'; emoji = '🔴';
+  } else if (currentDay <= 13) {
+    phase = 'Follicular Phase'; emoji = '🌱';
+  } else if (currentDay <= 16) {
+    phase = 'Ovulation Phase'; emoji = '✨';
+  } else {
+    phase = 'Luteal Phase'; emoji = '🌙';
+  }
+
+  return { day: currentDay, phase, emoji };
 }
 
 // Draw Radar Chart
