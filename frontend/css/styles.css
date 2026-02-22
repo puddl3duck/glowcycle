@@ -1611,118 +1611,6 @@ body {
     }
 }
 
-/* Testimonials Section */
-.testimonials-section {
-    padding: 5rem 0;
-    background: linear-gradient(135deg, #FFE8F0 0%, #E3F4F4 50%, #E8E4F3 100%);
-    position: relative;
-    overflow: hidden;
-}
-
-.testimonials-section::before,
-.testimonials-section::after {
-    content: '';
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(70px);
-    opacity: 0.3;
-}
-
-.testimonials-section::before {
-    width: 250px;
-    height: 250px;
-    background: linear-gradient(135deg, #FFD4E5, #A8E6CF);
-    top: 10%;
-    right: 5%;
-    animation: blobFloat 16s ease-in-out infinite;
-}
-
-.testimonials-section::after {
-    width: 280px;
-    height: 280px;
-    background: linear-gradient(135deg, #D4C5E8, #FFB6D9);
-    bottom: 10%;
-    left: 5%;
-    animation: blobFloat 14s ease-in-out infinite;
-    animation-delay: 6s;
-}
-
-.testimonials-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 2rem;
-}
-
-.testimonial-card {
-    background: rgba(255, 255, 255, 0.9);
-    backdrop-filter: blur(20px);
-    border-radius: 25px;
-    padding: 2.5rem;
-    border: 1px solid rgba(212, 197, 232, 0.2);
-    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-}
-
-.testimonial-card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 25px 70px rgba(212, 197, 232, 0.3);
-    border-color: var(--lavender);
-}
-
-.testimonial-stars {
-    font-size: 1.2rem;
-    color: #FFD700;
-}
-
-.testimonial-text {
-    font-size: 1rem;
-    line-height: 1.7;
-    color: var(--text-dark);
-    font-style: italic;
-    flex-grow: 1;
-}
-
-.testimonial-author {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid rgba(212, 197, 232, 0.2);
-}
-
-.author-avatar {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--lavender) 0%, var(--lavender-dark) 100%);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 600;
-    font-size: 1.3rem;
-    flex-shrink: 0;
-}
-
-.author-info {
-    display: flex;
-    flex-direction: column;
-    gap: 0.2rem;
-}
-
-.author-name {
-    font-weight: 600;
-    color: var(--text-dark);
-    font-size: 1rem;
-}
-
-.author-age {
-    font-size: 0.85rem;
-    color: var(--text-light);
-}
-
 /* Footer */
 .footer {
     padding: 2rem 0;
@@ -1819,9 +1707,6 @@ body {
         font-size: 2.5rem;
     }
     
-    .testimonials-grid {
-        grid-template-columns: 1fr;
-    }
 }
 
 @media (max-width: 768px) {
@@ -2254,7 +2139,6 @@ body.dark-theme .dashboard-card,
 body.dark-theme .feature-card,
 body.dark-theme .step-card,
 body.dark-theme .comparison-card,
-body.dark-theme .testimonial-card,
 body.dark-theme .question-card {
     background: var(--card-bg);
     border-color: var(--card-border);
@@ -2265,10 +2149,6 @@ body.dark-theme .feature-card h3,
 body.dark-theme .step-card h3,
 body.dark-theme .card-header h3,
 body.dark-theme .comparison-card h3,
-body.dark-theme .testimonial-card .author-name {
-    color: #FFFFFF;
-    font-weight: 700;
-}
 
 body.dark-theme .feature-card p,
 body.dark-theme .step-card p,
@@ -2296,7 +2176,6 @@ body.dark-theme .motivational-hero,
 body.dark-theme .features-section,
 body.dark-theme .how-it-works,
 body.dark-theme .before-after-section,
-body.dark-theme .testimonials-section,
 body.dark-theme .preview-section {
     background: linear-gradient(135deg, rgba(26, 26, 46, 0.6) 0%, rgba(37, 37, 58, 0.6) 50%, rgba(42, 42, 62, 0.6) 100%);
 }
@@ -2471,13 +2350,11 @@ body,
 .feature-card,
 .step-card,
 .comparison-card,
-.testimonial-card,
 .question-card,
 .motivational-hero,
 .features-section,
 .how-it-works,
 .before-after-section,
-.testimonials-section,
 .preview-section {
     transition: background 0.5s ease, color 0.5s ease, border-color 0.5s ease;
 }
@@ -2679,9 +2556,6 @@ body.dark-theme .comparison-item span {
     font-weight: 600;
 }
 
-body.dark-theme .testimonial-stars {
-    filter: brightness(1.1);
-}
 
 body.dark-theme .step-number {
     background: linear-gradient(135deg, #FFB6D9 0%, #D4C5E8 100%);

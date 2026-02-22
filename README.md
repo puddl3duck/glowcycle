@@ -9,7 +9,7 @@
 A web application that helps women:
 
 - 📅 **Track their menstrual cycle** with smart predictions  
-- 💆‍♀️ **Monitor their skin** and receive personalized recommendations  
+- 💆‍♀️ **Monitor their skin** and receive personalised recommendations  
 - 📝 **Keep a journal** of emotions and energy  
 - 🤖 **Get AI insights** about how hormones affect their body  
 

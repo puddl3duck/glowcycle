@@ -31,7 +31,7 @@ EXAMPLES:
 Generate ONLY the quote (no JSON, no explanation). Keep it under 100 tokens."""
 
 SYSTEM_PROMPT = """You are GlowCycle AI, a supportive emotional and skincare wellness assistant.
-Your role is to generate personalized, emotionally intelligent support messages based on:
+Your role is to generate personalised, emotionally intelligent support messages based on:
 
 1. Cycle phase (menstrual, follicular, ovulation, luteal)
 2. Journal emotional state
@@ -67,12 +67,13 @@ RULES:
 - Micro action must be achievable in under 10 minutes.
 - Skin tip must align with cycle phase.
 - Affirmation must sound personal, not generic.
+- Must have Australian spelling
 """
 
 
 def generate_motivational_quote(user_context: dict) -> str:
     """
-    Generate SHORT personalized motivational quote using Bedrock.
+    Generate SHORT personalised motivational quote using Bedrock.
     Optimized for cost (max 100 tokens).
     Falls back to rule-based if Bedrock fails.
     
@@ -162,7 +163,7 @@ def generate_rule_based_quote(user_context: dict) -> str:
     patterns = user_context.get('recent_patterns', {})
     entries_count = patterns.get('entries_count', 0)
     
-    # Girly, personalized quotes based on context
+    # Girly, personalised quotes based on context
     if cycle_phase == 'menstrual' and energy < 50:
         quotes = [
             f"Day {cycle_day} of your period and you're still showing up? That's strength 💜",
@@ -226,7 +227,7 @@ def generate_rule_based_quote(user_context: dict) -> str:
 
 def generate_wellness_support(user_context: dict) -> dict:
     """
-    Generate personalized wellness support using AWS Bedrock.
+    Generate personalised wellness support using AWS Bedrock.
     Falls back to rule-based generation if Bedrock is not available.
     
     Args:

@@ -146,7 +146,7 @@ async function loadAIMotivationalMessage(userName) {
     // Validate userName
     if (!userName || userName.trim() === '') {
         console.log('No username available');
-        quoteElement.textContent = '"Complete your profile to unlock personalized wellness insights 💜"';
+        quoteElement.textContent = '"Complete your profile to unlock personalised wellness insights 💜"';
         return;
     }
     
@@ -177,7 +177,7 @@ async function loadAIMotivationalMessage(userName) {
     }
     
     // FULL DATA - Show loading then fetch AI
-    quoteElement.textContent = '"Crafting your personalized message..."';
+    quoteElement.textContent = '"Crafting your personalised message..."';
     
     try {
         // Fetch wellness support from backend
@@ -207,7 +207,7 @@ async function loadAIMotivationalMessage(userName) {
             
             // Store wellness data for debugging
             window.currentWellnessData = data.wellness;
-            console.log('AI personalized message loaded:', data.wellness.support_message);
+            console.log('AI personalised message loaded:', data.wellness.support_message);
         } else {
             throw new Error('No wellness message in response');
         }
