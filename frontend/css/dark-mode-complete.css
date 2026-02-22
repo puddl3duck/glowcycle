@@ -156,7 +156,6 @@ body.dark-theme .dashboard-card,
 body.dark-theme .feature-card,
 body.dark-theme .step-card,
 body.dark-theme .comparison-card,
-body.dark-theme .testimonial-card,
 body.dark-theme .question-card {
     background: rgba(37, 37, 58, 0.95);
     border: 2px solid rgba(255, 182, 217, 0.3);
@@ -307,31 +306,6 @@ body.dark-theme .before-card {
 body.dark-theme .after-card {
     border-color: rgba(212, 197, 232, 0.6);
     background: linear-gradient(135deg, rgba(37, 37, 58, 0.95), rgba(42, 42, 62, 0.8));
-}
-
-/* ===== TESTIMONIALS ===== */
-body.dark-theme .testimonial-card {
-    background: rgba(37, 37, 58, 0.95);
-    border: 2px solid rgba(255, 182, 217, 0.3);
-}
-
-body.dark-theme .testimonial-text {
-    color: #FFFFFF !important;
-    font-weight: 500;
-}
-
-body.dark-theme .author-name {
-    color: #FFFFFF !important;
-    font-weight: 700;
-}
-
-body.dark-theme .author-age {
-    color: #E8D4F0 !important;
-    font-weight: 500;
-}
-
-body.dark-theme .testimonial-stars {
-    filter: brightness(1.1);
 }
 
 /* ===== BUTTONS ===== */
@@ -498,7 +472,6 @@ body.dark-theme .motivational-hero,
 body.dark-theme .features-section,
 body.dark-theme .how-it-works,
 body.dark-theme .before-after-section,
-body.dark-theme .testimonials-section,
 body.dark-theme .preview-section,
 body.dark-theme .today-section {
     background: linear-gradient(135deg, rgba(26, 26, 46, 0.7) 0%, rgba(37, 37, 58, 0.7) 50%, rgba(42, 42, 62, 0.7) 100%);

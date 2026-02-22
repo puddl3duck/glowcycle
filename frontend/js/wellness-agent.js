@@ -48,7 +48,7 @@ function displayWellnessSupport(wellness, containerId = 'wellness-container') {
         container.innerHTML = `
             <div class="wellness-card loading">
                 <div class="wellness-icon">✨</div>
-                <p>Loading your personalized wellness support...</p>
+                <p>Loading your personalised wellness support...</p>
             </div>
         `;
         return;
