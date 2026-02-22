@@ -67,7 +67,7 @@ function updateSkincareRoutine() {
   if (!routineTitle || !routineSteps) return;
 
   if (timeMode === "morning") {
-    routineTitle.innerHTML = "☀️ AM Routine";
+    routineTitle.innerHTML = "☀️ Morning Skin Routine";
     routineSteps.innerHTML = `
             <div class="routine-step">✓ Gentle Cleanser</div>
             <div class="routine-step">✓ Vitamin C Serum</div>
@@ -83,7 +83,7 @@ function updateSkincareRoutine() {
             <div class="routine-step">✓ Light Moisturizer</div>
         `;
   } else {
-    routineTitle.innerHTML = "🌙 PM Routine";
+    routineTitle.innerHTML = "🌙 Night Skin Routine";
     routineSteps.innerHTML = `
             <div class="routine-step">✓ Oil Cleanser</div>
             <div class="routine-step">✓ Treatment Serum</div>
@@ -755,98 +755,214 @@ function drawRadarChart() {
   const canvas = document.getElementById("skinRadar");
   if (!canvas) return;
 
-  const ctx = canvas.getContext("2d");
-  const centerX = canvas.width / 2;
-  const centerY = canvas.height / 2;
-  const radius = Math.min(centerX, centerY) - 40;
-  const labels = ["Radiance", "Moisture", "Texture", "Pores", "Dark Circles", "Oiliness", "Redness"];
-  // Data points
   const result = window.__skinAnalysisResult;
   const m = result?.metrics || {};
-  const data = [
-    m.radiance ?? 70,
-    m.moisture ?? 70,
-    m.texture ?? 70,
-    m.pores ?? 70,
-    m.dark_circles ?? 70,
-    m.oiliness ?? 70,
-    m.redness ?? 70,
-  ];
-  const numPoints = data.length;
+  const faceData = result?.face_data;
+  const landmarks = faceData?.landmarks || [];
+  const bbox = faceData?.bounding_box || {};
 
-  // Clear canvas
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const W = canvas.width;
+  const H = canvas.height;
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0, 0, W, H);
 
-  // Draw background circles
-  ctx.strokeStyle = "#E8E4F3";
-  ctx.lineWidth = 1;
-  for (let i = 1; i <= 5; i++) {
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, (radius / 5) * i, 0, Math.PI * 2);
-    ctx.stroke();
+  function scoreColor(score, alpha = 0.5) {
+    if (score >= 75) return `rgba(168, 230, 207, ${alpha})`;
+    if (score >= 50) return `rgba(255, 220, 150, ${alpha})`;
+    return `rgba(255, 160, 160, ${alpha})`;
   }
 
-  // Draw axes
-  ctx.strokeStyle = "#E8E4F3";
-  ctx.lineWidth = 1;
-  for (let i = 0; i < numPoints; i++) {
-    const angle = (Math.PI * 2 * i) / numPoints - Math.PI / 2;
-    const x = centerX + radius * Math.cos(angle);
-    const y = centerY + radius * Math.sin(angle);
+  // Add padding around the face bbox so we don't crop too tight
+  const pad = 0.04;
+  const cropLeft   = Math.max(0, (bbox.Left   ?? 0.2) - pad);
+  const cropTop    = Math.max(0, (bbox.Top    ?? 0.1) - pad);
+  const cropRight  = Math.min(1, (bbox.Left   ?? 0.2) + (bbox.Width  ?? 0.6) + pad);
+  const cropBottom = Math.min(1, (bbox.Top    ?? 0.1) + (bbox.Height ?? 0.8) + pad);
+  const cropW = cropRight  - cropLeft;
+  const cropH = cropBottom - cropTop;
 
-    ctx.beginPath();
-    ctx.moveTo(centerX, centerY);
-    ctx.lineTo(x, y);
-    ctx.stroke();
-
-    // Draw labels
-    const labelX = centerX + (radius + 30) * Math.cos(angle);
-    const labelY = centerY + (radius + 30) * Math.sin(angle);
-    ctx.fillStyle = "#7A7A8E";
-    ctx.font = "12px Outfit";
-    ctx.textAlign = "center";
-    ctx.fillText(labels[i], labelX, labelY);
+  // Convert original image fraction → canvas pixel
+  // by mapping the cropped region to fill the canvas
+  function fc(fracX, fracY) {
+    return {
+      x: ((fracX - cropLeft) / cropW) * W,
+      y: ((fracY - cropTop)  / cropH) * H,
+    };
   }
 
-  // Draw data polygon
-  ctx.beginPath();
-  for (let i = 0; i < numPoints; i++) {
-    const angle = (Math.PI * 2 * i) / numPoints - Math.PI / 2;
-    const value = data[i] / 100;
-    const x = centerX + radius * value * Math.cos(angle);
-    const y = centerY + radius * value * Math.sin(angle);
+  // Build landmark lookup in canvas coords
+  const lm = {};
+  landmarks.forEach(l => {
+    lm[l.Type] = fc(l.X, l.Y);
+  });
 
-    if (i === 0) {
-      ctx.moveTo(x, y);
+  function drawEverything(img) {
+    // ── 1. Draw cropped face region filling the canvas ────────────────
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(W / 2, H / 2, W / 2, H / 2, 0, 0, Math.PI * 2);
+    ctx.clip();
+
+    if (img) {
+      const srcX = cropLeft * img.naturalWidth;
+      const srcY = cropTop  * img.naturalHeight;
+      const srcW = cropW    * img.naturalWidth;
+      const srcH = cropH    * img.naturalHeight;
+      ctx.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, W, H);
+
+      // Subtle dark overlay so zone colours pop
+      ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
+      ctx.fillRect(0, 0, W, H);
     } else {
-      ctx.lineTo(x, y);
+      ctx.fillStyle = "#f5ebff";
+      ctx.fillRect(0, 0, W, H);
     }
+
+    ctx.restore();
+
+    // ── 2. Face outline using jawline landmarks ───────────────────────
+    const jawPoints = [
+      "upperJawlineLeft", "midJawlineLeft", "chinBottom",
+      "midJawlineRight",  "upperJawlineRight",
+    ].map(t => lm[t]).filter(Boolean);
+
+    if (jawPoints.length >= 3) {
+      ctx.beginPath();
+      ctx.moveTo(jawPoints[0].x, jawPoints[0].y);
+      jawPoints.forEach(p => ctx.lineTo(p.x, p.y));
+      ctx.closePath();
+      ctx.strokeStyle = "rgba(255,255,255,0.7)";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    // ── 3. Face centre & size from bbox remapped to canvas ────────────
+    const faceTopLeft     = fc(bbox.Left ?? 0.2,  bbox.Top  ?? 0.1);
+    const faceBottomRight = fc((bbox.Left ?? 0.2) + (bbox.Width ?? 0.6),
+                               (bbox.Top  ?? 0.1) + (bbox.Height ?? 0.8));
+    const fW = faceBottomRight.x - faceTopLeft.x;
+    const fH = faceBottomRight.y - faceTopLeft.y;
+    const fCX = faceTopLeft.x + fW / 2;
+    const fCY = faceTopLeft.y + fH / 2;
+
+    // ── 4. Zones using real landmarks ────────────────────────────────
+    const eyeL       = lm["eyeLeft"]        ?? { x: fCX - fW * 0.2, y: fCY - fH * 0.15 };
+    const eyeR       = lm["eyeRight"]       ?? { x: fCX + fW * 0.2, y: fCY - fH * 0.15 };
+    const nose       = lm["nose"]           ?? { x: fCX,             y: fCY };
+    const mouthUp    = lm["mouthUp"]        ?? { x: fCX,             y: fCY + fH * 0.2 };
+    const chinBottom = lm["chinBottom"]     ?? { x: fCX,             y: fCY + fH * 0.4 };
+    const browL      = lm["leftEyeBrowUp"]  ?? { x: eyeL.x,          y: eyeL.y - fH * 0.08 };
+    const browR      = lm["rightEyeBrowUp"] ?? { x: eyeR.x,          y: eyeR.y - fH * 0.08 };
+    const jawL       = lm["midJawlineLeft"] ?? { x: faceTopLeft.x + fW * 0.1, y: fCY + fH * 0.2 };
+    const jawR       = lm["midJawlineRight"]?? { x: faceTopLeft.x + fW * 0.9, y: fCY + fH * 0.2 };
+
+    const zones = [
+      {
+        label: "Forehead", key: "radiance",
+        cx: (eyeL.x + eyeR.x) / 2,
+        cy: browL.y - fH * 0.08,
+        rx: fW * 0.25, ry: fH * 0.07,
+      },
+      {
+        label: "Left Eye", key: "dark_circles",
+        cx: eyeL.x, cy: eyeL.y,
+        rx: fW * 0.12, ry: fH * 0.05,
+      },
+      {
+        label: "Right Eye", key: "dark_circles",
+        cx: eyeR.x, cy: eyeR.y,
+        rx: fW * 0.12, ry: fH * 0.05,
+      },
+      {
+        label: "Nose", key: "pores",
+        cx: nose.x, cy: nose.y,
+        rx: fW * 0.09, ry: fH * 0.08,
+      },
+      {
+        label: "Left Cheek", key: "oiliness",
+        cx: jawL.x + fW * 0.08, cy: (eyeL.y + mouthUp.y) / 2,
+        rx: fW * 0.12, ry: fH * 0.09,
+      },
+      {
+        label: "Right Cheek", key: "redness",
+        cx: jawR.x - fW * 0.08, cy: (eyeR.y + mouthUp.y) / 2,
+        rx: fW * 0.12, ry: fH * 0.09,
+      },
+      {
+        label: "Lips", key: "moisture",
+        cx: mouthUp.x,
+        cy: mouthUp.y + fH * 0.03,
+        rx: fW * 0.15, ry: fH * 0.05,
+      },
+      {
+        label: "Chin", key: "texture",
+        cx: chinBottom.x,
+        cy: chinBottom.y - fH * 0.03,
+        rx: fW * 0.12, ry: fH * 0.05,
+      },
+    ];
+
+    // ── 5. Draw zones ─────────────────────────────────────────────────
+    zones.forEach(zone => {
+      const score = m[zone.key] ?? 70;
+
+      ctx.beginPath();
+      ctx.ellipse(zone.cx, zone.cy, zone.rx, zone.ry, 0, 0, Math.PI * 2);
+      ctx.fillStyle = scoreColor(score, 0.4);
+      ctx.fill();
+      ctx.strokeStyle = scoreColor(score, 1);
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      ctx.save();
+      ctx.shadowColor = "rgba(0,0,0,0.9)";
+      ctx.shadowBlur = 4;
+      ctx.fillStyle = "#FFFFFF";
+      ctx.font = "bold 10px Outfit, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(zone.label, zone.cx, zone.cy - zone.ry - 4);
+
+      const pillW = 26, pillH = 14;
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = scoreColor(score, 0.95);
+      ctx.beginPath();
+      ctx.roundRect(zone.cx - pillW / 2, zone.cy + zone.ry + 2, pillW, pillH, 7);
+      ctx.fill();
+      ctx.fillStyle = "#2D2250";
+      ctx.font = "bold 9px Outfit, sans-serif";
+      ctx.fillText(score, zone.cx, zone.cy + zone.ry + 12);
+      ctx.restore();
+    });
+
+    // ── 6. Legend ─────────────────────────────────────────────────────
+    const legend = [
+      { label: "Good (75+)",   color: "rgba(168,230,207,0.9)" },
+      { label: "Fair (50–74)", color: "rgba(255,220,150,0.9)" },
+      { label: "Needs care",   color: "rgba(255,160,160,0.9)" },
+    ];
+    legend.forEach((item, i) => {
+      const lx = 8, ly = H - 54 + i * 18;
+      ctx.fillStyle = "rgba(0,0,0,0.55)";
+      ctx.beginPath();
+      ctx.roundRect(lx - 2, ly, 88, 15, 3);
+      ctx.fill();
+      ctx.fillStyle = item.color;
+      ctx.beginPath();
+      ctx.roundRect(lx + 1, ly + 2, 10, 10, 2);
+      ctx.fill();
+      ctx.fillStyle = "#FFFFFF";
+      ctx.font = "9px Outfit, sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText(item.label, lx + 14, ly + 11);
+    });
   }
-  ctx.closePath();
 
-  // Fill with gradient
-  const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-  gradient.addColorStop(0, "rgba(168, 230, 207, 0.3)");
-  gradient.addColorStop(1, "rgba(255, 182, 217, 0.3)");
-  ctx.fillStyle = gradient;
-  ctx.fill();
-
-  // Stroke
-  ctx.strokeStyle = "#FFB6D9";
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
-  // Draw data points
-  for (let i = 0; i < numPoints; i++) {
-    const angle = (Math.PI * 2 * i) / numPoints - Math.PI / 2;
-    const value = data[i] / 100;
-    const x = centerX + radius * value * Math.cos(angle);
-    const y = centerY + radius * value * Math.sin(angle);
-
-    ctx.beginPath();
-    ctx.arc(x, y, 4, 0, Math.PI * 2);
-    ctx.fillStyle = "#FFB6D9";
-    ctx.fill();
+  if (capturedImageData) {
+    const img = new Image();
+    img.onload = () => drawEverything(img);
+    img.src = capturedImageData;
+  } else {
+    drawEverything(null);
   }
 }
 
@@ -854,7 +970,7 @@ function drawRadarChart() {
 window.addEventListener("load", () => {
   const canvas = document.getElementById("skinRadar");
   if (canvas) {
-    canvas.width = 400;
-    canvas.height = 400;
+    canvas.width = 300;
+    canvas.height = 360;
   }
 });

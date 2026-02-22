@@ -552,8 +552,17 @@ body {
     margin: 2rem 0;
     box-shadow: 0 20px 60px rgba(212, 197, 232, 0.2);
     height: 400px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-sizing: border-box;
 }
-
+#skinRadar {
+    display: block;
+    margin: 0 auto;
+    max-width: 100%;
+}
 .skin-metrics {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
