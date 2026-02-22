@@ -998,6 +998,6 @@ window.addEventListener("load", () => {
   const canvas = document.getElementById("skinRadar");
   if (canvas) {
     canvas.width = 300;
-    canvas.height = 360;
+    canvas.height = 320;
   }
 });
