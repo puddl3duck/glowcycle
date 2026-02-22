@@ -195,6 +195,19 @@ export class GlowCycleStack extends cdk.Stack {
       "POST",
       new apigateway.LambdaIntegration(skinAnalyzeLambda),
     );
+
+    const skinHistoryLambda = new lambda.Function(this, 'SkinHistoryLambda', {
+      runtime: lambda.Runtime.PYTHON_3_11,
+      handler: 'skin/history.lambda_handler',
+      code: lambda.Code.fromAsset('../backend'),
+      environment: { DYNAMODB_TABLE_NAME: table.tableName },
+    });
+    table.grantReadWriteData(skinHistoryLambda);
+
+    const skinHistory = api.root.getResource('skin')!.addResource('history');
+    skinHistory.addMethod('POST', new apigateway.LambdaIntegration(skinHistoryLambda));
+    skinHistory.addMethod('GET', new apigateway.LambdaIntegration(skinHistoryLambda));
+
     // Journal (ONE resource, multiple methods)
     const journalResource = api.root.addResource('journal');
 

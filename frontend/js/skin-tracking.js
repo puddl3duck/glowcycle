@@ -492,9 +492,50 @@ async function sendCapturedImageToBackend(dataUrl) {
 
     const analysis = await analyzeResp.json();
     window.__skinAnalysisResult = analysis;
+
   } catch (err) {
     console.error("Error in sendCapturedImageToBackend:", err);
-    // Don't block the UI — results will render with fallback/default values
+  }
+}
+
+// Save report to DynamoDB when user clicks Save Report
+async function saveReport() {
+  const result = window.__skinAnalysisResult;
+  if (!result) {
+    alert("No analysis to save yet.");
+    return;
+  }
+
+  const apiConfig = typeof API_CONFIG !== "undefined" ? API_CONFIG : window.API_CONFIG;
+  const user = document.querySelector(".profile-name")?.textContent?.trim()
+    || localStorage.getItem("userName")
+    || "anonymous";
+
+  const saveBtn = document.querySelector(".save-btn");
+  if (saveBtn) {
+    saveBtn.textContent = "Saving...";
+    saveBtn.disabled = true;
+  }
+
+  try {
+    const resp = await fetch(apiConfig.BASE_URL + "/skin/history", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user, analysis: result }),
+    });
+
+    if (!resp.ok) throw new Error("Save failed");
+
+    if (saveBtn) {
+      saveBtn.textContent = "✓ Saved!";
+      saveBtn.style.background = "linear-gradient(135deg, #A8E6CF, #68C9A3)";
+    }
+  } catch (err) {
+    console.error("Error saving report:", err);
+    if (saveBtn) {
+      saveBtn.textContent = "Save failed — try again";
+      saveBtn.disabled = false;
+    }
   }
 }
 
