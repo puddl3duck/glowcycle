@@ -3349,21 +3349,19 @@ body.dark-theme .amazon-buy-btn:hover {
     box-shadow: 0 15px 40px rgba(255, 155, 155, 0.7);
 }
 
-/* Two Column Layout: Scanner Left, History Right */
+/* Vertical Layout: Scanner Top, History Bottom */
 .skin-dashboard-layout {
-    display: grid;
-    grid-template-columns: 1fr 1.5fr;
+    display: flex;
+    flex-direction: column;
     gap: 2rem;
-    max-width: 1400px;
+    max-width: 900px;
     margin: 0 auto;
     padding: 0 2rem 3rem 2rem;
 }
 
-/* Left Column: New Scan Card */
+/* Top Section: New Scan Card */
 .new-scan-section {
-    position: sticky;
-    top: 2rem;
-    height: fit-content;
+    width: 100%;
 }
 
 .new-scan-card {
@@ -3436,8 +3434,9 @@ body.dark-theme .amazon-buy-btn:hover {
     font-weight: 300;
 }
 
-/* Right Column: Scan History */
+/* Bottom Section: Scan History */
 .scan-history-section {
+    width: 100%;
     background: rgba(255, 255, 255, 0.6);
     border-radius: 24px;
     padding: 2rem;
@@ -3653,12 +3652,7 @@ body.dark-theme .amazon-buy-btn:hover {
 /* Responsive */
 @media (max-width: 1024px) {
     .skin-dashboard-layout {
-        grid-template-columns: 1fr;
         gap: 2rem;
-    }
-    
-    .new-scan-section {
-        position: static;
     }
     
     .history-list {
