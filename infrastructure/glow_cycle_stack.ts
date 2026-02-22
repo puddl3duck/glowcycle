@@ -198,9 +198,9 @@ export class GlowCycleStack extends cdk.Stack {
 
     const skinHistoryLambda = new lambda.Function(this, 'SkinHistoryLambda', {
       runtime: lambda.Runtime.PYTHON_3_11,
-      handler: 'skin.history.lambda_handler',
+      handler: 'skin/history.lambda_handler',
       code: lambda.Code.fromAsset('../backend'),
-      environment: { TABLE_NAME: table.tableName },
+      environment: { DYNAMODB_TABLE_NAME: table.tableName },
     });
     table.grantReadWriteData(skinHistoryLambda);
 

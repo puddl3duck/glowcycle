@@ -48,10 +48,14 @@ def save_skin_analysis(event):
         skin_table.put_item(Item=item)
 
         return {
-            "status": "success",
-            "user": user,
-            "date": sk,
-            "message": "Skin analysis saved successfully"
+            "statusCode": 200,
+            "headers": {"Content-Type": "application/json", "Access-Control-Allow-Origin": "*"},
+            "body": json.dumps({
+                "status": "success",
+                "user": user,
+                "date": sk,
+                "message": "Skin analysis saved successfully"
+            })
         }
 
     except ValueError as e:
@@ -85,8 +89,11 @@ def get_skin_analyses(event):
         logger.info(f"Found {len(items)} skin analyses for user: {user}")
 
         return {
-            "analyses": items,
-            "count": len(items)
+            "statusCode": 200,
+            "headers": {"Content-Type": "application/json", "Access-Control-Allow-Origin": "*"},
+            "body": json.dumps({
+                "analyses": items,
+            })
         }
 
     except ValueError as e:
@@ -100,17 +107,17 @@ def get_skin_analyses(event):
 def lambda_handler(event, context):
     try:
         method = event.get("httpMethod", "")
-        logger.info(f"Received {method} request")
-
         if method == "OPTIONS":
-            return {"status": "ok", "message": "CORS preflight"}
+            return {"statusCode": 200, "headers": {"Access-Control-Allow-Origin": "*"}, "body": ""}
         if method == "POST":
             return save_skin_analysis(event)
         if method == "GET":
             return get_skin_analyses(event)
-
-        raise ValueError(f"Unsupported HTTP method: {method}")
-
+        return {
+            "statusCode": 405,
+            "headers": {"Content-Type": "application/json", "Access-Control-Allow-Origin": "*"},
+            "body": json.dumps({"error": f"Unsupported method: {method}"})
+        }
     except Exception as e:
         logger.error(f"Lambda handler error: {str(e)}")
         return {
