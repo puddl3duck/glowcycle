@@ -685,7 +685,11 @@ function renderSkinAnalysisResult() {
   const routineTitle = document.querySelector(".routine-title");
   const isNight = detectTimeMode() === "night";
   const steps = isNight ? result.pm_routine : result.am_routine;
-  if (routineTitle) routineTitle.textContent = isNight ? "🌙 Night Skincare Routine" : "☀️ Day Skincare Routine";
+  if (routineTitle) {
+    routineTitle.innerHTML = isNight 
+      ? `🌙 Night Skincare Routine<span class="routine-subtitle">Click a step for product recommendations</span>`
+      : `☀️ Morning Skincare Routine<span class="routine-subtitle">Click a step for product recommendations</span>`;
+  }
   if (routineSteps && Array.isArray(steps))  {
   routineSteps.innerHTML = steps.map((s, i) => `
     <div class="routine-step" id="routine-step-${i}" onclick="toggleRoutineStep(${i}, '${s.replace(/'/g, "\\'")}')">
@@ -724,24 +728,43 @@ function renderSkinAnalysisResult() {
     `;
   }
 
-  // Concerns detected
-  if (Array.isArray(result.concerns_detected) && result.concerns_detected.length) {
+if (Array.isArray(result.concerns_detected) && result.concerns_detected.length) {
     const tipsEl = document.getElementById("ai-tips");
     if (tipsEl) {
       tipsEl.innerHTML += `
-        <h3 style="margin-top: 1.5rem">Concerns Detected</h3>
-        ${result.concerns_detected.map((c) => `
-          <div class="recommendation-card">
-            <div class="rec-icon">🔍</div>
-            <div class="rec-content"><p>${c}</p></div>
-          </div>`).join("")}
-      `;
+    <h3 style="margin-top: 1.5rem">Concerns Detected</h3>
+    <div class="recommendation-card" onclick="toggleConcerns()" style="cursor: pointer; flex-direction: column; gap: 0.3rem;">
+      <div style="display: flex; align-items: center; gap: 1rem;">
+        <span class="rec-icon">✨</span>
+        <div style="flex: 1;">
+          <p style="font-weight: 600; color: var(--accent-purple); margin: 0;">You look amazing bestie, just the way you are!</p>
+          <p style="font-size: 0.8rem; color: var(--text-medium); margin: 0.25rem 0 0 0;">Want to see detailed concerns? Click here</p>
+        </div>
+        <span class="concerns-chevron" id="concerns-chevron" style="font-size: 1.3rem; color: #9B7EBD; transition: transform 0.2s ease;">›</span>
+      </div>
+    </div>
+    <div id="concerns-expanded" style="display:none;">
+      ${result.concerns_detected.map((c) => `
+        <div class="recommendation-card">
+          <div class="rec-icon">🔍</div>
+          <div class="rec-content"><p>${c}</p></div>
+        </div>`).join("")}
+    </div>
+  `;
     }
   }
 
   // Disclaimer
   const disEl = document.getElementById("ai-disclaimer");
   if (disEl && result.disclaimer) disEl.textContent = result.disclaimer;
+}
+
+function toggleConcerns() {
+  const expanded = document.getElementById("concerns-expanded");
+  const chevron = document.getElementById("concerns-chevron");
+  const isOpen = expanded.style.display !== "none";
+  expanded.style.display = isOpen ? "none" : "block";
+  chevron.style.transform = isOpen ? "rotate(0deg)" : "rotate(90deg)";
 }
 
 // Cycle day and phase info 
