@@ -107,7 +107,7 @@ glowcycle/
 
 ## 📄 License
 
-MIT License - See [LICENSE](LICENSE)
+License - See [LICENSE](LICENSE)
 
 ---
 
