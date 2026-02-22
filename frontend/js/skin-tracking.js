@@ -480,8 +480,9 @@ async function sendCapturedImageToBackend(dataUrl) {
       body: JSON.stringify({
         s3Key,
         timeOfDay: detectTimeMode(),
-        cyclePhase: "unknown",
+        cyclePhase: getCycleDayAndPhase().phase,
         skinGoals: ["hydration", "texture"],
+        skinType: localStorage.getItem('skinType') || 'normal',
       }),
     });
     if (!analyzeResp.ok) {
