@@ -281,7 +281,7 @@ body {
 .results-container {
     max-width: 900px;
     margin: 0 auto;
-    padding: 1.5rem 2rem 3rem;
+    padding: 1.5rem 2rem 0;
 }
 
 .scanner-header,
@@ -598,7 +598,12 @@ body {
 }
 
 .recommendations {
-    margin: 3rem 0;
+.recommendations {
+    padding-top: 3rem;
+    padding-left: 2rem;
+    padding-right: 2rem;
+    padding-bottom: 0;
+}
 }
 
 .recommendations h3 {
@@ -617,12 +622,13 @@ body {
     padding: 1.5rem;
     margin-bottom: 1rem;
     border: 1px solid rgba(255, 182, 217, 0.2);
-    transition: all 0.3s ease;
+    transition: none;
+    cursor: default;
 }
 
 .recommendation-card:hover {
-    transform: translateX(10px);
-    box-shadow: 0 10px 30px rgba(212, 197, 232, 0.3);
+    transform: none;
+    box-shadow: none;
 }
 
 .rec-icon {
@@ -799,6 +805,55 @@ body {
     
     .routine-title {
         font-size: 1.2rem;
+    }
+
+    .routine-subtitle {
+        font-size: 0.8rem;
+        font-weight: 400;
+        color: var(--text-medium);
+        display: block;
+        margin-top: 0.25rem;
+    }
+
+    .concerns-teaser {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    background: linear-gradient(135deg, rgba(255, 182, 217, 0.1), rgba(212, 197, 232, 0.1));
+    border: 2px solid #D4C5E8;
+    border-radius: 16px;
+    padding: 1.2rem 1.5rem;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+    margin-bottom: 0.75rem;
+    }
+
+    .concerns-teaser:hover {
+        border-color: #FFB6D9;
+        background: linear-gradient(135deg, rgba(255, 182, 217, 0.2), rgba(212, 197, 232, 0.2));
+    }
+
+    .concerns-teaser-text {
+        font-weight: 600;
+        color: var(--accent-purple);
+        font-size: 1rem;
+        padding-right: 2rem;
+    }
+
+    .concerns-teaser-sub {
+        font-size: 0.8rem;
+        color: var(--text-medium);
+    }
+
+    .concerns-chevron {
+        position: absolute;
+        right: 1.2rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #9B7EBD;
+        font-size: 1.3rem;
+        transition: transform 0.2s ease;
     }
     
     .routine-steps {
@@ -1672,8 +1727,8 @@ body.dark-theme .recommendation-card {
 }
 
 body.dark-theme .recommendation-card:hover {
-    border-color: rgba(255, 182, 217, 0.5);
-    box-shadow: 0 10px 30px rgba(255, 182, 217, 0.3);
+    border-color: none;
+    box-shadow: none;
 }
 
 body.dark-theme .method-btn-large,
