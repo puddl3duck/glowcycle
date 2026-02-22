@@ -1,37 +1,38 @@
 # 🌸 Glow Cycle
 
-**Tu compañera personalizada para rastrear tu ciclo, entender tu piel y conectar con el ritmo natural de tu cuerpo.**
+**Your personalised companion to track your cycle, understand your skin, and connect with your body’s natural rhythm.**
 
 ---
 
-## ¿Qué es Glow Cycle?
+## What is Glow Cycle?
 
-Una aplicación web que ayuda a las mujeres a:
-- 📅 **Rastrear su ciclo menstrual** con predicciones inteligentes
-- 💆‍♀️ **Monitorear su piel** y recibir recomendaciones personalizadas
-- 📝 **Llevar un diario** de emociones y energía
-- 🤖 **Obtener insights con IA** sobre cómo las hormonas afectan su cuerpo
+A web application that helps women:
+
+- 📅 **Track their menstrual cycle** with smart predictions  
+- 💆‍♀️ **Monitor their skin** and receive personalized recommendations  
+- 📝 **Keep a journal** of emotions and energy  
+- 🤖 **Get AI insights** about how hormones affect their body  
 
 ---
 
-## 🚀 Inicio Rápido
+## 🚀 Quick Start
 
-### 1. Clonar el proyecto
+### 1. Clone the project
 ```bash
 git clone https://github.com/puddl3duck/glowcycle.git
 cd glowcycle
 ```
 
-### 2. Abrir el frontend
+### 2. Open the frontend
 ```bash
 cd frontend
-# Abrir index.html en tu navegador
-# O usar un servidor local:
+# Open index.html in your browser
+# Or use a local server:
 python -m http.server 8000
-# Visitar http://localhost:8000
+# Visit http://localhost:8000
 ```
 
-### 3. Configurar backend (opcional)
+### 3. Configure backend (optional)
 ```bash
 cd infrastructure
 npm install
@@ -41,79 +42,79 @@ cdk deploy
 
 ---
 
-## 🛠 Tecnologías
+## 🛠 Technologies
 
 **Frontend:** HTML5, CSS3, JavaScript (Vanilla)  
 **Backend:** Python, AWS Lambda, DynamoDB  
 **IA:** AWS Bedrock (Claude Haiku)  
-**Infraestructura:** AWS CDK, TypeScript
+**Infrastructure:** AWS CDK, TypeScript
 
 ---
 
-## 📁 Estructura del Proyecto
+## 📁 Project Structure
 
 ```
 glowcycle/
-├── frontend/          # Aplicación web (HTML/CSS/JS)
-├── backend/           # Funciones Lambda (Python)
+├── frontend/          # Web application (HTML/CSS/JS)
+├── backend/           # Lambda functions (Python)
 ├── infrastructure/    # AWS CDK (TypeScript)
-└── tests/            # Tests
+└── tests/             # Tests
 ```
 
 ---
 
-## ✨ Características Principales
+## ✨ Key Features
 
-### 🌙 Rastreo de Ciclo
-- Calendario visual con fases del ciclo
-- Predicciones de próximo período y ovulación
-- Tips personalizados por fase
+### 🌙 Cycle Tracking
+- Visual calendar with cycle phases
+- Next period and ovulation predictions
+- Personalised tips for each phase
 
-### 💆‍♀️ Rastreo de Piel
-- Registro manual de condición de piel
-- Correlación con fases del ciclo
-- Recomendaciones de skincare
+### 💆‍♀️ Skin Tracking
+- Manual skin condition logging
+- Correlation with cycle phases
+- Skincare recommendations
 
-### 📝 Diario & Estado de Ánimo
-- Registro diario de emociones
-- Monitoreo de niveles de energía
-- Identificación de patrones
+### 📝 Journal & Mood Tracking
+- Daily emotion tracking
+- Energy level monitoring
+- Pattern identification
 
-### 🤖 Asistente de Bienestar con IA
-- Frases motivacionales personalizadas
-- Análisis de patrones hormonales
-- Consejos basados en tu ciclo actual
+### 🤖 AI Wellness Assistant
+- Personalised motivational messages
+- Hormonal pattern analysis
+- Advice based on your current cycle
 
-### 🌓 Modo Oscuro
-- Cambio automático según hora del día
-- Modo manual con persistencia
-- Diseño accesible (WCAG AA/AAA)
-
----
-
-## 🎯 Para Jurados
-
-**Tiempo de evaluación: 60 segundos**
-
-1. **Problema:** Las mujeres no entienden cómo su ciclo hormonal afecta su piel y emociones
-2. **Solución:** App que conecta ciclo menstrual + piel + estado de ánimo con IA
-3. **Innovación:** Primera app que usa IA para dar insights personalizados sobre hormonas y piel
-4. **Impacto:** Ayuda a millones de mujeres a entender mejor su cuerpo
-
-**Demo en vivo:** [glowcycle.app](https://glowcycle.app)
+### 🌓 Dark Mode
+- Automatic switching based on time of day
+- Manual mode with saved preferences
+- Accessible design (WCAG AA/AAA)
 
 ---
 
-## 📄 Licencia
+## 🎯 For Judges
 
-MIT License - Ver [LICENSE](LICENSE)
+**Evaluation time: 60 seconds**
+
+1. **Problem:** Women don’t fully understand how their hormonal cycle affects their skin and emotions
+2. **Solution:** An app that connects menstrual cycle + skin + mood using AI
+3. **Innovation:** The first app to use AI to provide personalised insights about hormones and skin
+4. **Impact:** Impact: Helps millions of women better understand their bodies
+
+**Live demo:** [glowcycle.app](https://glowcycle.app)
 
 ---
 
-## 👥 Equipo
+## 📄 License
 
-Proyecto desarrollado por el equipo Glow Cycle
+MIT License - See [LICENSE](LICENSE)
 
 ---
 
-**Hecho con 💜 para mujeres que quieren entender su cuerpo**
+## 👥 Team
+
+Project developed by the Glow Cycle team
+
+---
+
+**Made with 💜 for women who want to understand their bodies**
