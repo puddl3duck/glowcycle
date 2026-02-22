@@ -492,9 +492,23 @@ async function sendCapturedImageToBackend(dataUrl) {
 
     const analysis = await analyzeResp.json();
     window.__skinAnalysisResult = analysis;
+
+    // Save to history — fire and forget
+    try {
+      const user = document.querySelector(".profile-name")?.textContent?.trim()
+        || localStorage.getItem("userName")
+        || "anonymous";
+      fetch(apiConfig.BASE_URL + "/skin/history", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user, analysis }),
+      }).catch(err => console.warn("Failed to save skin history:", err));
+    } catch (err) {
+      console.warn("Skin history save error:", err);
+    }
+
   } catch (err) {
     console.error("Error in sendCapturedImageToBackend:", err);
-    // Don't block the UI — results will render with fallback/default values
   }
 }
 
