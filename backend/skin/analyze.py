@@ -69,10 +69,9 @@ Rules:
 - Do NOT mention diseases.
 - Provide cosmetic skincare insights and routines only.
 - Return ONLY valid JSON (no markdown, no extra text, no code fences).
-- Generate atlease 3 type of product recommendation based on the analysis.
 - Generate exactly 3 tips in the "tips" array, no more, no less.
+- Generate atmost 5 type of product recommendation based on the concerns detected. Use appropriate emoticons at the start of each recommendation to make it look fun.
 - Provide responses with Australian spelling
-- Generate atmost 5 type of product recommendation, Tips and concerns detected based on the analysis. Use appropriate emoticons at the start of each recommendation to make it look fun.
 - """
 
         schema = """{

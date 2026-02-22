@@ -800,11 +800,17 @@ function drawRadarChart() {
   }
 
   // Add padding around the face bbox so we don't crop too tight
-  const pad = 0.04;
-  const cropLeft   = Math.max(0, (bbox.Left   ?? 0.2) - pad);
-  const cropTop    = Math.max(0, (bbox.Top    ?? 0.1) - pad);
-  const cropRight  = Math.min(1, (bbox.Left   ?? 0.2) + (bbox.Width  ?? 0.6) + pad);
-  const cropBottom = Math.min(1, (bbox.Top    ?? 0.1) + (bbox.Height ?? 0.8) + pad);
+  const pad = 0.02;
+  const padTop = 0.06; // extra room for forehead/hair
+
+  // Find chinBottom landmark to crop exactly at chin, not neck
+  const chinLandmark = landmarks.find(l => l.Type === "chinBottom");
+  const chinFrac = chinLandmark ? chinLandmark.Y + 0.02 : (bbox.Top ?? 0.1) + (bbox.Height ?? 0.8) + pad;
+
+  const cropLeft   = Math.max(0, (bbox.Left ?? 0.2) - pad);
+  const cropTop    = Math.max(0, (bbox.Top  ?? 0.1) - padTop);
+  const cropRight  = Math.min(1, (bbox.Left ?? 0.2) + (bbox.Width ?? 0.6) + pad);
+  const cropBottom = Math.min(1, chinFrac);
   const cropW = cropRight  - cropLeft;
   const cropH = cropBottom - cropTop;
 
@@ -827,7 +833,7 @@ function drawRadarChart() {
     // ── 1. Draw cropped face region filling the canvas ────────────────
     ctx.save();
     ctx.beginPath();
-    ctx.ellipse(W / 2, H / 2, W / 2, H / 2, 0, 0, Math.PI * 2);
+    ctx.ellipse(W / 2, H / 2.2, W / 2, H / 2.1, 0, 0, Math.PI * 2);
     ctx.clip();
 
     if (img) {
@@ -997,7 +1003,7 @@ function drawRadarChart() {
 window.addEventListener("load", () => {
   const canvas = document.getElementById("skinRadar");
   if (canvas) {
-    canvas.width = 300;
-    canvas.height = 320;
+    canvas.width = 380;
+    canvas.height = 520;
   }
 });
