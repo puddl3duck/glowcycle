@@ -8,7 +8,9 @@ const API_CONFIG = {
         JOURNAL: '/journal',
         PERIOD: '/period',
         SKIN_UPLOAD_URL: "/skin/upload-url",
-        SKIN_ANALYZE: "/skin/analyze"
+        SKIN_ANALYZE: "/skin/analyze",
+        SKIN: '/skin',
+        WELLNESS: '/wellness'
     }
 };
 

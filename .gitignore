@@ -413,6 +413,9 @@ logs/
 # AWS
 .aws/
 
+#kiro
+.kiro/
+
 # Terraform
 *.tfstate
 *.tfstate.*

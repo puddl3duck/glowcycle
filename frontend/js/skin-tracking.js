@@ -1,6 +1,21 @@
 // Time-based functionality
 let timeMode = "morning"; // 'morning', 'afternoon', or 'night'
 
+// Load user profile
+function loadUserProfile() {
+  const userName = localStorage.getItem('userName') || 'User';
+  const profileNameElement = document.getElementById('profile-name');
+  const profileAvatarElement = document.getElementById('profile-avatar');
+  
+  if (profileNameElement) {
+    profileNameElement.textContent = userName;
+  }
+  
+  if (profileAvatarElement) {
+    profileAvatarElement.textContent = userName.charAt(0).toUpperCase();
+  }
+}
+
 function detectTimeMode() {
   const hour = new Date().getHours();
   // Morning: 05:00–11:59, Afternoon: 12:00–17:59, Night: 18:00–04:59
@@ -112,6 +127,7 @@ function acceptConsent() {
 // Enable/disable accept button based on checkbox
 document.addEventListener("DOMContentLoaded", () => {
   applyTheme();
+  loadUserProfile(); // Load user name and avatar
 
   const consentCheck = document.getElementById("consent-check");
   const acceptBtn = document.getElementById("accept-btn");
@@ -597,7 +613,7 @@ function showResults() {
   drawRadarChart();
 }
 
-// Toggle for routine step proudct section 
+// Toggle for routine step product section 
 function toggleRoutineStep(index, stepText) {
   const expanded = document.getElementById(`routine-step-expanded-${index}`);
   const card = document.getElementById(`routine-step-${index}`);
@@ -720,6 +736,14 @@ function renderSkinAnalysisResult() {
 function drawRadarChart() {
   const canvas = document.getElementById("skinRadar");
   if (!canvas) return;
+  
+  // Make canvas responsive
+  const container = canvas.parentElement;
+  const containerWidth = container.clientWidth;
+  const size = Math.min(containerWidth - 40, 400);
+  
+  canvas.width = size;
+  canvas.height = size;
 
   const ctx = canvas.getContext("2d");
   const centerX = canvas.width / 2;

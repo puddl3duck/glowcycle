@@ -1,5 +1,7 @@
 let cycleDays = 28;
 let currentQuestion = 1;
+let selectedSkinType = null;
+let selectedPeriodOption = null; // 'date', 'cant-remember', or 'pregnant'
 
 // ===== TIME-BASED PERSONALIZATION =====
 let timeMode = 'morning'; // 'morning', 'afternoon', or 'night'
@@ -67,40 +69,185 @@ function updateTimeBasedContent() {
     // Get user name from localStorage or default
     const userName = localStorage.getItem('userName') || 'Sofia';
     
-    // Update greeting in welcome line
+    // Update greeting with contextual intelligence
     const subtextElement = document.querySelector('.motivational-subtext');
     if (subtextElement) {
-        let greeting = '';
-        
-        if (timeMode === 'morning') {
-            greeting = `Good morning, ${userName}! ☀️ Let's understand your body's rhythm together.`;
-        } else if (timeMode === 'afternoon') {
-            greeting = `Good afternoon, ${userName}! 🌸 Let's understand your body's rhythm together.`;
-        } else {
-            greeting = `Good night, ${userName}! 🌙 Let's understand your body's rhythm together.`;
-        }
-        
+        const greeting = generateContextualGreeting(userName);
         subtextElement.textContent = greeting;
     }
     
-    // Update motivational quote (mood-based, no greeting)
-    const quoteElement = document.querySelector('.motivational-quote');
-    if (quoteElement) {
-        const moodQuotes = [
-            '"You deserve softness and care today 💜"',
-            '"Your body is doing amazing things for you"',
-            '"Be gentle with yourself, you\'re glowing from within"',
-            '"Every phase of your cycle is beautiful"',
-            '"You are worthy of rest and nourishment"',
-            '"Listen to what your body needs today"'
-        ];
-        // Pick a random quote or cycle through them
-        const randomQuote = moodQuotes[Math.floor(Math.random() * moodQuotes.length)];
-        quoteElement.textContent = randomQuote;
-    }
+    // Load AI-generated motivational message (just the quote, nothing else)
+    loadAIMotivationalMessage(userName);
     
     // Update profile name and avatar
     updateUserProfile();
+}
+
+// Generate intelligent contextual greeting based on ALL user data
+function generateContextualGreeting(userName) {
+    const hasJournal = localStorage.getItem('hasJournalEntries') === 'true';
+    const hasCycle = localStorage.getItem('lastPeriod');
+    const hasSkin = localStorage.getItem('skinType');
+    const periodOption = localStorage.getItem('periodOption');
+    
+    // Calculate data completeness
+    const dataPoints = [hasJournal, hasCycle, hasSkin].filter(Boolean).length;
+    
+    // Time-based emoji
+    const timeEmoji = timeMode === 'morning' ? '☀️' : timeMode === 'afternoon' ? '🌸' : '🌙';
+    const timeGreeting = timeMode === 'morning' ? 'Good morning' : timeMode === 'afternoon' ? 'Good afternoon' : 'Good night';
+    
+    // FIRST TIME USER - No data yet
+    if (dataPoints === 0) {
+        return `${timeGreeting}, ${userName}! ${timeEmoji} Ready to track your unique patterns?`;
+    }
+    
+    // PARTIAL DATA - Encourage completion
+    if (dataPoints < 3) {
+        const missing = [];
+        if (!hasJournal) missing.push('journal');
+        if (!hasCycle) missing.push('cycle');
+        if (!hasSkin) missing.push('skin');
+        
+        const missingText = missing.length === 1 ? missing[0] : 'your profile';
+        return `${timeGreeting}, ${userName}! ${timeEmoji} Complete your ${missingText} to unlock deeper insights.`;
+    }
+    
+    // FULL DATA - Contextual variations
+    // Use different messages based on time + pregnancy status
+    if (periodOption === 'pregnant') {
+        const variations = [
+            `${timeGreeting}, ${userName}! ${timeEmoji} Supporting you and your little one today.`,
+            `${timeGreeting}, ${userName}! ${timeEmoji} Your body is doing amazing things right now.`,
+            `${timeGreeting}, ${userName}! ${timeEmoji} Let's nurture your wellness journey together.`
+        ];
+        return variations[Math.floor(Math.random() * variations.length)];
+    }
+    
+    // Regular cycle tracking - varied messages
+    const variations = [
+        `${timeGreeting}, ${userName}! ${timeEmoji} Let's understand your body's rhythm together.`,
+        `${timeGreeting}, ${userName}! ${timeEmoji} Your wellness journey continues today.`,
+        `${timeGreeting}, ${userName}! ${timeEmoji} Tracking your cycle, skin, and mood in harmony.`,
+        `${timeGreeting}, ${userName}! ${timeEmoji} Every phase tells a story - let's listen together.`
+    ];
+    
+    // Use time-based seed for variation (changes throughout the day)
+    const hour = new Date().getHours();
+    const index = hour % variations.length;
+    return variations[index];
+}
+
+// Load AI-generated motivational message from Wellness Agent
+async function loadAIMotivationalMessage(userName) {
+    const quoteElement = document.querySelector('.motivational-quote');
+    if (!quoteElement) return;
+    
+    // Validate userName
+    if (!userName || userName.trim() === '') {
+        console.log('No username available');
+        quoteElement.textContent = '"Complete your profile to unlock personalized wellness insights 💜"';
+        return;
+    }
+    
+    // Check data completeness
+    const hasJournal = localStorage.getItem('hasJournalEntries') === 'true';
+    const hasCycle = localStorage.getItem('lastPeriod');
+    const hasSkin = localStorage.getItem('skinType');
+    const dataPoints = [hasJournal, hasCycle, hasSkin].filter(Boolean).length;
+    
+    // FIRST TIME - No data yet (FIXED MESSAGE, NO AI)
+    if (dataPoints === 0) {
+        quoteElement.textContent = `"You're not alone in this journey 💜"`;
+        return;
+    }
+    
+    // PARTIAL DATA - Encourage completion with variety
+    if (dataPoints < 3) {
+        const encouragementMessages = [
+            `"${userName}, the more I know about you, the better I can support you 💜"`,
+            `"Keep building your profile, ${userName} - deeper insights are coming 💜"`,
+            `"Your wellness story is unfolding, ${userName} - let's complete it together 💜"`
+        ];
+        quoteElement.textContent = encouragementMessages[Math.floor(Math.random() * encouragementMessages.length)];
+        
+        // Still try to fetch AI message in background
+        fetchAIMessageInBackground(userName, quoteElement);
+        return;
+    }
+    
+    // FULL DATA - Show loading then fetch AI
+    quoteElement.textContent = '"Crafting your personalized message..."';
+    
+    try {
+        // Fetch wellness support from backend
+        const API_BASE = API_CONFIG?.BASE_URL || 'https://7ofiibs7k7.execute-api.ap-southeast-2.amazonaws.com/prod';
+        const url = `${API_BASE}/wellness?user=${encodeURIComponent(userName.trim())}`;
+        console.log('Fetching wellness from:', url);
+        
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Backend error:', response.status, errorText);
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('AI Wellness data received:', data);
+        
+        if (data.wellness && data.wellness.support_message) {
+            // Use ONLY the AI-generated support message as the quote
+            quoteElement.textContent = `"${data.wellness.support_message}"`;
+            
+            // Store wellness data for debugging
+            window.currentWellnessData = data.wellness;
+            console.log('AI personalized message loaded:', data.wellness.support_message);
+        } else {
+            throw new Error('No wellness message in response');
+        }
+        
+    } catch (error) {
+        console.error('Error loading AI motivational message:', error);
+        // Fallback with contextual variety
+        const fallbackMessages = [
+            `"${userName}, your body's wisdom is unique - I'm here to help you understand it 💜"`,
+            `"Every day is a new chapter in your wellness story, ${userName} 💜"`,
+            `"${userName}, trust your body's signals - I'm here to help you listen 💜"`
+        ];
+        quoteElement.textContent = fallbackMessages[Math.floor(Math.random() * fallbackMessages.length)];
+    }
+}
+
+// Helper function to fetch AI message in background without blocking UI
+async function fetchAIMessageInBackground(userName, quoteElement) {
+    try {
+        const API_BASE = API_CONFIG?.BASE_URL || 'https://7ofiibs7k7.execute-api.ap-southeast-2.amazonaws.com/prod';
+        const url = `${API_BASE}/wellness?user=${encodeURIComponent(userName.trim())}`;
+        
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data.wellness && data.wellness.support_message) {
+                // Update with AI message if available
+                quoteElement.textContent = `"${data.wellness.support_message}"`;
+                window.currentWellnessData = data.wellness;
+            }
+        }
+    } catch (error) {
+        console.log('Background AI fetch failed, keeping fallback message');
+    }
 }
 
 // Get time-based journal prompt
@@ -181,6 +328,62 @@ function goToDashboard() {
 }
 
 // Questionnaire
+function selectPeriodOption(option) {
+    // Remove selected class from all alternative buttons
+    document.querySelectorAll('.alternative-btn').forEach(btn => {
+        btn.classList.remove('selected');
+    });
+    
+    // Add selected class to clicked button
+    const selectedBtn = event.target.closest('.alternative-btn');
+    if (selectedBtn) {
+        selectedBtn.classList.add('selected');
+    }
+    
+    // Store selection
+    selectedPeriodOption = option;
+    
+    // Clear date input if alternative is selected
+    const dateInput = document.getElementById('last-period');
+    if (dateInput) {
+        dateInput.value = '';
+    }
+    
+    // Clear error if any
+    const errorElement = document.getElementById('period-error');
+    if (errorElement) {
+        errorElement.textContent = '';
+    }
+}
+
+function selectSkinType(type) {
+    // Remove selected class from all options
+    document.querySelectorAll('.skin-type-option').forEach(option => {
+        option.classList.remove('selected');
+    });
+    
+    // Add selected class to clicked option
+    const selectedOption = document.querySelector(`.skin-type-option[data-type="${type}"]`);
+    if (selectedOption) {
+        selectedOption.classList.add('selected');
+    }
+    
+    // Store selection
+    selectedSkinType = type;
+    
+    // Enable next button
+    const nextBtn = document.getElementById('skin-type-next');
+    if (nextBtn) {
+        nextBtn.disabled = false;
+    }
+    
+    // Clear error if any
+    const errorElement = document.getElementById('skin-type-error');
+    if (errorElement) {
+        errorElement.textContent = '';
+    }
+}
+
 function nextQuestion(questionNumber) {
     // Clear all previous errors
     document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
@@ -203,14 +406,26 @@ function nextQuestion(questionNumber) {
             showError('age', 'age-error', 'Age is required');
             return;
         }
-        if (ageInput.value < 13 || ageInput.value > 60) {
-            showError('age', 'age-error', 'Age must be between 13 and 60');
+        if (ageInput.value < 10 || ageInput.value > 60) {
+            showError('age', 'age-error', 'Age must be between 10 and 60');
             return;
         }
     } else if (currentQuestionNum === 3) {
         const lastPeriodInput = document.getElementById('last-period');
-        if (!lastPeriodInput.value) {
-            showError('last-period', 'period-error', 'Last period date is required');
+        const hasDate = lastPeriodInput && lastPeriodInput.value;
+        const hasAlternative = selectedPeriodOption;
+        
+        if (!hasDate && !hasAlternative) {
+            showError('last-period', 'period-error', 'Please select a date or choose an option below');
+            return;
+        }
+    } else if (currentQuestionNum === 4) {
+        // Validate skin type selection
+        if (!selectedSkinType) {
+            const errorElement = document.getElementById('skin-type-error');
+            if (errorElement) {
+                errorElement.textContent = 'Please select your skin type';
+            }
             return;
         }
     }
@@ -257,6 +472,14 @@ document.addEventListener('DOMContentLoaded', () => {
                                inputId === 'age' ? 'age-error' : 'period-error';
                 const error = document.getElementById(errorId);
                 if (error) error.textContent = '';
+                
+                // If user types in period date, clear alternative selections
+                if (inputId === 'last-period' && input.value) {
+                    selectedPeriodOption = null;
+                    document.querySelectorAll('.alternative-btn').forEach(btn => {
+                        btn.classList.remove('selected');
+                    });
+                }
             });
         }
     });
@@ -264,7 +487,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function updateProgress() {
     const progressFill = document.getElementById('progress-fill');
-    const percentage = (currentQuestion / 4) * 100;
+    const percentage = (currentQuestion / 5) * 100;
     progressFill.style.width = percentage + '%';
 }
 
@@ -344,31 +567,66 @@ function goToDashboard() {
         return;
     }
     
-    if (ageInput.value < 13 || ageInput.value > 60) {
+    if (ageInput.value < 10 || ageInput.value > 60) {
         showPage('questionnaire-page');
         document.querySelectorAll('.question-card').forEach(card => card.classList.remove('active'));
         document.querySelector('.question-card[data-question="2"]').classList.add('active');
         currentQuestion = 2;
         updateProgress();
-        showError('age', 'age-error', 'Age must be between 13 and 60');
+        showError('age', 'age-error', 'Age must be between 10 and 60');
         return;
     }
     
-    if (!lastPeriodInput || !lastPeriodInput.value) {
+    // Validate period question (date OR alternative option)
+    const hasDate = lastPeriodInput && lastPeriodInput.value;
+    const hasAlternative = selectedPeriodOption;
+    
+    if (!hasDate && !hasAlternative) {
         showPage('questionnaire-page');
         document.querySelectorAll('.question-card').forEach(card => card.classList.remove('active'));
         document.querySelector('.question-card[data-question="3"]').classList.add('active');
         currentQuestion = 3;
         updateProgress();
-        showError('last-period', 'period-error', 'Last period date is required');
+        showError('last-period', 'period-error', 'Please select a date or choose an option below');
+        return;
+    }
+    
+    if (!selectedSkinType) {
+        showPage('questionnaire-page');
+        document.querySelectorAll('.question-card').forEach(card => card.classList.remove('active'));
+        document.querySelector('.question-card[data-question="4"]').classList.add('active');
+        currentQuestion = 4;
+        updateProgress();
+        const errorElement = document.getElementById('skin-type-error');
+        if (errorElement) {
+            errorElement.textContent = 'Please select your skin type';
+        }
         return;
     }
     
     // All validations passed - save data
     localStorage.setItem('userName', userNameInput.value.trim());
     localStorage.setItem('userAge', ageInput.value);
-    localStorage.setItem('lastPeriod', lastPeriodInput.value);
+    
+    // Save period data based on selection
+    if (hasDate) {
+        localStorage.setItem('lastPeriod', lastPeriodInput.value);
+        localStorage.setItem('periodOption', 'date');
+    } else if (hasAlternative) {
+        localStorage.setItem('periodOption', selectedPeriodOption);
+        // Set a default date for "can't remember" (30 days ago)
+        if (selectedPeriodOption === 'cant-remember') {
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            localStorage.setItem('lastPeriod', thirtyDaysAgo.toISOString().split('T')[0]);
+        } else if (selectedPeriodOption === 'pregnant') {
+            // For pregnant users, we won't track cycle
+            localStorage.removeItem('lastPeriod');
+        }
+    }
+    
     localStorage.setItem('cycleDays', cycleDays);
+    localStorage.setItem('skinType', selectedSkinType);
     
     completeOnboarding();
     showPage('dashboard-page');
@@ -440,12 +698,37 @@ function closeHowItWorksModal() {
 }
 
 // ===== PROFILE SETTINGS MODAL =====
+let settingsSkinType = null;
+
+function selectSettingsSkinType(type) {
+    // Remove selected class from all options in settings modal
+    document.querySelectorAll('#profileSettingsModal .skin-type-option').forEach(option => {
+        option.classList.remove('selected');
+    });
+    
+    // Add selected class to clicked option
+    const selectedOption = document.querySelector(`#profileSettingsModal .skin-type-option[data-type="${type}"]`);
+    if (selectedOption) {
+        selectedOption.classList.add('selected');
+    }
+    
+    // Store selection
+    settingsSkinType = type;
+    
+    // Clear error if any
+    const errorElement = document.getElementById('settings-skin-type-error');
+    if (errorElement) {
+        errorElement.textContent = '';
+    }
+}
+
 function openProfileSettings() {
     const modal = document.getElementById('profileSettingsModal');
     if (modal) {
         // Clear any previous errors
         document.querySelectorAll('#profileSettingsModal .error-message').forEach(el => el.textContent = '');
         document.querySelectorAll('#profileSettingsModal .input-field').forEach(el => el.classList.remove('error'));
+        document.querySelectorAll('#profileSettingsModal .skin-type-option').forEach(el => el.classList.remove('selected'));
         
         // Load current values
         document.getElementById('settings-name').value = localStorage.getItem('userName') || '';
@@ -454,6 +737,16 @@ function openProfileSettings() {
         
         const cycleDays = parseInt(localStorage.getItem('cycleDays')) || 28;
         document.getElementById('settings-cycle-days').textContent = cycleDays;
+        
+        // Load and select current skin type
+        const currentSkinType = localStorage.getItem('skinType');
+        if (currentSkinType) {
+            settingsSkinType = currentSkinType;
+            const skinTypeOption = document.querySelector(`#profileSettingsModal .skin-type-option[data-type="${currentSkinType}"]`);
+            if (skinTypeOption) {
+                skinTypeOption.classList.add('selected');
+            }
+        }
         
         // Set max date to today
         const today = new Date().toISOString().split('T')[0];
@@ -513,13 +806,21 @@ function saveProfileSettings() {
     if (!age) {
         showSettingsError('settings-age', 'settings-age-error', 'Age is required');
         hasError = true;
-    } else if (age < 13 || age > 60) {
-        showSettingsError('settings-age', 'settings-age-error', 'Age must be between 13 and 60');
+    } else if (age < 10 || age > 60) {
+        showSettingsError('settings-age', 'settings-age-error', 'Age must be between 10 and 60');
         hasError = true;
     }
     
     if (!lastPeriod) {
         showSettingsError('settings-last-period', 'settings-period-error', 'Last period date is required');
+        hasError = true;
+    }
+    
+    if (!settingsSkinType) {
+        const errorElement = document.getElementById('settings-skin-type-error');
+        if (errorElement) {
+            errorElement.textContent = 'Please select your skin type';
+        }
         hasError = true;
     }
     
@@ -532,6 +833,7 @@ function saveProfileSettings() {
     localStorage.setItem('userAge', age);
     localStorage.setItem('lastPeriod', lastPeriod);
     localStorage.setItem('cycleDays', cycleDays);
+    localStorage.setItem('skinType', settingsSkinType);
     
     // Update UI
     updateUserProfile();

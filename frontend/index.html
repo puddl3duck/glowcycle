@@ -92,7 +92,7 @@
                 <div class="question-card" data-question="2">
                     <h2 class="question-title">How old are you?</h2>
                     <p class="question-subtitle">This helps us personalise your experience</p>
-                    <input type="number" id="age" class="input-field" placeholder="Enter your age" min="13" max="60">
+                    <input type="number" id="age" class="input-field" placeholder="Enter your age" min="10" max="60">
                     <div class="error-message" id="age-error"></div>
                     <button class="btn-next" onclick="nextQuestion(3)">Continue</button>
                 </div>
@@ -100,14 +100,73 @@
                 <!-- Question 3: Last Period -->
                 <div class="question-card" data-question="3">
                     <h2 class="question-title">When was your last period?</h2>
-                    <p class="question-subtitle">We'll use this to track your cycle and predict your next one</p>
-                    <input type="date" id="last-period" class="input-field" max="">
+                    <p class="question-subtitle">This helps us track your cycle and provide personalised insights</p>
+                    
+                    <!-- Date Input Option -->
+                    <div class="period-date-section">
+                        <label for="last-period" class="period-label">Select date:</label>
+                        <input type="date" id="last-period" class="input-field" max="">
+                    </div>
+                    
+                    <!-- Alternative Options -->
+                    <div class="period-alternatives">
+                        <p class="alternatives-label">Or select an option:</p>
+                        <div class="alternative-options">
+                            <button type="button" class="alternative-btn" onclick="selectPeriodOption('cant-remember')">
+                                <span class="alt-text">I can't remember</span>
+                            </button>
+                            <button type="button" class="alternative-btn" onclick="selectPeriodOption('pregnant')">
+                                <span class="alt-text">I am pregnant</span>
+                            </button>
+                        </div>
+                    </div>
+                    
                     <div class="error-message" id="period-error"></div>
                     <button class="btn-next" onclick="nextQuestion(4)">Continue</button>
                 </div>
                 
-                <!-- Question 4: Cycle Length -->
+                <!-- Question 4: Skin Type -->
                 <div class="question-card" data-question="4">
+                    <h2 class="question-title">What's your skin type?</h2>
+                    <p class="question-subtitle">Choose the one that best describes your skin</p>
+                    <div class="skin-type-grid">
+                        <div class="skin-type-option" data-type="normal" onclick="selectSkinType('normal')">
+                            <div class="skin-type-icon">✨</div>
+                            <h3>Normal</h3>
+                            <p>Balanced & clear</p>
+                        </div>
+                        <div class="skin-type-option" data-type="dry" onclick="selectSkinType('dry')">
+                            <div class="skin-type-icon">🏜️</div>
+                            <h3>Dry</h3>
+                            <p>Tight & flaky</p>
+                        </div>
+                        <div class="skin-type-option" data-type="oily" onclick="selectSkinType('oily')">
+                            <div class="skin-type-icon">💧</div>
+                            <h3>Oily</h3>
+                            <p>Shiny & large pores</p>
+                        </div>
+                        <div class="skin-type-option" data-type="combination" onclick="selectSkinType('combination')">
+                            <div class="skin-type-icon">🌓</div>
+                            <h3>Combination</h3>
+                            <p>Oily T-zone, dry cheeks</p>
+                        </div>
+                        <div class="skin-type-option" data-type="sensitive" onclick="selectSkinType('sensitive')">
+                            <div class="skin-type-icon">🌸</div>
+                            <h3>Sensitive</h3>
+                            <p>Easily irritated</p>
+                        </div>
+                        <div class="skin-type-option" data-type="not-sure" onclick="selectSkinType('not-sure')">
+                            <div class="skin-type-icon">🎯</div>
+                            <h3>Not sure</h3>
+                            <p>Not sure of my skin type</p>
+                        </div>
+                    </div>
+                    <div class="error-message" id="skin-type-error"></div>
+                    <button class="btn-next" id="skin-type-next" onclick="nextQuestion(5)" disabled>Continue</button>
+                </div>
+                
+                <!-- Question 5: Cycle Length -->
+                <div class="question-card" data-question="5">
                     <h2 class="question-title">How many days is your cycle?</h2>
                     <p class="question-subtitle">This is the number of days from the first day of your period to the day before your next period starts</p>
                     <div class="cycle-info-box">
@@ -164,9 +223,9 @@
                     </div>
                     
                     <h1 class="motivational-quote">
-                        "You're looking absolutely stunning today."
+                        "Let's understand your body's rhythm together 🌸"
                     </h1>
-                    <p class="motivational-subtext"></p>
+                    <p class="motivational-subtext">Your skin isn't broken, it's hormonal - and you're not alone. Let's figure it out together 💜</p>
                 </div>
             </section>
 
@@ -748,7 +807,7 @@
                 
                 <div class="form-group">
                     <label for="settings-age">Age <span style="color: var(--accent-coral);">*</span></label>
-                    <input type="number" id="settings-age" class="input-field" placeholder="Your age" min="13" max="60" required>
+                    <input type="number" id="settings-age" class="input-field" placeholder="Your age" min="10" max="60" required>
                     <div class="error-message" id="settings-age-error"></div>
                 </div>
                 
@@ -770,6 +829,38 @@
                         <button class="cycle-btn" onclick="adjustSettingsCycle(1)">+</button>
                     </div>
                 </div>
+                
+                <div class="form-group">
+                    <label>Skin Type <span style="color: var(--accent-coral);">*</span></label>
+                    <p style="font-size: 0.85rem; color: var(--text-medium); margin: 0.5rem 0 1rem 0;">Select your skin type for personalized recommendations</p>
+                    <div class="skin-type-grid" style="grid-template-columns: repeat(3, 1fr);">
+                        <div class="skin-type-option" data-type="normal" onclick="selectSettingsSkinType('normal')">
+                            <div class="skin-type-icon">✨</div>
+                            <h3>Normal</h3>
+                        </div>
+                        <div class="skin-type-option" data-type="dry" onclick="selectSettingsSkinType('dry')">
+                            <div class="skin-type-icon">🏜️</div>
+                            <h3>Dry</h3>
+                        </div>
+                        <div class="skin-type-option" data-type="oily" onclick="selectSettingsSkinType('oily')">
+                            <div class="skin-type-icon">💧</div>
+                            <h3>Oily</h3>
+                        </div>
+                        <div class="skin-type-option" data-type="combination" onclick="selectSettingsSkinType('combination')">
+                            <div class="skin-type-icon">🌓</div>
+                            <h3>Combination</h3>
+                        </div>
+                        <div class="skin-type-option" data-type="sensitive" onclick="selectSettingsSkinType('sensitive')">
+                            <div class="skin-type-icon">🌸</div>
+                            <h3>Sensitive</h3>
+                        </div>
+                        <div class="skin-type-option" data-type="not-sure" onclick="selectSettingsSkinType('not-sure')">
+                            <div class="skin-type-icon">🎯</div>
+                            <h3>Not-Sure</h3>
+                        </div>
+                    </div>
+                    <div class="error-message" id="settings-skin-type-error"></div>
+                </div>
             </div>
             
             <div class="modal-footer">
@@ -780,6 +871,7 @@
         </div>
     </div>
 
+    <script src="js/config.js"></script>
     <script src="js/script.js"></script>
 </body>
 </html>

@@ -23,7 +23,7 @@ export class GlowCycleStack extends cdk.Stack {
       cors: [
         {
           allowedMethods: [s3.HttpMethods.PUT, s3.HttpMethods.GET, s3.HttpMethods.HEAD],
-          allowedOrigins: ["http://localhost:8000"], // local dev
+          allowedOrigins: ["*"], // Allow all origins for development
           allowedHeaders: ["*"],
           exposedHeaders: ["ETag"],
           maxAge: 3000,
@@ -86,7 +86,7 @@ export class GlowCycleStack extends cdk.Stack {
       handler: 'journal.handler.lambda_handler',
       code: lambda.Code.fromAsset('../backend'),
       environment: {
-        TABLE_NAME: table.tableName,
+        DYNAMODB_TABLE_NAME: table.tableName,
       },
     });
 
@@ -98,6 +98,16 @@ export class GlowCycleStack extends cdk.Stack {
         DYNAMODB_TABLE_NAME: table.tableName,
       },
     });
+
+    const wellnessLambda = new lambda.Function(this, 'WellnessAILambda', {
+      runtime: lambda.Runtime.PYTHON_3_11,
+      handler: 'wellness.handler.lambda_handler',
+      code: lambda.Code.fromAsset('../backend'),
+      environment: {
+        DYNAMODB_TABLE_NAME: table.tableName,
+      },
+      timeout: cdk.Duration.seconds(30), // Bedrock calls may take longer
+    });
     journalLambda.addToRolePolicy(new iam.PolicyStatement({
       actions: ["dynamodb:DescribeLimits"],
       resources: ["*"],  // Dynamo calls DescribeLimits on the account level
@@ -107,8 +117,10 @@ export class GlowCycleStack extends cdk.Stack {
     // -------------------------
     table.grantReadWriteData(journalLambda);
     table.grantReadWriteData(periodLambda);
+    table.grantReadData(wellnessLambda); // Wellness only needs read access
     glowCycleSecret.grantRead(journalLambda);
     glowCycleSecret.grantRead(periodLambda);
+    glowCycleSecret.grantRead(wellnessLambda);
     assetsBucket.grantWrite(skinUploadUrlLambda);
     assetsBucket.grantRead(skinAnalyzeLambda);
     assetsBucket.grantPut(skinUploadUrlLambda);
@@ -136,6 +148,16 @@ export class GlowCycleStack extends cdk.Stack {
       ],
      }),
     );
+
+    wellnessLambda.addToRolePolicy(new iam.PolicyStatement({
+      actions: ['bedrock:InvokeModel'],
+      resources: ['*'],
+    }));
+
+    wellnessLambda.addToRolePolicy(new iam.PolicyStatement({
+      actions: ["dynamodb:DescribeLimits"],
+      resources: ["*"],
+    }));
 
     // -------------------------
     // API Gateway
@@ -202,6 +224,14 @@ export class GlowCycleStack extends cdk.Stack {
     periodResource.addMethod(
       'DELETE',
       new apigateway.LambdaIntegration(periodLambda)
+    );
+
+    // Wellness AI endpoint
+    const wellnessResource = api.root.addResource('wellness');
+    
+    wellnessResource.addMethod(
+      'GET',
+      new apigateway.LambdaIntegration(wellnessLambda)
     );
   }
 }
