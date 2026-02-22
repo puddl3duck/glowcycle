@@ -370,7 +370,8 @@ function selectSkinType(type) {
     
     // Store selection
     selectedSkinType = type;
-    
+    localStorage.setItem('skinType', type);
+
     // Enable next button
     const nextBtn = document.getElementById('skin-type-next');
     if (nextBtn) {
