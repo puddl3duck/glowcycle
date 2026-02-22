@@ -1876,7 +1876,6 @@ body {
     .alt-text {
         font-size: 0.9rem;
     }
-    }
     
     .motivational-quote::before {
         top: -20px;
@@ -3653,20 +3652,6 @@ body.dark-theme label {
         max-width: 130px;
     }
 }
-    .cta-button,
-    .primary-cta {
-        padding: 0.85rem 1.5rem;
-        font-size: 0.85rem;
-    }
-    
-    .stat-number {
-        font-size: 1.2rem;
-    }
-    
-    .stat-label {
-        font-size: 0.65rem;
-    }
-}
 
 /* Navbar responsive improvements */
 @media (max-width: 768px) {
@@ -4066,7 +4051,6 @@ body.dark-theme .welcome-subtitle {
 
 body.dark-theme .floating-decoration img {
     filter: drop-shadow(0 8px 20px rgba(255, 182, 217, 0.3));
-}
 }
 
 /* Responsive adjustments for floating shapes */
