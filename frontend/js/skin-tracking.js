@@ -948,7 +948,7 @@ function generateProductRecommendations(skinAnalysis, cyclePhase, skinType) {
             description: "Deep-cleansing formula that removes excess oil and unclogs pores without over-drying.",
             benefits: ["Oil Control", "Pore Cleansing", "Refreshing"],
             ingredients: "Salicylic Acid, Zinc, Glycerin",
-            forSkinTypes: ["oily", "combination", "acne-prone"],
+            forSkinTypes: ["oily", "combination"],
             forConcerns: ["oiliness", "acne", "large_pores"],
             cyclePhases: ["ovulation", "follicular"],
             price: "$15.99",
@@ -995,7 +995,7 @@ function generateProductRecommendations(skinAnalysis, cyclePhase, skinType) {
             description: "Multi-tasking serum that controls oil, minimizes pores, and reduces inflammation.",
             benefits: ["Oil Control", "Pore Minimizing", "Anti-Inflammatory"],
             ingredients: "Niacinamide 10%, Zinc 1%",
-            forSkinTypes: ["oily", "combination", "acne-prone"],
+            forSkinTypes: ["oily", "combination"],
             forConcerns: ["oiliness", "acne", "large_pores", "redness"],
             cyclePhases: ["luteal", "ovulation"],
             price: "$5.99",
@@ -1010,7 +1010,7 @@ function generateProductRecommendations(skinAnalysis, cyclePhase, skinType) {
             description: "Anti-aging powerhouse that accelerates cell turnover and reduces wrinkles.",
             benefits: ["Anti-Aging", "Smoothing", "Acne Prevention"],
             ingredients: "Retinol, Hyaluronic Acid, Glycerin",
-            forSkinTypes: ["normal", "oily", "combination", "acne-prone"],
+            forSkinTypes: ["normal", "oily", "combination"],
             forConcerns: ["wrinkles", "acne", "texture"],
             cyclePhases: ["follicular", "ovulation"],
             price: "$22.99",
@@ -1042,7 +1042,7 @@ function generateProductRecommendations(skinAnalysis, cyclePhase, skinType) {
             description: "Oil-free gel formula that hydrates without clogging pores or adding shine.",
             benefits: ["Oil-Free", "Non-Comedogenic", "Lightweight"],
             ingredients: "Hyaluronic Acid, Glycerin, Dimethicone",
-            forSkinTypes: ["oily", "combination", "acne-prone"],
+            forSkinTypes: ["oily", "combination"],
             forConcerns: ["oiliness", "acne"],
             cyclePhases: ["ovulation", "follicular"],
             price: "$17.99",
@@ -1059,7 +1059,7 @@ function generateProductRecommendations(skinAnalysis, cyclePhase, skinType) {
             description: "Targeted treatment that quickly reduces breakouts and prevents new ones.",
             benefits: ["Acne Fighting", "Pore Clearing", "Exfoliating"],
             ingredients: "Salicylic Acid 2%, Green Tea Extract",
-            forSkinTypes: ["oily", "combination", "acne-prone"],
+            forSkinTypes: ["oily", "combination"],
             forConcerns: ["acne", "breakouts"],
             cyclePhases: ["luteal", "menstrual"],
             price: "$32.00",
@@ -1074,7 +1074,7 @@ function generateProductRecommendations(skinAnalysis, cyclePhase, skinType) {
             description: "Multi-benefit treatment for acne, redness, and hyperpigmentation.",
             benefits: ["Anti-Acne", "Brightening", "Anti-Redness"],
             ingredients: "Azelaic Acid 10%",
-            forSkinTypes: ["sensitive", "acne-prone", "combination"],
+            forSkinTypes: ["sensitive", "combination"],
             forConcerns: ["acne", "redness", "dark_spots"],
             cyclePhases: ["luteal", "menstrual"],
             price: "$12.99",
@@ -1106,7 +1106,7 @@ function generateProductRecommendations(skinAnalysis, cyclePhase, skinType) {
             description: "Invisible, lightweight sunscreen perfect for oily skin.",
             benefits: ["Matte Finish", "Oil-Free", "Water-Resistant"],
             ingredients: "Avobenzone, Homosalate, Octisalate",
-            forSkinTypes: ["oily", "combination", "acne-prone"],
+            forSkinTypes: ["oily", "combination"],
             forConcerns: ["oiliness", "sun_protection"],
             cyclePhases: ["menstrual", "follicular", "ovulation", "luteal"],
             price: "$35.99",
@@ -1124,7 +1124,7 @@ function generateProductRecommendations(skinAnalysis, cyclePhase, skinType) {
             ...productDatabase.gentle_cleanser,
             why: `Perfect for ${skinType} skin. Your skin needs gentle cleansing to avoid stripping natural oils, especially during ${cyclePhase} phase.`
         });
-    } else if (skinType === 'oily' || skinType === 'acne-prone' || skinType === 'combination') {
+    } else if (skinType === 'oily' || skinType === 'combination') {
         products.push({
             ...productDatabase.foaming_cleanser,
             why: `Ideal for ${skinType} skin. Controls excess oil and prevents breakouts, especially important during ${cyclePhase} phase.`
@@ -1175,7 +1175,7 @@ function generateProductRecommendations(skinAnalysis, cyclePhase, skinType) {
             ...productDatabase.rich_moisturizer,
             why: `${skinType} skin needs rich hydration. This cream repairs your skin barrier and locks in moisture.`
         });
-    } else if (skinType === 'oily' || skinType === 'acne-prone' || skinType === 'combination') {
+    } else if (skinType === 'oily' || skinType === 'combination') {
         products.push({
             ...productDatabase.lightweight_moisturizer,
             why: `${skinType} skin needs hydration without heaviness. This gel moisturizer won't clog pores or add shine.`
@@ -1254,4 +1254,4 @@ function displayProductRecommendations(skinAnalysis, cyclePhase, skinType) {
 }
 
 // Call this function when showing results
-// Example: displayProductRecommendations(skinAnalysisData, 'luteal', 'acne-prone');
+// Example: displayProductRecommendations(skinAnalysisData, 'luteal', 'dry-skin');
