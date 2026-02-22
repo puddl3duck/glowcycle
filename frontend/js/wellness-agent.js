@@ -154,10 +154,5 @@ function markCycleUpdated() {
     console.log('Cycle updated - message will refresh on next dashboard load');
 }
 
-// Auto-initialize if wellness container exists
-document.addEventListener('DOMContentLoaded', () => {
-    const container = document.getElementById('wellness-message-container');
-    if (container) {
-        initializeWellnessMessage();
-    }
-});
+// NOTE: Auto-initialization removed to prevent race conditions
+// initializeWellnessMessage() should be called manually after user data is saved

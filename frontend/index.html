@@ -105,11 +105,9 @@
                         <p class="alternatives-label">Or select an option:</p>
                         <div class="alternative-options">
                             <button type="button" class="alternative-btn" onclick="selectPeriodOption('cant-remember')">
-                                <span class="alt-icon">🤔</span>
                                 <span class="alt-text">I can't remember</span>
                             </button>
                             <button type="button" class="alternative-btn" onclick="selectPeriodOption('pregnant')">
-                                <span class="alt-icon">🤰</span>
                                 <span class="alt-text">I am pregnant</span>
                             </button>
                         </div>
@@ -124,11 +122,6 @@
                     <h2 class="question-title">What's your skin type?</h2>
                     <p class="question-subtitle">Choose the one that best describes your skin</p>
                     <div class="skin-type-grid">
-                        <div class="skin-type-option" data-type="normal" onclick="selectSkinType('normal')">
-                            <div class="skin-type-icon">✨</div>
-                            <h3>Normal</h3>
-                            <p>Balanced & clear</p>
-                        </div>
                         <div class="skin-type-option" data-type="dry" onclick="selectSkinType('dry')">
                             <div class="skin-type-icon">🏜️</div>
                             <h3>Dry</h3>
@@ -153,6 +146,11 @@
                             <div class="skin-type-icon">🎯</div>
                             <h3>Acne-Prone</h3>
                             <p>Frequent breakouts</p>
+                        </div>
+                        <div class="skin-type-option" data-type="not-sure" onclick="selectSkinType('not-sure')">
+                            <div class="skin-type-icon">💭</div>
+                            <h3>Not sure</h3>
+                            <p>I'm not sure yet</p>
                         </div>
                     </div>
                     <div class="error-message" id="skin-type-error"></div>
@@ -757,10 +755,6 @@
                     <label>Skin Type <span style="color: var(--accent-coral);">*</span></label>
                     <p style="font-size: 0.85rem; color: var(--text-medium); margin: 0.5rem 0 1rem 0;">Select your skin type for personalised recommendations</p>
                     <div class="skin-type-grid" style="grid-template-columns: repeat(3, 1fr);">
-                        <div class="skin-type-option" data-type="normal" onclick="selectSettingsSkinType('normal')">
-                            <div class="skin-type-icon">✨</div>
-                            <h3>Normal</h3>
-                        </div>
                         <div class="skin-type-option" data-type="dry" onclick="selectSettingsSkinType('dry')">
                             <div class="skin-type-icon">🏜️</div>
                             <h3>Dry</h3>
@@ -780,6 +774,10 @@
                         <div class="skin-type-option" data-type="acne-prone" onclick="selectSettingsSkinType('acne-prone')">
                             <div class="skin-type-icon">🎯</div>
                             <h3>Acne-Prone</h3>
+                        </div>
+                        <div class="skin-type-option" data-type="not-sure" onclick="selectSettingsSkinType('not-sure')">
+                            <div class="skin-type-icon">💭</div>
+                            <h3>Not sure</h3>
                         </div>
                     </div>
                     <div class="error-message" id="settings-skin-type-error"></div>

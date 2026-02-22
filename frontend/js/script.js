@@ -659,13 +659,21 @@ function goToDashboard() {
     localStorage.setItem('skinType', selectedSkinType);
     
     completeOnboarding();
+    
+    // Update profile BEFORE showing dashboard
+    updateUserProfile();
+    
+    // Show dashboard page
     showPage('dashboard-page');
     
-    // Update profile and content after showing dashboard
-    setTimeout(() => {
-        updateUserProfile();
-        updateTimeBasedContent();
-    }, 100);
+    // Initialize wellness message immediately after showing dashboard
+    // This ensures the message loads with the new user data
+    if (typeof initializeWellnessMessage === 'function') {
+        initializeWellnessMessage();
+    }
+    
+    // Update other time-based content
+    updateTimeBasedContent();
 }
 
 function updatePreviewCard() {
@@ -782,16 +790,20 @@ document.addEventListener('DOMContentLoaded', () => {
         // Has name and navigating to dashboard
         if (hasCompletedOnboarding()) {
             showPage('dashboard-page');
-            setTimeout(() => {
-                updateTimeBasedContent();
-            }, 100);
+            // Initialize wellness message for existing user
+            if (typeof initializeWellnessMessage === 'function') {
+                initializeWellnessMessage();
+            }
+            updateTimeBasedContent();
         }
     } else if (hasCompletedOnboarding()) {
         // Has name and completed onboarding - show dashboard
         showPage('dashboard-page');
-        setTimeout(() => {
-            updateTimeBasedContent();
-        }, 100);
+        // Initialize wellness message for existing user
+        if (typeof initializeWellnessMessage === 'function') {
+            initializeWellnessMessage();
+        }
+        updateTimeBasedContent();
     }
     
     // Update time-based content every minute
@@ -982,5 +994,41 @@ document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         closeHowItWorksModal();
         closeProfileSettings();
+    }
+});
+
+// ===== ENTER KEY FUNCTIONALITY FOR QUESTIONNAIRE =====
+document.addEventListener('DOMContentLoaded', () => {
+    // Add Enter key listener for name input (Question 1)
+    const nameInput = document.getElementById('user-name');
+    if (nameInput) {
+        nameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                nextQuestion(2);
+            }
+        });
+    }
+    
+    // Add Enter key listener for age input (Question 2)
+    const ageInput = document.getElementById('age');
+    if (ageInput) {
+        ageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                nextQuestion(3);
+            }
+        });
+    }
+    
+    // Add Enter key listener for last period input (Question 3)
+    const lastPeriodInput = document.getElementById('last-period');
+    if (lastPeriodInput) {
+        lastPeriodInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                nextQuestion(4);
+            }
+        });
     }
 });
