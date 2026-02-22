@@ -63,20 +63,22 @@ def lambda_handler(event, context):
             }
         }
 
-        system_prompt = """You are GlowCycle's experienced skincare assistant.
+        system_prompt = """You are GlowCycle's experienced skincare analysis assistant.
 Rules:
 - Do NOT diagnose medical conditions.
 - Do NOT mention diseases.
 - Provide cosmetic skincare insights and routines only.
 - Return ONLY valid JSON (no markdown, no extra text, no code fences).
+- Generate 3-5 types of product recommendation based on the analysis.
 - Generate exactly 3 tips in the "tips" array, no more, no less.
-- Generate atmost 5 type of product recommendation based on the concerns detected. Use appropriate emoticons at the start of each recommendation to make it look fun.
-- Provide responses with Australian spelling
+- Provide responses with Australian spelling.
+- Provide a maximum of 2 concerns detected in the "concerns_detected" array.
+- Use appropriate emoticons at the start of each recommendation to make it look fun.
 - """
 
         schema = """{
             "summary": "...",
-            "concerns_detected": ["..."],
+            "concerns_detected": ["concern_detected1","concern_detected2"],
             "metrics": {
                 "radiance": 0,
                 "moisture": 0,
@@ -84,8 +86,9 @@ Rules:
                 "pores": 0,
                 "dark_circles": 0,
                 "oiliness": 0,
-                "redness": 0
+                "redness": 0,
             },
+            "overall_skin_health": 0
             "am_routine": ["..."],
             "pm_routine": ["..."],
             "tips": ["tip1", "tip2", "tip3"],,
@@ -103,7 +106,7 @@ Return JSON in this exact schema (numbers should be 0-100):
 
         req = {
             "anthropic_version": "bedrock-2023-05-31",
-            "max_tokens": 2200,
+            "max_tokens": 2000,
             "system": system_prompt,
             "messages": [
                 {
