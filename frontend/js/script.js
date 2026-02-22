@@ -146,7 +146,7 @@ async function loadAIMotivationalMessage(userName) {
     // Validate userName
     if (!userName || userName.trim() === '') {
         console.log('No username available');
-        quoteElement.textContent = '"Complete your profile to unlock personalized wellness insights 💜"';
+        quoteElement.textContent = '"Complete your profile to unlock personalised wellness insights 💜"';
         return;
     }
     
@@ -177,7 +177,7 @@ async function loadAIMotivationalMessage(userName) {
     }
     
     // FULL DATA - Show loading then fetch AI
-    quoteElement.textContent = '"Crafting your personalized message..."';
+    quoteElement.textContent = '"Crafting your personalised message..."';
     
     try {
         // Fetch wellness support from backend
@@ -207,7 +207,7 @@ async function loadAIMotivationalMessage(userName) {
             
             // Store wellness data for debugging
             window.currentWellnessData = data.wellness;
-            console.log('AI personalized message loaded:', data.wellness.support_message);
+            console.log('AI personalised message loaded:', data.wellness.support_message);
         } else {
             throw new Error('No wellness message in response');
         }
@@ -390,7 +390,8 @@ function selectSkinType(type) {
     
     // Store selection
     selectedSkinType = type;
-    
+    localStorage.setItem('skinType', type);
+
     // Enable next button
     const nextBtn = document.getElementById('skin-type-next');
     if (nextBtn) {
@@ -483,6 +484,7 @@ function showError(inputId, errorId, message) {
 document.addEventListener('DOMContentLoaded', () => {
     // Add event listeners to clear errors on input
     const inputs = ['user-name', 'age', 'last-period'];
+    updatePreviewCard();
     inputs.forEach(inputId => {
         const input = document.getElementById(inputId);
         if (input) {
@@ -664,6 +666,94 @@ function goToDashboard() {
         updateUserProfile();
         updateTimeBasedContent();
     }, 100);
+}
+
+function updatePreviewCard() {
+  const lastPeriod = localStorage.getItem('lastPeriod');
+  const cycleLength = parseInt(localStorage.getItem('cycleDays')) || 28;
+
+  let previewDay;
+  if (lastPeriod) {
+    const start = new Date(lastPeriod);
+    const today = new Date();
+    const diff = Math.floor((today - start) / (1000 * 60 * 60 * 24));
+    previewDay = (diff % cycleLength) + 1;
+  } else {
+    previewDay = 14;
+  }
+
+  const phases = [
+    {
+      days: [1,2,3,4,5],
+      name: "Menstrual Phase",
+      emoji: "🔴",
+      tagline: "Rest and restore — your body is doing powerful work",
+      actions: [
+        "✓ Gentle face massage with facial oil",
+        "✓ Rest and light stretching",
+        "✓ Warm herbal tea for cramp relief"
+      ]
+    },
+    {
+      days: [6,7,8,9,10,11,12,13],
+      name: "Follicular Phase",
+      emoji: "🌱",
+      tagline: "Energy rises — great time to try new things",
+      actions: [
+        "✓ Exfoliate & Vitamin C Serum",
+        "✓ 30-Minute outdoor walk",
+        "✓ Try a new healthy recipe"
+      ]
+    },
+    {
+      days: [14,15,16],
+      name: "Ovulation Phase",
+      emoji: "✨",
+      tagline: "Estrogen peaks — your skin is radiant and energy is high",
+      actions: [
+        "✓ Gentle Cleanser & Vitamin C Serum",
+        "✓ 20-Minute Walk in Nature",
+        "✓ Hydrate with 8 Glasses of Water"
+      ]
+    },
+    {
+      days: [17,18,19,20,21,22,23,24,25,26,27,28],
+      name: "Luteal Phase",
+      emoji: "🌙",
+      tagline: "Wind down — focus on nourishment and calm",
+      actions: [
+        "✓ Hydrating mask & calming serum",
+        "✓ Gentle yoga or stretching",
+        "✓ Magnesium-rich foods for PMS support"
+      ]
+    },
+  ];
+
+  // Handle cycles longer than 28 days by mapping to nearest phase
+  const phase = phases.find(p => p.days.includes(previewDay))
+    || (previewDay <= 5 ? phases[0]
+      : previewDay <= Math.floor(cycleLength * 0.46) ? phases[1]
+      : previewDay <= Math.floor(cycleLength * 0.57) ? phases[2]
+      : phases[3]);
+
+  const header = document.querySelector('.preview-card .card-header h3');
+  const phaseTitle = document.querySelector('.preview-card .cycle-phase h4');
+  const phaseDesc = document.querySelector('.preview-card .cycle-phase p');
+  const actionsContainer = document.querySelector('.preview-card .today-actions');
+
+  if (header) header.textContent = `Day ${previewDay} — ${phase.name}`;
+  if (phaseTitle) phaseTitle.textContent = `${phase.emoji} ${phase.name}`;
+  if (phaseDesc) phaseDesc.textContent = phase.tagline;
+  if (actionsContainer) {
+    actionsContainer.innerHTML = `
+      <h5>Suggested Actions:</h5>
+      ${phase.actions.map(a => `<div class="action-item">${a}</div>`).join('')}
+    `;
+  }
+}
+
+function navigateToCyclePage() {
+  window.location.href = 'pages/cycle-tracking.html';
 }
 
 // Check on page load if user should go directly to dashboard
