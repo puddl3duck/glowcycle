@@ -1,381 +1,328 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Skin Tracking - Glow Cycle</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="../css/skin-tracking.css" />
-    <link rel="stylesheet" href="../css/dark-mode-complete.css" />
-  </head>
-  <body class="light-theme">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/skin-tracking.css">
+    <link rel="stylesheet" href="../css/dark-mode-complete.css">
+</head>
+<body class="light-theme">
     <!-- Theme Toggle Button -->
     <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
-      🌓
+        🌓
     </button>
-
+    
     <!-- Navigation -->
     <nav class="navbar">
-      <div class="nav-logo">✦ Glow Cycle</div>
-      <div class="nav-links">
-        <a href="../index.html#dashboard" class="nav-link">Dashboard</a>
-        <a href="../index.html#about" class="nav-link">About</a>
-      </div>
-      <div class="nav-profile">
-        <div class="profile-avatar">S</div>
-        <span class="profile-name">Sofia</span>
-      </div>
+        <div class="nav-logo">✦ Glow Cycle</div>
+        <div class="nav-links">
+            <a href="../index.html#dashboard" class="nav-link">Dashboard</a>
+            <a href="../index.html#about" class="nav-link">About</a>
+        </div>
+        <div class="nav-profile">
+            <div class="profile-avatar" id="profile-avatar">U</div>
+            <span class="profile-name" id="profile-name">User</span>
+        </div>
     </nav>
 
     <!-- Main Content -->
     <div class="skin-tracking-container">
-      <!-- Back Button -->
-      <div class="back-navigation">
-        <a href="../index.html#dashboard" class="back-link" id="back-link">
-          <span class="back-arrow">←</span>
-          <span>Back</span>
-        </a>
-      </div>
-
-      <!-- Header -->
-      <div class="page-header">
-        <h1>Track Your Skin</h1>
-        <p>Use our AI-powered scanner to analyse your skin condition</p>
-      </div>
-
-      <!-- AI Scanner Card (Centered) -->
-      <div class="method-selection-single">
-        <div class="method-card-large" onclick="showConsentPopup()">
-          <div class="method-icon-large">
-            <svg
-              viewBox="0 0 100 100"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <rect
-                x="20"
-                y="15"
-                width="60"
-                height="70"
-                rx="8"
-                fill="url(#camGrad)"
-              />
-              <circle cx="50" cy="45" r="18" fill="#FFFFFF" opacity="0.9" />
-              <circle cx="50" cy="45" r="12" fill="url(#lensGrad)" />
-              <circle cx="70" cy="25" r="4" fill="#FFB6D9" />
-              <defs>
-                <linearGradient id="camGrad" x1="20" y1="15" x2="80" y2="85">
-                  <stop offset="0%" stop-color="#FFE0EC" />
-                  <stop offset="100%" stop-color="#FFB6D9" />
-                </linearGradient>
-                <linearGradient id="lensGrad" x1="38" y1="33" x2="62" y2="57">
-                  <stop offset="0%" stop-color="#D4C5E8" />
-                  <stop offset="100%" stop-color="#9B7EBD" />
-                </linearGradient>
-              </defs>
-            </svg>
-          </div>
-          <h3>AI Skin Scanner</h3>
-          <p>
-            Take a selfie and let our AI analyse your skin condition, texture,
-            and provide personalised recommendations
-          </p>
-          <button class="method-btn-large">Start Scan</button>
+        <!-- Back Button -->
+        <div class="back-navigation">
+            <a href="../index.html#dashboard" class="back-link" id="back-link">
+                <span class="back-arrow">←</span>
+                <span>Back</span>
+            </a>
         </div>
-      </div>
+        
+        <!-- Header -->
+        <div class="page-header">
+            <h1>Track Your Skin</h1>
+            <p>Monitor your skin health journey with AI-powered analysis</p>
+        </div>
 
-      <!-- Consent Popup (Hidden by default) -->
-      <div id="consent-popup" class="consent-overlay" style="display: none">
-        <div class="consent-modal">
-          <div class="consent-icon">🔒</div>
-          <h2>Privacy & Consent</h2>
-          <div class="consent-content">
-            <p>
-              We'll use your camera to analyse your skin condition. Your photo
-              is processed locally and never stored or shared without your
-              permission.
+        <!-- Vertical Layout: Scanner Top, History Bottom -->
+        <div class="skin-dashboard-layout">
+            <!-- Top Section: New Scan Card -->
+            <div class="new-scan-section">
+                <div class="new-scan-card">
+                    <div class="scan-card-icon">
+                        <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="20" y="15" width="60" height="70" rx="8" fill="url(#camGrad)"/>
+                            <circle cx="50" cy="45" r="18" fill="#FFFFFF" opacity="0.9"/>
+                            <circle cx="50" cy="45" r="12" fill="url(#lensGrad)"/>
+                            <circle cx="70" cy="25" r="4" fill="#FFB6D9"/>
+                            <defs>
+                                <linearGradient id="camGrad" x1="20" y1="15" x2="80" y2="85">
+                                    <stop offset="0%" stop-color="#FFE0EC"/>
+                                    <stop offset="100%" stop-color="#FFB6D9"/>
+                                </linearGradient>
+                                <linearGradient id="lensGrad" x1="38" y1="33" x2="62" y2="57">
+                                    <stop offset="0%" stop-color="#D4C5E8"/>
+                                    <stop offset="100%" stop-color="#9B7EBD"/>
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </div>
+                    <h3>AI Skin Scanner</h3>
+                    <p>Take a selfie and let our AI analyse your skin condition, texture, and provide personalised recommendations</p>
+                    <button class="start-scan-btn" onclick="showConsentPopup()">
+                        <span class="btn-icon">+</span>
+                        <span>Start New Scan</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Bottom Section: Scan History -->
+            <div class="scan-history-section">
+                <div class="history-header">
+                    <h2>Scan History</h2>
+                    <span class="scan-count" id="scan-count">0 scans</span>
+                </div>
+                
+                <!-- History List -->
+                <div class="history-list" id="history-list">
+                    <!-- Empty State -->
+                    <div class="empty-history" id="empty-history">
+                        <div class="empty-icon">📊</div>
+                        <p>No scans yet</p>
+                        <p class="empty-subtitle">Start your first skin analysis to track your progress</p>
+                    </div>
+                    
+                    <!-- History cards will be inserted here dynamically -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Consent Popup (Hidden by default) -->
+        <div id="consent-popup" class="consent-overlay" style="display: none;">
+            <div class="consent-modal">
+                <div class="consent-icon">🔒</div>
+                <h2>Privacy & Consent</h2>
+                <div class="consent-content">
+                    <p>We'll use your camera to analyse your skin condition. Your photo is processed locally and never stored or shared without your permission.</p>
+                    <details class="consent-details">
+                        <summary>Learn more about data privacy</summary>
+                        <p class="consent-detail-text">Your facial image is analysed in real-time using AI technology. We detect skin characteristics to provide personalised recommendations. All processing happens securely, and you maintain full control over your data.</p>
+                    </details>
+                </div>
+                <div class="consent-checkbox">
+                    <input type="checkbox" id="consent-check" />
+                    <label for="consent-check">I understand and consent to use the AI skin scanner</label>
+                </div>
+                <div class="consent-checkbox" style="margin-top: 0.5rem;">
+                <input type="checkbox" id="remember-check" />
+                <label for="remember-check">Remember my choice</label>
+                </div>
+                <div class="consent-buttons">
+                    <button class="btn-cancel" onclick="closeConsentPopup()">Cancel</button>
+                    <button class="btn-accept" onclick="acceptConsent()" disabled id="accept-btn">Start Scanner</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scanner View (Hidden by default) -->
+        <div id="scanner-view" class="tracking-view" style="display: none;">
+            <div class="scanner-container">
+                <!-- Instructions at top -->
+                <div class="scanner-instructions">
+                    <div class="instruction-item">
+                        <span class="instruction-icon">💡</span>
+                        <span>Good lighting</span>
+                    </div>
+                    <div class="instruction-item">
+                        <span class="instruction-icon">😊</span>
+                        <span>Neutral expression</span>
+                    </div>
+                    <div class="instruction-item">
+                        <span class="instruction-icon">🧼</span>
+                        <span>Clean face</span>
+                    </div>
+                </div>
+                
+                <div class="scanner-header">
+                    <h2>AI Skin Scanner</h2>
+                    <button class="close-scanner-btn" onclick="closeScanner()">✕</button>
+                </div>
+                
+                <div class="camera-frame-wrapper">
+                    <div class="camera-frame">
+                        <video id="camera-video" autoplay playsinline></video>
+                        <canvas id="camera-canvas" style="display: none;"></canvas>
+                        <div class="camera-overlay">
+                            <div class="face-guide-oval">
+                                <div class="oval-border"></div>
+                                <div class="corner-dot dot-tl"></div>
+                                <div class="corner-dot dot-tr"></div>
+                                <div class="corner-dot dot-bl"></div>
+                                <div class="corner-dot dot-br"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- AI Analysis Overlay -->
+                        <div class="ai-analysis-overlay" id="ai-analysis-overlay" style="display: none;">
+                            <div class="analysis-content">
+                                <div class="scanning-animation">
+                                    <div class="scan-line"></div>
+                                    <div class="scan-particles">
+                                        <div class="particle"></div>
+                                        <div class="particle"></div>
+                                        <div class="particle"></div>
+                                        <div class="particle"></div>
+                                        <div class="particle"></div>
+                                    </div>
+                                </div>
+                                <div class="analysis-text">
+                                    <h3 id="analysis-title">Analysing Your Skin</h3>
+                                    <div class="analysis-steps">
+                                        <div class="step-item" id="step-1">
+                                            <span class="step-icon">🔍</span>
+                                            <span class="step-text">Detecting facial features...</span>
+                                        </div>
+                                        <div class="step-item" id="step-2">
+                                            <span class="step-icon">✨</span>
+                                            <span class="step-text">Analysing skin texture...</span>
+                                        </div>
+                                        <div class="step-item" id="step-3">
+                                            <span class="step-icon">💎</span>
+                                            <span class="step-text">Evaluating radiance...</span>
+                                        </div>
+                                        <div class="step-item" id="step-4">
+                                            <span class="step-icon">🎯</span>
+                                            <span class="step-text">Generating recommendations...</span>
+                                        </div>
+                                    </div>
+                                    <div class="progress-bar-container">
+                                        <div class="progress-bar" id="analysis-progress"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="camera-status" id="camera-status">
+                            <span class="status-icon">📷</span>
+                            <span class="status-text">Position your face in the frame</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="camera-controls">
+                    <button class="capture-btn" onclick="capturePhoto()" id="capture-btn">
+                        <span class="capture-circle">
+                            <svg class="capture-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </span>
+                        <span class="capture-text">Capture Photo</span>
+                    </button>
+                    <button class="retake-btn" onclick="retakePhoto()" id="retake-btn" style="display: none;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="1 4 1 10 7 10"></polyline>
+                            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                        </svg>
+                        <span>Retake</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results View (Hidden by default) -->
+        <div id="results-view" class="tracking-view" style="display: none;">
+            <div class="results-container">
+                <div class="results-header">
+                    <h2>Your Skin Report</h2>
+                    <p class="report-date">Day 14 • Ovulation Phase</p>
+                </div>
+
+                <div class="overall-score">
+                    <div class="score-circle">
+                        <svg viewBox="0 0 120 120">
+                            <circle cx="60" cy="60" r="50" fill="none" stroke="#E8E4F3" stroke-width="10"/>
+                            <circle cx="60" cy="60" r="50" fill="none" stroke="url(#scoreGrad)" stroke-width="10" 
+                                    stroke-dasharray="314" stroke-dashoffset="63" transform="rotate(-90 60 60)"/>
+                            <defs>
+                                <linearGradient id="scoreGrad">
+                                    <stop offset="0%" stop-color="#A8E6CF"/>
+                                    <stop offset="100%" stop-color="#FFB6D9"/>
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                        <div class="score-text">
+                            <span class="score-number">82</span>
+                            <span class="score-label">Skin Health</span>
+                        </div>
+                    </div>
+                    <p class="score-message">Your skin is glowing! ✨</p>
+                </div>
+
+                <div class="radar-chart">
+                    <canvas id="skinRadar"></canvas>
+                </div>
+
+                <div class="skin-metrics">
+                    <div class="metric-item">
+                        <span class="metric-value">85</span>
+                        <span class="metric-label">Radiance</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-value">90</span>
+                        <span class="metric-label">Spots</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-value">94</span>
+                        <span class="metric-label">Wrinkles</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-value">88</span>
+                        <span class="metric-label">Texture</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-value">78</span>
+                        <span class="metric-label">Dark Circles</span>
+                    </div>
+                </div>
+
+                <div class="recommendations">
+                    <h3 class="routine-title">☀️ AM Routine</h3>
+                    <div class="routine-steps">
+                        <div class="routine-step">✓ Gentle Cleanser</div>
+                        <div class="routine-step">✓ Vitamin C Serum</div>
+                        <div class="routine-step">✓ Moisturizer</div>
+                        <div class="routine-step">✓ SPF 30+ Sunscreen</div>
+                    </div>
+
+                    <div id="ai-tips" style="margin-top: 1rem"></div>
+                    <p id="ai-disclaimer" style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.8"></p>
+                </div>
+
+                <button class="save-btn" onclick="saveReport()">Save Report</button>
+            </div>
+        </div>
+
+    </div><!-- end .skin-tracking-container -->
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content-wrapper">
+            <p class="footer-text">
+                <strong>Medical Disclaimer:</strong> Glow Cycle is a wellness tracking tool, not a medical device. 
+                Information provided is for educational purposes only and does not constitute medical advice. 
+                Always consult a qualified healthcare professional for medical concerns.
             </p>
-            <details class="consent-details">
-              <summary>Learn more about data privacy</summary>
-              <p class="consent-detail-text">
-                Your facial image is analysed in real-time using AI technology.
-                We detect skin characteristics to provide personalised
-                recommendations. All processing happens securely, and you
-                maintain full control over your data.
-              </p>
-            </details>
-          </div>
-          <div class="consent-checkbox">
-            <input type="checkbox" id="consent-check" />
-            <label for="consent-check"
-              >I understand and consent to use the AI skin scanner</label
-            >
-          </div>
-          <div class="consent-buttons">
-            <button class="btn-cancel" onclick="closeConsentPopup()">
-              Cancel
-            </button>
-            <button
-              class="btn-accept"
-              onclick="acceptConsent()"
-              disabled
-              id="accept-btn"
-            >
-              Start Scanner
-            </button>
-          </div>
+            <p class="footer-links">
+                <a href="../index.html#privacy">Privacy</a> · 
+                <a href="../index.html#terms">Terms</a> · 
+                <a href="../index.html#contact">Contact</a>
+            </p>
+            <p class="footer-copyright">© 2026 Glow Cycle. Made with 💜 in Australia.</p>
         </div>
-      </div>
-
-      <!-- Scanner View (Hidden by default) -->
-      <div id="scanner-view" class="tracking-view" style="display: none">
-        <div class="scanner-container">
-          <!-- Instructions at top -->
-          <div class="scanner-instructions">
-            <div class="instruction-item">
-              <span class="instruction-icon">💡</span>
-              <span>Good lighting</span>
-            </div>
-            <div class="instruction-item">
-              <span class="instruction-icon">😊</span>
-              <span>Neutral expression</span>
-            </div>
-            <div class="instruction-item">
-              <span class="instruction-icon">🧼</span>
-              <span>Clean face</span>
-            </div>
-          </div>
-
-          <div class="scanner-header">
-            <h2>AI Skin Scanner</h2>
-            <button class="close-scanner-btn" onclick="closeScanner()">
-              ✕
-            </button>
-          </div>
-
-          <div class="camera-frame-wrapper">
-            <div class="camera-frame">
-              <video id="camera-video" autoplay playsinline></video>
-              <canvas id="camera-canvas" style="display: none"></canvas>
-              <div class="camera-overlay">
-                <div class="face-guide-oval">
-                  <div class="oval-border"></div>
-                  <div class="corner-dot dot-tl"></div>
-                  <div class="corner-dot dot-tr"></div>
-                  <div class="corner-dot dot-bl"></div>
-                  <div class="corner-dot dot-br"></div>
-                </div>
-              </div>
-
-              <!-- AI Analysis Overlay -->
-              <div
-                class="ai-analysis-overlay"
-                id="ai-analysis-overlay"
-                style="display: none"
-              >
-                <div class="analysis-content">
-                  <div class="scanning-animation">
-                    <div class="scan-line"></div>
-                    <div class="scan-particles">
-                      <div class="particle"></div>
-                      <div class="particle"></div>
-                      <div class="particle"></div>
-                      <div class="particle"></div>
-                      <div class="particle"></div>
-                    </div>
-                  </div>
-                  <div class="analysis-text">
-                    <h3 id="analysis-title">Analyzing Your Skin</h3>
-                    <div class="analysis-steps">
-                      <div class="step-item" id="step-1">
-                        <span class="step-icon">🔍</span>
-                        <span class="step-text"
-                          >Detecting facial features...</span
-                        >
-                      </div>
-                      <div class="step-item" id="step-2">
-                        <span class="step-icon">✨</span>
-                        <span class="step-text">Analyzing skin texture...</span>
-                      </div>
-                      <div class="step-item" id="step-3">
-                        <span class="step-icon">💎</span>
-                        <span class="step-text">Evaluating radiance...</span>
-                      </div>
-                      <div class="step-item" id="step-4">
-                        <span class="step-icon">🎯</span>
-                        <span class="step-text"
-                          >Generating recommendations...</span
-                        >
-                      </div>
-                    </div>
-                    <div class="progress-bar-container">
-                      <div class="progress-bar" id="analysis-progress"></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="camera-status" id="camera-status">
-                <span class="status-icon">📷</span>
-                <span class="status-text">Position your face in the frame</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="camera-controls">
-            <button
-              class="capture-btn"
-              onclick="capturePhoto()"
-              id="capture-btn"
-            >
-              <span class="capture-circle">
-                <svg
-                  class="capture-icon"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                >
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <circle cx="12" cy="12" r="3"></circle>
-                </svg>
-              </span>
-              <span class="capture-text">Capture Photo</span>
-            </button>
-            <button
-              class="retake-btn"
-              onclick="retakePhoto()"
-              id="retake-btn"
-              style="display: none"
-            >
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <polyline points="1 4 1 10 7 10"></polyline>
-                <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
-              </svg>
-              <span>Retake</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Results View (Hidden by default) -->
-      <div id="results-view" class="tracking-view" style="display: none">
-        <div class="results-container">
-          <div class="results-header">
-            <h2>Your Skin Report</h2>
-            <p class="report-date">Day 14 • Ovulation Phase</p>
-          </div>
-
-          <div class="overall-score">
-            <div class="score-circle">
-              <svg viewBox="0 0 120 120">
-                <circle
-                  cx="60"
-                  cy="60"
-                  r="50"
-                  fill="none"
-                  stroke="#E8E4F3"
-                  stroke-width="10"
-                />
-                <circle
-                  cx="60"
-                  cy="60"
-                  r="50"
-                  fill="none"
-                  stroke="url(#scoreGrad)"
-                  stroke-width="10"
-                  stroke-dasharray="314"
-                  stroke-dashoffset="63"
-                  transform="rotate(-90 60 60)"
-                />
-                <defs>
-                  <linearGradient id="scoreGrad">
-                    <stop offset="0%" stop-color="#A8E6CF" />
-                    <stop offset="100%" stop-color="#FFB6D9" />
-                  </linearGradient>
-                </defs>
-              </svg>
-              <div class="score-text">
-                <span class="score-number">82</span>
-                <span class="score-label">Skin Health</span>
-              </div>
-            </div>
-            <p class="score-message">Your skin is glowing! ✨</p>
-          </div>
-
-          <div class="radar-chart">
-            <canvas id="skinRadar"></canvas>
-          </div>
-
-          <div class="skin-metrics">
-            <div class="metric-item">
-              <span class="metric-value">85</span>
-              <span class="metric-label">Radiance</span>
-            </div>
-            <div class="metric-item">
-              <span class="metric-value">90</span>
-              <span class="metric-label">Spots</span>
-            </div>
-            <div class="metric-item">
-              <span class="metric-value">94</span>
-              <span class="metric-label">Wrinkles</span>
-            </div>
-            <div class="metric-item">
-              <span class="metric-value">88</span>
-              <span class="metric-label">Texture</span>
-            </div>
-            <div class="metric-item">
-              <span class="metric-value">78</span>
-              <span class="metric-label">Dark Circles</span>
-            </div>
-          </div>
-
-          <div class="recommendations">
-            <h3 class="routine-title">☀️ AM Routine</h3>
-            <div class="routine-steps">
-              <div class="routine-step">✓ Gentle Cleanser</div>
-              <div class="routine-step">✓ Vitamin C Serum</div>
-              <div class="routine-step">✓ Moisturizer</div>
-              <div class="routine-step">✓ SPF 30+ Sunscreen</div>
-            </div>
-
-            <h3 style="margin-top: 2rem">Recommended for You</h3>
-            <div class="recommendation-card">
-              <div class="rec-icon">✨</div>
-              <div class="rec-content">
-                <h4>Vitamin C Serum</h4>
-                <p>
-                  Perfect for your ovulation phase - boost that natural glow!
-                </p>
-              </div>
-            </div>
-            <div class="recommendation-card">
-              <div class="rec-icon">💧</div>
-              <div class="rec-content">
-                <h4>Hydrating Moisturizer</h4>
-                <p>Keep your skin balanced and hydrated.</p>
-              </div>
-            </div>
-            <div id="ai-tips" style="margin-top: 1rem"></div>
-            <p id="ai-disclaimer" style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.8"></p>
-          </div>
-
-          <button class="save-btn">Save Report</button>
-        </div>
-      </div>
-    </div>
-
+    </footer>
     <script src="../js/config.js"></script>
     <script src="../js/skin-tracking.js"></script>
-  </body>
+</body>
 </html>
