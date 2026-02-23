@@ -21,8 +21,10 @@ async function fetchWellnessMessage(userName) {
     try {
         console.log(`Fetching FRESH wellness message from Bedrock for: ${userName}`);
         
-        // Get display name from localStorage (if available)
+        // CRITICAL: Always get display name from localStorage
         const displayName = localStorage.getItem('userDisplayName') || userName;
+        
+        console.log(`Using displayName: ${displayName} for wellness message`);
         
         const response = await fetch(`${WELLNESS_ENDPOINT}?user=${encodeURIComponent(userName)}&name=${encodeURIComponent(displayName)}`, {
             method: 'GET',
@@ -32,7 +34,9 @@ async function fetchWellnessMessage(userName) {
         });
         
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            const errorText = await response.text();
+            console.error('❌ Backend error response:', errorText);
+            throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
         }
         
         const data = await response.json();
@@ -88,13 +92,20 @@ function displayWellnessMessage(wellness, containerId = 'wellness-message-contai
  * Refresh wellness message - ALWAYS calls Bedrock
  */
 async function refreshWellnessMessage() {
+    // CRITICAL: Get userName (normalized) for API call
     const userName = localStorage.getItem('userName');
+    const userDisplayName = localStorage.getItem('userDisplayName');
+    
+    console.log('🔍 DEBUG refreshWellnessMessage:');
+    console.log('  - userName:', userName);
+    console.log('  - userDisplayName:', userDisplayName);
+    
     if (!userName) {
-        console.error('No user name found');
+        console.error('❌ No userName found');
         return;
     }
     
-    console.log('Refreshing wellness message from Bedrock...');
+    console.log('🔄 Refreshing wellness message from Bedrock...');
     
     // Show loading state
     displayWellnessMessage(null);
@@ -123,35 +134,58 @@ async function refreshWellnessMessage() {
  * ALWAYS FRESH - No cache
  */
 async function initializeWellnessMessage(containerId = 'wellness-message-container') {
+    // CRITICAL: Get userName (normalized) for API call
     const userName = localStorage.getItem('userName');
+    const userDisplayName = localStorage.getItem('userDisplayName');
+    
+    console.log('🔍 DEBUG initializeWellnessMessage:');
+    console.log('  - userName:', userName);
+    console.log('  - userDisplayName:', userDisplayName);
+    
     if (!userName) {
-        console.log('No user name found, skipping wellness message');
+        console.log('❌ No userName found, skipping wellness message');
         return;
     }
     
-    console.log('Initializing wellness message - ALWAYS FRESH from Bedrock');
+    console.log('✅ Initializing wellness message - ALWAYS FRESH from Bedrock');
+    console.log(`   Using userName: ${userName}, displayName: ${userDisplayName}`);
     
     // Show loading state
     displayWellnessMessage(null, containerId);
     
-    // Fetch fresh message from Bedrock
+    // Fetch fresh message from Bedrock (userName is used for API, displayName is passed in URL)
     const wellness = await fetchWellnessMessage(userName);
     displayWellnessMessage(wellness, containerId);
 }
 
 /**
- * Mark functions for compatibility (not used anymore but kept for compatibility)
+ * Mark functions - ACTIVELY refresh wellness message when data changes
  */
 function markJournalUpdated() {
-    console.log('Journal updated - message will refresh on next dashboard load');
+    console.log('✅ Journal updated - refreshing wellness message NOW');
+    // Refresh immediately if on dashboard
+    const container = document.getElementById('wellness-message-container');
+    if (container) {
+        refreshWellnessMessage();
+    }
 }
 
 function markSkinScanUpdated() {
-    console.log('Skin scan updated - message will refresh on next dashboard load');
+    console.log('✅ Skin scan updated - refreshing wellness message NOW');
+    // Refresh immediately if on dashboard
+    const container = document.getElementById('wellness-message-container');
+    if (container) {
+        refreshWellnessMessage();
+    }
 }
 
 function markCycleUpdated() {
-    console.log('Cycle updated - message will refresh on next dashboard load');
+    console.log('✅ Cycle updated - refreshing wellness message NOW');
+    // Refresh immediately if on dashboard
+    const container = document.getElementById('wellness-message-container');
+    if (container) {
+        refreshWellnessMessage();
+    }
 }
 
 // NOTE: Auto-initialization removed to prevent race conditions

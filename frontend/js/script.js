@@ -316,6 +316,21 @@ function showPage(pageId) {
         page.classList.remove('active');
     });
     document.getElementById(pageId).classList.add('active');
+    
+    // CRITICAL: Refresh wellness message when returning to dashboard
+    // This ensures the message updates with any new data (journal, skin, cycle)
+    if (pageId === 'dashboard-page') {
+        // Small delay to ensure page is visible before loading message
+        setTimeout(() => {
+            if (typeof initializeWellnessMessage === 'function') {
+                const userName = localStorage.getItem('userName');
+                if (userName) {
+                    console.log('🔄 Dashboard shown - refreshing wellness message with latest data');
+                    initializeWellnessMessage();
+                }
+            }
+        }, 100);
+    }
 }
 
 function startQuestionnaire() {
@@ -419,12 +434,38 @@ function nextQuestion(questionNumber) {
     
     // Validation for each question
     if (currentQuestionNum === 1 && !isJudgeAccount) {
-        // Only validate name for non-judge accounts
+        // Validate name and password for non-judge accounts
         const nameInput = document.getElementById('user-name');
+        const passwordInput = document.getElementById('user-password');
+        
         if (!nameInput.value.trim()) {
             showError('user-name', 'name-error', 'Name is required');
             return;
         }
+        
+        if (!passwordInput.value.trim()) {
+            showError('user-password', 'password-error', 'Password is required');
+            return;
+        }
+        
+        if (passwordInput.value.length < 4) {
+            showError('user-password', 'password-error', 'Password must be at least 4 characters long');
+            return;
+        }
+        
+        // Save user credentials when moving from question 1
+        const username = nameInput.value.trim();
+        const password = passwordInput.value.trim();
+        
+        // Create user account (async)
+        createUserAccount(username, password).then(success => {
+            if (success) {
+                // Continue to next question
+                proceedToNextQuestion(questionNumber);
+            }
+        });
+        return; // Don't continue immediately
+        
     } else if (currentQuestionNum === 2) {
         const ageInput = document.getElementById('age');
         if (!ageInput.value) {
@@ -455,6 +496,11 @@ function nextQuestion(questionNumber) {
         }
     }
     
+    // Continue to next question
+    proceedToNextQuestion(questionNumber);
+}
+
+function proceedToNextQuestion(questionNumber) {
     // Hide current question
     document.querySelectorAll('.question-card').forEach(card => {
         card.classList.remove('active');
@@ -484,6 +530,79 @@ function showError(inputId, errorId, message) {
     }
 }
 
+// Create user account function
+async function createUserAccount(displayName, password) {
+    try {
+        // Create normalized username from display name
+        const username = displayName.toLowerCase().replace(/\s+/g, '');
+        
+        // ALWAYS save to localStorage first (works without backend)
+        localStorage.setItem('userName', username);
+        localStorage.setItem('userDisplayName', displayName);
+        localStorage.setItem('isJudgeAccount', 'false');
+        localStorage.setItem('userPassword', password); // Store for later backend sync
+        
+        console.log('✅ User account saved locally:', username);
+        
+        // Try to save to backend (optional - won't block if backend not deployed)
+        try {
+            const API_BASE = API_CONFIG?.BASE_URL || 'https://7ofiibs7k7.execute-api.ap-southeast-2.amazonaws.com/prod';
+            
+            const response = await fetch(`${API_BASE}/user/create`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    username: username,
+                    password: password,
+                    displayName: displayName
+                })
+            });
+            
+            if (response.ok) {
+                console.log('✅ User account also saved to backend');
+            } else {
+                console.warn('⚠️ Backend save failed, but local save succeeded');
+            }
+        } catch (backendError) {
+            console.warn('⚠️ Backend not available, using local storage only:', backendError.message);
+        }
+        
+        return true;
+        
+    } catch (error) {
+        console.error('❌ Error creating user account:', error);
+        showError('user-name', 'name-error', 'Failed to create account. Please try again.');
+        return false;
+    }
+}
+
+// Mark user setup as complete
+async function markUserSetupComplete(username) {
+    try {
+        const API_BASE = API_CONFIG?.BASE_URL || 'https://7ofiibs7k7.execute-api.ap-southeast-2.amazonaws.com/prod';
+        
+        const response = await fetch(`${API_BASE}/user/complete-setup`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                username: username
+            })
+        });
+        
+        if (response.ok) {
+            console.log('✅ User setup marked as complete in backend');
+        } else {
+            console.error('❌ Failed to mark setup as complete in backend');
+        }
+        
+    } catch (error) {
+        console.error('Error marking setup complete:', error);
+    }
+}
 // Clear error when user starts typing
 document.addEventListener('DOMContentLoaded', () => {
     // Add event listeners to clear errors on input
@@ -534,23 +653,32 @@ function completeOnboarding() {
 
 // Update user profile display
 function updateUserProfile() {
-    const userName = localStorage.getItem('userName') || 'Beautiful';
+    const userDisplayName = localStorage.getItem('userDisplayName');
+    const userName = localStorage.getItem('userName');
+    
+    console.log('🔍 DEBUG updateUserProfile:');
+    console.log('  - userDisplayName:', userDisplayName);
+    console.log('  - userName:', userName);
+    
+    const finalName = userDisplayName || userName || 'Beautiful';
+    console.log('  - finalName:', finalName);
+    
     const profileNameElement = document.getElementById('profile-name');
     const profileAvatarElement = document.getElementById('profile-avatar');
     const userNameDisplayElement = document.getElementById('user-name-display');
     
     if (profileNameElement) {
-        profileNameElement.textContent = userName;
+        profileNameElement.textContent = finalName;
     }
     
     if (profileAvatarElement) {
         // Get first letter of name for avatar
-        profileAvatarElement.textContent = userName.charAt(0).toUpperCase();
+        profileAvatarElement.textContent = finalName.charAt(0).toUpperCase();
     }
     
     // Update welcome message with user name
     if (userNameDisplayElement) {
-        userNameDisplayElement.textContent = userName;
+        userNameDisplayElement.textContent = finalName;
     }
 }
 
@@ -560,6 +688,21 @@ function showPage(pageId) {
         page.classList.remove('active');
     });
     document.getElementById(pageId).classList.add('active');
+    
+    // CRITICAL: Refresh wellness message when returning to dashboard
+    // This ensures the message updates with any new data (journal, skin, cycle)
+    if (pageId === 'dashboard-page') {
+        // Small delay to ensure page is visible before loading message
+        setTimeout(() => {
+            if (typeof initializeWellnessMessage === 'function') {
+                const userName = localStorage.getItem('userName');
+                if (userName) {
+                    console.log('🔄 Dashboard shown - refreshing wellness message with latest data');
+                    initializeWellnessMessage();
+                }
+            }
+        }, 100);
+    }
 }
 
 function startQuestionnaire() {
@@ -673,22 +816,27 @@ function goToDashboard() {
     localStorage.setItem('cycleDays', cycleDays);
     localStorage.setItem('skinType', selectedSkinType);
     
-    // Mark judge setup as complete - SAVE TO BACKEND
-    if (isJudgeAccount && userName) {
-        console.log('🔵 Saving setup to BACKEND for judge:', userName);
+    // Mark setup as complete - SAVE TO BACKEND
+    if (userName) {
+        console.log('🔵 Saving setup completion to backend for user:', userName);
         
-        // Prepare profile data
-        const profileData = {
-            age: ageInput.value,
-            lastPeriod: lastPeriodInput ? lastPeriodInput.value : null,
-            periodOption: selectedPeriodOption,
-            skinType: selectedSkinType,
-            cycleDays: cycleDays,
-            timestamp: new Date().toISOString()
-        };
-        
-        // Save to backend (async, don't wait)
-        saveJudgeSetupToBackend(userName, profileData);
+        if (isJudgeAccount) {
+            // Prepare profile data for judges
+            const profileData = {
+                age: ageInput.value,
+                lastPeriod: lastPeriodInput ? lastPeriodInput.value : null,
+                periodOption: selectedPeriodOption,
+                skinType: selectedSkinType,
+                cycleDays: cycleDays,
+                timestamp: new Date().toISOString()
+            };
+            
+            // Save to backend (async, don't wait)
+            saveJudgeSetupToBackend(userName, profileData);
+        } else {
+            // For regular users, just mark setup as completed
+            markUserSetupComplete(userName);
+        }
     }
     
     completeOnboarding();
@@ -1273,31 +1421,92 @@ async function handleSignIn() {
         }
     }
     
-    // Regular user account (no password validation for now)
-    // For regular users, just check if username exists in localStorage
-    const storedUsername = localStorage.getItem('userName');
-    
-    if (storedUsername && storedUsername.toLowerCase() === username.toLowerCase()) {
-        // Existing user
-        localStorage.setItem('userName', username.toLowerCase().replace(/\s+/g, ''));
-        localStorage.setItem('userDisplayName', username);
-        localStorage.setItem('onboardingCompleted', 'true');
+    // Regular user account - try backend first, fallback to localStorage
+    try {
+        // Try backend authentication first
+        const API_BASE = API_CONFIG?.BASE_URL || 'https://7ofiibs7k7.execute-api.ap-southeast-2.amazonaws.com/prod';
         
-        closeSignInModal();
-        showPage('dashboard-page');
-        
-        updateUserProfile();
-        if (typeof initializeWellnessMessage === 'function') {
-            initializeWellnessMessage();
+        try {
+            const response = await fetch(`${API_BASE}/user/authenticate`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    username: username,
+                    password: password
+                })
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                
+                // Backend authentication successful
+                localStorage.setItem('userName', data.username);
+                localStorage.setItem('userDisplayName', data.displayName);
+                localStorage.setItem('isJudgeAccount', 'false');
+                localStorage.setItem('onboardingCompleted', 'true'); // ALWAYS true for existing users
+                
+                closeSignInModal();
+                
+                // EXISTING USER - Always go to dashboard (they already registered)
+                showPage('dashboard-page');
+                updateUserProfile();
+                if (typeof initializeWellnessMessage === 'function') {
+                    initializeWellnessMessage();
+                }
+                updateTimeBasedContent();
+                
+                console.log('✅ User logged in via backend:', data.username);
+                return;
+            }
+        } catch (backendError) {
+            console.warn('⚠️ Backend not available, trying localStorage:', backendError.message);
         }
-        updateTimeBasedContent();
         
-        console.log('User logged in:', username);
-    } else {
-        // Username not found
+        // Fallback to localStorage authentication
+        const normalizedInput = username.toLowerCase().replace(/\s+/g, '');
+        const storedUserName = localStorage.getItem('userName');
+        const storedDisplayName = localStorage.getItem('userDisplayName');
+        const storedPassword = localStorage.getItem('userPassword');
+        
+        // Check if user exists in localStorage
+        if (storedUserName === normalizedInput || 
+            (storedDisplayName && storedDisplayName.toLowerCase() === username.toLowerCase())) {
+            
+            // Verify password
+            if (storedPassword && storedPassword === password) {
+                // Authentication successful
+                localStorage.setItem('userName', normalizedInput);
+                localStorage.setItem('userDisplayName', storedDisplayName || username);
+                localStorage.setItem('isJudgeAccount', 'false');
+                localStorage.setItem('onboardingCompleted', 'true'); // ALWAYS true for existing users
+                
+                closeSignInModal();
+                
+                // EXISTING USER - Always go to dashboard (they already registered)
+                showPage('dashboard-page');
+                updateUserProfile();
+                if (typeof initializeWellnessMessage === 'function') {
+                    initializeWellnessMessage();
+                }
+                updateTimeBasedContent();
+                
+                console.log('✅ User logged in via localStorage:', normalizedInput);
+                return;
+            }
+        }
+        
+        // Authentication failed
         usernameInput.classList.add('error');
         passwordInput.classList.add('error');
         errorElement.textContent = 'Invalid username or password';
+        
+    } catch (error) {
+        console.error('❌ Error authenticating user:', error);
+        usernameInput.classList.add('error');
+        passwordInput.classList.add('error');
+        errorElement.textContent = 'Login failed. Please try again.';
     }
 }
 

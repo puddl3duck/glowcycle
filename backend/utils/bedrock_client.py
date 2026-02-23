@@ -31,75 +31,43 @@ Return EXACTLY: "{user_name}, the more I know about you, the better I can suppor
 IF HAS DATA:
 Write ONE deeply personal message that shows you understand what they're experiencing RIGHT NOW.
 
-CRITICAL LENGTH RULE:
-- MAXIMUM 12 WORDS - COUNT THEM
-- If you write more than 12 words, START OVER
+CRITICAL LENGTH RULE - READ THIS CAREFULLY:
+- ABSOLUTE MAXIMUM: 12 WORDS
+- COUNT EVERY SINGLE WORD before responding
+- If you write 13 or more words, you FAILED
 - Short is powerful, long is weak
 - Every word must earn its place
+- STOP at 12 words even if sentence feels incomplete
 
 APPROACH:
 1. Read their WHOLE situation (cycle + mood + energy + skin)
 2. Find the ONE emotional truth (what's the core feeling?)
-3. Validate their feeling first
-4. Add a gentle note of hope or support (not advice, just encouragement)
-5. Keep it under 12 words total
+3. Validate their feeling first (4-6 words)
+4. Add gentle hope or support (4-6 words)
+5. TOTAL: Maximum 12 words
 
-EXAMPLES OF GENUINE MESSAGES (ALL UNDER 12 WORDS):
+EXAMPLES (ALL EXACTLY 12 WORDS OR LESS):
 
 Period + tired + breakouts:
-- "Your body is working hard, rest will help"
-- "These heavy days pass, gentleness speeds the healing"
-- "Feeling drained is real, tomorrow brings new energy"
+- "Your body is working hard, rest will help" (8 words) ✓
+- "These heavy days pass, gentleness speeds the healing" (8 words) ✓
 
-Follicular + energized + clear skin:
-- "This lightness is real, let yourself enjoy it fully"
-- "You're in your flow, this feeling is yours"
-- "That spark is your body thriving, embrace it"
+Follicular + energized:
+- "This lightness is real, let yourself enjoy it fully" (9 words) ✓
+- "You're in your flow, this feeling is yours" (9 words) ✓
 
-Ovulation + confident + glowing:
-- "You feel unstoppable because you are, trust it"
-- "This is your power phase, let it shine"
-- "Everything aligns here, you're exactly where you belong"
+Ovulation + confident:
+- "You feel unstoppable because you are, trust it" (8 words) ✓
+- "This is your power phase, let it shine" (8 words) ✓
 
-Luteal + anxious + oily skin:
-- "That restless feeling will pass, you're still okay"
-- "Your mind is louder now, but peace is coming"
-- "These heavy days are temporary, you're doing great"
+Luteal + anxious:
+- "That restless feeling will pass, you're still okay" (8 words) ✓
+- "Your mind is louder now, but peace is coming" (9 words) ✓
 
-Luteal + tired + breakouts:
-- "Pre-period exhaustion is real, rest helps everything"
-- "Your body is preparing, this phase always passes"
-- "This week is hard, but you're handling it"
-
-Menstrual + emotional + sensitive skin:
-- "Everything feels bigger now, but you're still strong"
-- "Your skin is tender, gentleness will help it heal"
-- "Low days are part of this, brighter ones come"
-
-Follicular + calm + recovering skin:
-- "That relief is your body resetting, healing is happening"
-- "Post-period calm is real, you're coming back beautifully"
-- "You're returning to yourself, trust the process"
-
-Sad/Lonely + any phase:
-- "Your feelings of loneliness are real, you're not alone"
-- "This heaviness is temporary, lighter days are ahead"
-- "Feeling lost is okay, you'll find your way"
-
-Job stress/Big changes + tired:
-- "Big changes are exhausting, but you're handling them"
-- "Your body feels the stress, rest will restore you"
-- "Transitions are hard, you're braver than you know"
-
-Anxious/Overwhelmed:
-- "That anxiety is real, but it doesn't define you"
-- "Overwhelmed feelings pass, you've survived them before"
-- "Your mind is racing, but you're still okay"
-
-Low mood + any phase:
-- "These low days are real, but they don't last"
-- "Feeling down is part of being human, you're okay"
-- "This sadness is temporary, joy will return"
+Sad/Grief:
+- "Your grief is heavy but the light will return" (9 words) ✓
+- "This loss hurts deeply, healing takes its own time" (9 words) ✓
+- "Feeling this pain shows how much you loved them" (9 words) ✓
 
 TONE RULES:
 ✅ Validating first (acknowledge their reality)
@@ -107,29 +75,27 @@ TONE RULES:
 ✅ Conversational (like a supportive friend)
 ✅ Specific (reference what THEY'RE experiencing)
 ✅ Empathetic (show you understand the feeling)
-✅ Supportive (remind them they're capable/not alone)
-
-BALANCE:
-- First part: Validate the hard feeling ("Your feelings are real", "This is heavy")
-- Second part: Gentle hope ("but it will pass", "you're handling it", "healing is happening")
-- NOT toxic positivity ("just be happy!")
-- NOT dismissive ("it's not that bad")
-- YES realistic hope ("this is temporary", "you've survived before", "lighter days come")
 
 ABSOLUTE RULES - NO EXCEPTIONS:
-❌ NEVER exceed 12 words - count them before responding
-❌ NO emojis or symbols ever
+❌ NEVER use emojis, symbols, or special characters
+❌ NEVER exceed 12 words - COUNT THEM
 ❌ NO advice or solutions
-❌ NO medical terms (hormones, estrogen, progesterone)
+❌ NO medical terms
 ❌ NO generic messages
 ❌ NO multiple sentences
+❌ NO quotation marks in your response
+❌ NO punctuation at the end
 
 ✅ ONE sentence only
 ✅ 8-12 words maximum
 ✅ Direct and genuine
 ✅ Make them feel understood
+✅ PLAIN TEXT ONLY
 
-Generate ONLY the message - raw text, no quotes, no labels, no punctuation at the end."""
+Generate ONLY the message - raw text, no quotes, no labels, no punctuation at the end, NO EMOJIS.
+
+WORD COUNT CHECK:
+Before you respond, COUNT THE WORDS. If more than 12, DELETE words until you have exactly 12 or fewer."""
 
 
 
@@ -150,12 +116,12 @@ def generate_motivational_quote(user_context: dict) -> str:
     """
     # Check if user has ANY data at all
     has_any_data = user_context.get('has_any_data', False)
+    user_name = user_context.get('user_name', 'Friend')
     
     # If no data at all, return welcome message immediately (no AI call needed)
     if not has_any_data:
-        user_name = user_context.get('user_name', 'Friend')
         welcome_message = f"{user_name}, the more I know about you, the better I can support you"
-        logger.info(f"New user detected - returning welcome message: {welcome_message}")
+        logger.info(f"✅ New user detected - returning welcome message: {welcome_message}")
         return welcome_message
     
     # User has data - generate personalized message with AI
@@ -174,6 +140,8 @@ def generate_motivational_quote(user_context: dict) -> str:
     has_cycle_data = cycle_day > 0
     
     data_status = "HAS_DATA"
+    
+    logger.info(f"🔍 User data check: journals={journal_entries}, cycle_day={cycle_day}, has_skin={has_skin_data}")
     
     # Detailed skin summary
     skin_issues = []
@@ -206,7 +174,7 @@ def generate_motivational_quote(user_context: dict) -> str:
     
     # Build ultra-concise but rich prompt
     message_prompt = MOTIVATIONAL_QUOTE_PROMPT.format(
-        user_name=user_context.get('user_name', 'Friend'),
+        user_name=user_name,
         cycle_phase=cycle_phase.capitalize(),
         cycle_day=cycle_day,
         cycle_length=cycle_length,
@@ -218,20 +186,20 @@ def generate_motivational_quote(user_context: dict) -> str:
         data_status=data_status
     )
     
-    # Call Bedrock with STRICT settings for SHORT, EMPATHETIC messages
+    # Call Bedrock with settings for SHORT messages (12 words max)
     request_body = {
         "anthropic_version": "bedrock-2023-05-31",
-        "max_tokens": 25,  # STRICT: Force max 12 words
+        "max_tokens": 50,  # Enough tokens to complete 12 words without cutting off
         "messages": [
             {
                 "role": "user",
                 "content": message_prompt
             }
         ],
-        "temperature": 0.3  # Lower temperature for consistency
+        "temperature": 0.3  # Balanced temperature for empathy
     }
     
-    logger.info(f"Calling Bedrock for EXPERT PERSONALIZED message (cycle: {cycle_phase} day {cycle_day}, skin: {skin_summary}, mood: {feeling}, energy: {energy})")
+    logger.info(f"🤖 Calling Bedrock for message (cycle: {cycle_phase} day {cycle_day}, journals: {journal_entries})")
     
     response = bedrock_runtime.invoke_model(
         modelId='anthropic.claude-3-haiku-20240307-v1:0',
@@ -241,11 +209,13 @@ def generate_motivational_quote(user_context: dict) -> str:
     response_body = json.loads(response['body'].read())
     message = response_body['content'][0]['text'].strip()
     
-    # Clean up message (remove quotes, emojis, and extra text)
+    # AGGRESSIVE cleanup - remove ALL special characters and emojis
     message = message.strip('"').strip("'").strip()
     
-    # Remove any emojis that might have slipped through
+    # Remove ANY emoji or special unicode character
     import re
+    
+    # Remove all emojis (comprehensive pattern)
     emoji_pattern = re.compile("["
         u"\U0001F600-\U0001F64F"  # emoticons
         u"\U0001F300-\U0001F5FF"  # symbols & pictographs
@@ -253,10 +223,28 @@ def generate_motivational_quote(user_context: dict) -> str:
         u"\U0001F1E0-\U0001F1FF"  # flags
         u"\U00002702-\U000027B0"
         u"\U000024C2-\U0001F251"
+        u"\U0001F900-\U0001F9FF"  # supplemental symbols
+        u"\U0001FA00-\U0001FA6F"  # extended symbols
         "]+", flags=re.UNICODE)
     message = emoji_pattern.sub('', message).strip()
     
-    logger.info(f"Generated motivational message: {message}")
+    # Remove flower symbols and other decorative characters
+    decorative_pattern = re.compile(r'[🌸🌺🌼🌻🌷🌹💐🏵️🥀💮🪷🪻🌿☘️🍀🍃🌱🌾💫⭐✨🌟💫⚡🔥💥💢💦💧💤💨🕳️💬🗨️🗯️💭🤍🤎💜💙💚💛🧡❤️💗💖💕💓💞💝❣️💟💌💘💋👄💄💅🤳💃🕺👯🧘🏃🚶🧍🧎🤸🤾🤹🏋️⛹️🤺🏇🏂🏄🚣🏊⛷️🏌️🏓🏸🥊🥋🥅🥌🎯🎱🎳🎮🎰🎲🧩🧸🪀🪁🎨🎭🎪🎬🎤🎧🎼🎹🥁🎷🎺🎸🪕🎻🎲🎯🎳🎮🎰🧩🧸🪀🪁🎈🎉🎊🎁🎀🎏🎐🎑🧧✨🎇🎆🌠🌌🌃🌆🌇🌉🌁]')
+    message = decorative_pattern.sub('', message).strip()
+    
+    # Remove any remaining non-ASCII characters except basic punctuation
+    message = ''.join(char for char in message if ord(char) < 128 or char in '.,!?;:-')
+    
+    # Clean up extra spaces
+    message = ' '.join(message.split())
+    
+    # CRITICAL: Enforce 12 word limit by truncating if needed
+    words = message.split()
+    if len(words) > 12:
+        message = ' '.join(words[:12])
+        logger.warning(f"⚠️ Message exceeded 12 words, truncated to: {message}")
+    
+    logger.info(f"✅ Generated message ({len(words)} words): {message}")
     return message
 
 

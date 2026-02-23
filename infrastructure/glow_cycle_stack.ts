@@ -263,5 +263,37 @@ export class GlowCycleStack extends cdk.Stack {
       'POST',
       new apigateway.LambdaIntegration(judgeSetupLambda)
     );
+
+    // User management endpoints
+    const userLambda = new lambda.Function(this, 'UserLambda', {
+      runtime: lambda.Runtime.PYTHON_3_11,
+      handler: 'user/lambda_handler.lambda_handler',
+      code: lambda.Code.fromAsset('../backend'),
+      environment: { DYNAMODB_TABLE_NAME: table.tableName },
+    });
+    table.grantReadWriteData(userLambda);
+
+    const userResource = api.root.addResource('user');
+    
+    // User creation endpoint
+    const userCreateResource = userResource.addResource('create');
+    userCreateResource.addMethod(
+      'POST',
+      new apigateway.LambdaIntegration(userLambda)
+    );
+    
+    // User authentication endpoint
+    const userAuthResource = userResource.addResource('authenticate');
+    userAuthResource.addMethod(
+      'POST',
+      new apigateway.LambdaIntegration(userLambda)
+    );
+    
+    // User setup completion endpoint
+    const userSetupResource = userResource.addResource('complete-setup');
+    userSetupResource.addMethod(
+      'POST',
+      new apigateway.LambdaIntegration(userLambda)
+    );
   }
 }
