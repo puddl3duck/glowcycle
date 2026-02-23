@@ -3,11 +3,9 @@ let timeMode = "morning"; // 'morning', 'afternoon', or 'night'
 
 // Load user profile
 function loadUserProfile() {
-  const userName = localStorage.getItem('userName') || localStorage.getItem('userDisplayName') || 'User';
+  const userName = localStorage.getItem('userName') || 'User';
   const profileNameElement = document.getElementById('profile-name');
   const profileAvatarElement = document.getElementById('profile-avatar');
-  
-  console.log('Loading user profile:', userName);
   
   if (profileNameElement) {
     profileNameElement.textContent = userName;
@@ -73,7 +71,7 @@ function updateSkincareRoutine() {
   if (!routineTitle || !routineSteps) return;
 
   if (timeMode === "morning") {
-    routineTitle.innerHTML = "☀️ AM Routine";
+    routineTitle.innerHTML = "☀️ Morning Skin Routine";
     routineSteps.innerHTML = `
       <div class="routine-step">✓ Gentle Cleanser</div>
       <div class="routine-step">✓ Vitamin C Serum</div>
@@ -89,7 +87,7 @@ function updateSkincareRoutine() {
       <div class="routine-step">✓ Light Moisturizer</div>
     `;
   } else {
-    routineTitle.innerHTML = "🌙 PM Routine";
+    routineTitle.innerHTML = "🌙 Night Skin Routine";
     routineSteps.innerHTML = `
       <div class="routine-step">✓ Oil Cleanser</div>
       <div class="routine-step">✓ Treatment Serum</div>
@@ -101,23 +99,12 @@ function updateSkincareRoutine() {
 
 // Show Consent Popup
 function showConsentPopup() {
-  console.log('showConsentPopup called');
-  console.log('skinConsentGiven:', localStorage.getItem("skinConsentGiven"));
-  
   // Skip popup if user previously consented
   if (localStorage.getItem("skinConsentGiven") === "true") {
-    console.log('User already consented, showing scanner directly');
     showScanner();
     return;
   }
-  
-  const popup = document.getElementById("consent-popup");
-  if (popup) {
-    popup.style.display = "flex";
-    console.log('Consent popup shown');
-  } else {
-    console.error('Consent popup element not found');
-  }
+  document.getElementById("consent-popup").style.display = "flex";
 }
 
 // Close Consent Popup
@@ -135,32 +122,7 @@ function acceptConsent() {
   }
   closeConsentPopup();
   showScanner();
-}
-
-// Enable/disable accept button based on checkbox
-document.addEventListener("DOMContentLoaded", () => {
-  console.log('DOM Content Loaded');
-  
-  applyTheme();
-  loadUserProfile(); // Load user name and avatar
-  loadScanHistory(); // Load scan history
-
-  const consentCheck = document.getElementById("consent-check");
-  const acceptBtn = document.getElementById("accept-btn");
-
-  if (consentCheck && acceptBtn) {
-    consentCheck.addEventListener("change", (e) => {
-      acceptBtn.disabled = !e.target.checked;
-    });
-  }
-  
-  // Make showConsentPopup available globally
-  window.showConsentPopup = showConsentPopup;
-  window.closeConsentPopup = closeConsentPopup;
-  window.acceptConsent = acceptConsent;
-  
-  console.log('Functions attached to window');
-});
+};
 
 // Camera variables
 let stream = null;
@@ -373,41 +335,35 @@ function stopFaceDetection() {
 
 // Show Scanner View
 function showScanner() {
-  console.log('showScanner called');
-  
-  const dashboardLayout = document.querySelector(".skin-dashboard-layout");
-  const scannerView = document.getElementById("scanner-view");
-  
-  if (!scannerView) {
-    console.error('Scanner view element not found!');
-    return;
-  }
-  
-  if (dashboardLayout) {
-    dashboardLayout.style.display = "none";
-    console.log('Dashboard hidden');
-  }
-  
-  scannerView.style.display = "block";
-  console.log('Scanner view shown');
-  
+  // Hide main content
+  document.querySelector('.method-selection-single').style.display = 'none';
+  document.querySelector('.scan-history-section').style.display = 'none';
+  document.querySelector('.page-header').style.display = 'none';
+  document.querySelector('.back-navigation').style.display = 'none';
+
+  // Show scanner
+  document.getElementById('scanner-view').style.display = 'block';
+
+  // Start camera
   startCamera();
 }
 
-// Close Scanner
 function closeScanner() {
-  stopCamera();
-  hideViews();
-}
-
-// Hide all views and show dashboard
-function hideViews() {
-  const dashboardLayout = document.querySelector(".skin-dashboard-layout");
-  if (dashboardLayout) {
-    dashboardLayout.style.display = "grid";
+  // Stop camera
+  const video = document.getElementById('camera-video');
+  if (video && video.srcObject) {
+    video.srcObject.getTracks().forEach(track => track.stop());
+    video.srcObject = null;
   }
-  document.getElementById("scanner-view").style.display = "none";
-  document.getElementById("results-view").style.display = "none";
+
+  // Hide scanner
+  document.getElementById('scanner-view').style.display = 'none';
+
+  // Restore main content
+  document.querySelector('.method-selection-single').style.display = 'block';
+  document.querySelector('.scan-history-section').style.display = 'block';
+  document.querySelector('.page-header').style.display = 'block';
+  document.querySelector('.back-navigation').style.display = 'block';
 }
 
 // Stop Camera
@@ -519,8 +475,9 @@ async function sendCapturedImageToBackend(dataUrl) {
       body: JSON.stringify({
         s3Key,
         timeOfDay: detectTimeMode(),
-        cyclePhase: "unknown",
+        cyclePhase: getCycleDayAndPhase().phase,
         skinGoals: ["hydration", "texture"],
+        skinType: localStorage.getItem('skinType') || 'normal',
       }),
     });
     if (!analyzeResp.ok) {
@@ -530,9 +487,63 @@ async function sendCapturedImageToBackend(dataUrl) {
 
     const analysis = await analyzeResp.json();
     window.__skinAnalysisResult = analysis;
+
   } catch (err) {
     console.error("Error in sendCapturedImageToBackend:", err);
-    // Don't block the UI — results will render with fallback/default values
+  }
+}
+
+// Save report to DynamoDB when user clicks Save Report
+async function saveReport() {
+  const result = window.__skinAnalysisResult;
+  if (!result) {
+    alert("No analysis to save yet.");
+    return;
+  }
+
+  const apiConfig = typeof API_CONFIG !== "undefined" ? API_CONFIG : window.API_CONFIG;
+  const user = document.querySelector(".profile-name")?.textContent?.trim()
+    || localStorage.getItem("userName")
+    || "anonymous";
+
+  const saveBtn = document.querySelector(".save-btn");
+  if (saveBtn) {
+    saveBtn.textContent = "Saving...";
+    saveBtn.disabled = true;
+  }
+
+  try {
+    const cycleInfo = getCycleDayAndPhase();
+
+    const resp = await fetch(apiConfig.BASE_URL + "/skin/history", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        user,
+        analysis: {
+          ...result,
+          cycleDay: cycleInfo.day,
+          cyclePhase: cycleInfo.phase,
+        }
+      }),
+    });
+
+    if (!resp.ok) throw new Error("Save failed");
+
+    if (saveBtn) {
+      saveBtn.textContent = "✓ Saved!";
+      saveBtn.style.background = "linear-gradient(135deg, #A8E6CF, #68C9A3)";
+    }
+
+    // Reload history so the new entry appears immediately
+    await loadScanHistory();
+
+  } catch (err) {
+    console.error("Error saving report:", err);
+    if (saveBtn) {
+      saveBtn.textContent = "Save failed — try again";
+      saveBtn.disabled = false;
+    }
   }
 }
 
@@ -600,11 +611,6 @@ function completeAnalysis() {
 
   title.textContent = "Analysis Complete! ✨";
 
-  // Mark skin scan updated for wellness message refresh
-  if (typeof markSkinScanUpdated === 'function') {
-    markSkinScanUpdated();
-  }
-
   setTimeout(() => {
     overlay.style.display = "none";
     stopCamera();
@@ -648,57 +654,28 @@ function retakePhoto() {
   }, 300);
 }
 
-// Show Results View
 function showResults() {
+  // Hide scanner and main content
   document.getElementById("scanner-view").style.display = "none";
+  document.querySelector('.method-selection-single').style.display = 'none';
+  document.querySelector('.scan-history-section').style.display = 'none';
+  document.querySelector('.page-header').style.display = 'none';
+  document.querySelector('.back-navigation').style.display = 'none';
+
+  // Show results
   document.getElementById("results-view").style.display = "block";
+
+  // Update cycle day dynamically
+  const { day, phase, emoji } = getCycleDayAndPhase();
+  const reportDate = document.querySelector(".report-date");
+  if (reportDate) {
+    reportDate.textContent = day
+      ? `Day ${day} • ${phase} ${emoji}`
+      : `${phase} ${emoji}`;
+  }
 
   renderSkinAnalysisResult();
   drawRadarChart();
-  
-  // Generate and display product recommendations
-  const skinType = localStorage.getItem('skinType') || 'normal';
-  const cyclePhase = calculateCurrentCyclePhase();
-  
-  // Get skin analysis from backend result
-  const result = window.__skinAnalysisResult;
-  const skinAnalysis = {
-    acne_detected: result?.concerns_detected?.some(c => c.toLowerCase().includes('acne')) || false,
-    dryness_detected: result?.concerns_detected?.some(c => c.toLowerCase().includes('dry')) || false,
-    oiliness_detected: result?.concerns_detected?.some(c => c.toLowerCase().includes('oil')) || false,
-    redness_detected: result?.concerns_detected?.some(c => c.toLowerCase().includes('red')) || false
-  };
-  
-  displayProductRecommendations(skinAnalysis, cyclePhase, skinType);
-}
-
-function calculateCurrentCyclePhase() {
-  const lastPeriod = localStorage.getItem('lastPeriod');
-  const cycleDays = parseInt(localStorage.getItem('cycleDays')) || 28;
-  
-  if (!lastPeriod) {
-    return 'follicular';
-  }
-  
-  try {
-    const lastPeriodDate = new Date(lastPeriod);
-    const today = new Date();
-    const daysSince = Math.floor((today - lastPeriodDate) / (1000 * 60 * 60 * 24));
-    const cycleDay = (daysSince % cycleDays) + 1;
-    
-    if (cycleDay <= 5) {
-      return 'menstrual';
-    } else if (cycleDay <= Math.floor(cycleDays * 0.43)) {
-      return 'follicular';
-    } else if (cycleDay <= Math.floor(cycleDays * 0.57)) {
-      return 'ovulation';
-    } else {
-      return 'luteal';
-    }
-  } catch (error) {
-    console.error('Error calculating cycle phase:', error);
-    return 'follicular';
-  }
 }
 
 // Toggle for routine step product section 
@@ -728,13 +705,14 @@ function renderSkinAnalysisResult() {
   const avgScore = metricValues.length
     ? Math.round(metricValues.reduce((a, b) => a + b, 0) / metricValues.length)
     : 75;
+  const overallScore = result.overall_skin_health ?? avgScore;
 
   const scoreEl = document.querySelector(".score-number");
-  if (scoreEl) scoreEl.textContent = avgScore;
+  if (scoreEl) scoreEl.textContent = overallScore;
 
   const scoreCircle = document.querySelector(".score-circle circle:nth-child(2)");
   if (scoreCircle) {
-    scoreCircle.setAttribute("stroke-dashoffset", 314 - (314 * avgScore) / 100);
+    scoreCircle.setAttribute("stroke-dashoffset", 314 - (314 * overallScore) / 100);
   }
 
   // Metric cards
@@ -745,6 +723,8 @@ function renderSkinAnalysisResult() {
     { label: "Texture", key: "texture" },
     { label: "Pores", key: "pores" },
     { label: "Dark Circles", key: "dark_circles" },
+    { label: "Redness", key: "redness"},
+    { label: "Oiliness", key: "oiliness"},
   ];
   metricItems.forEach((item, i) => {
     if (metricMap[i]) {
@@ -761,28 +741,32 @@ function renderSkinAnalysisResult() {
   const routineTitle = document.querySelector(".routine-title");
   const isNight = detectTimeMode() === "night";
   const steps = isNight ? result.pm_routine : result.am_routine;
-  if (routineTitle) routineTitle.textContent = isNight ? "🌙 Night Skincare Routine" : "☀️ Day Skincare Routine";
+  if (routineTitle) {
+    routineTitle.innerHTML = isNight 
+      ? `🌙 Night Skincare Routine<span class="routine-subtitle">Click a step for product recommendations</span>`
+      : `☀️ Morning Skincare Routine<span class="routine-subtitle">Click a step for product recommendations</span>`;
+  }
   if (routineSteps && Array.isArray(steps))  {
-    routineSteps.innerHTML = steps.map((s, i) => `
-      <div class="routine-step" id="routine-step-${i}" onclick="toggleRoutineStep(${i}, '${s.replace(/'/g, "\\'")}')">
-        <div class="routine-step-header">
-          <span class="routine-step-check">✓</span>
-          <span class="routine-step-text">${s}</span>
-          <span class="routine-step-chevron">›</span>
-        </div>
-        <div class="routine-step-expanded" id="routine-step-expanded-${i}" style="display:none;">
-          <div class="suggested-product">
-            <span class="suggested-label">🛍️ Suggested product</span>
-            <a href="https://www.amazon.com.au/s?k=${encodeURIComponent(s)}" 
-               target="_blank" 
-               class="amazon-link">
-              Search "${s}" on Amazon →
-            </a>
-          </div>
+  routineSteps.innerHTML = steps.map((s, i) => `
+    <div class="routine-step" id="routine-step-${i}" onclick="toggleRoutineStep(${i}, '${s.replace(/'/g, "\\'")}')">
+      <div class="routine-step-header">
+        <span class="routine-step-check">✓</span>
+        <span class="routine-step-text">${s}</span>
+        <span class="routine-step-chevron">›</span>
+      </div>
+      <div class="routine-step-expanded" id="routine-step-expanded-${i}" style="display:none;">
+        <div class="suggested-product">
+          <span class="suggested-label">🛍️ Suggested product</span>
+          <a href="https://www.amazon.com.au/s?k=${encodeURIComponent(s)}" 
+             target="_blank" 
+             class="amazon-link">
+            Search "${s}" on Amazon →
+          </a>
         </div>
       </div>
-    `).join("");
-  }
+    </div>
+  `).join("");
+}
 
   // Remove static hardcoded recommendation cards
   document.querySelectorAll(".recommendations .recommendation-card").forEach((el) => el.remove());
@@ -800,18 +784,29 @@ function renderSkinAnalysisResult() {
     `;
   }
 
-  // Concerns detected
-  if (Array.isArray(result.concerns_detected) && result.concerns_detected.length) {
+if (Array.isArray(result.concerns_detected) && result.concerns_detected.length) {
     const tipsEl = document.getElementById("ai-tips");
     if (tipsEl) {
       tipsEl.innerHTML += `
-        <h3 style="margin-top: 1.5rem">Concerns Detected</h3>
-        ${result.concerns_detected.map((c) => `
-          <div class="recommendation-card">
-            <div class="rec-icon">🔍</div>
-            <div class="rec-content"><p>${c}</p></div>
-          </div>`).join("")}
-      `;
+    <h3 style="margin-top: 1.5rem">Concerns Detected</h3>
+    <div class="recommendation-card" onclick="toggleConcerns()" style="cursor: pointer; flex-direction: column; gap: 0.3rem;">
+      <div style="display: flex; align-items: center; gap: 1rem;">
+        <span class="rec-icon">✨</span>
+        <div style="flex: 1;">
+          <p style="font-weight: 600; color: var(--accent-purple); margin: 0;">You look amazing bestie, just the way you are!</p>
+          <p style="font-size: 0.8rem; color: var(--text-medium); margin: 0.25rem 0 0 0;">Want to see detailed concerns? Click here</p>
+        </div>
+        <span class="concerns-chevron" id="concerns-chevron" style="font-size: 1.3rem; color: #9B7EBD; transition: transform 0.2s ease;">›</span>
+      </div>
+    </div>
+    <div id="concerns-expanded" style="display:none;">
+      ${result.concerns_detected.map((c) => `
+        <div class="recommendation-card">
+          <div class="rec-icon">🔍</div>
+          <div class="rec-content"><p>${c}</p></div>
+        </div>`).join("")}
+    </div>
+  `;
     }
   }
 
@@ -820,11 +815,47 @@ function renderSkinAnalysisResult() {
   if (disEl && result.disclaimer) disEl.textContent = result.disclaimer;
 }
 
+function toggleConcerns() {
+  const expanded = document.getElementById("concerns-expanded");
+  const chevron = document.getElementById("concerns-chevron");
+  const isOpen = expanded.style.display !== "none";
+  expanded.style.display = isOpen ? "none" : "block";
+  chevron.style.transform = isOpen ? "rotate(0deg)" : "rotate(90deg)";
+}
+
+// Cycle day and phase info 
+function getCycleDayAndPhase() {
+  const lastPeriod = localStorage.getItem('lastPeriod');
+  const cycleLength = parseInt(localStorage.getItem('cycleLength')) || 28;
+
+  if (!lastPeriod) return { day: null, phase: 'Unknown Phase', emoji: '🌸' };
+
+  const start = new Date(lastPeriod);
+  const today = new Date();
+  const diffMs = today - start;
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const currentDay = (diffDays % cycleLength) + 1;
+
+  // Determine phase
+  let phase, emoji;
+  if (currentDay <= 5) {
+    phase = 'Menstrual Phase'; emoji = '🔴';
+  } else if (currentDay <= 13) {
+    phase = 'Follicular Phase'; emoji = '🌱';
+  } else if (currentDay <= 16) {
+    phase = 'Ovulation Phase'; emoji = '✨';
+  } else {
+    phase = 'Luteal Phase'; emoji = '🌙';
+  }
+
+  return { day: currentDay, phase, emoji };
+}
+
 // Draw Radar Chart
 function drawRadarChart() {
   const canvas = document.getElementById("skinRadar");
   if (!canvas) return;
-
+  
   // Make canvas responsive
   const container = canvas.parentElement;
   const containerWidth = container.clientWidth;
@@ -833,473 +864,231 @@ function drawRadarChart() {
   canvas.width = size;
   canvas.height = size;
 
-  const ctx = canvas.getContext("2d");
-  const centerX = canvas.width / 2;
-  const centerY = canvas.height / 2;
-  const radius = Math.min(centerX, centerY) - 40;
-
-  const labels = ["Radiance", "Moisture", "Texture", "Pores", "Dark Circles", "Oiliness", "Redness"];
-
   const result = window.__skinAnalysisResult;
   const m = result?.metrics || {};
-  const data = [
-    m.radiance ?? 70,
-    m.moisture ?? 70,
-    m.texture ?? 70,
-    m.pores ?? 70,
-    m.dark_circles ?? 70,
-    m.oiliness ?? 70,
-    m.redness ?? 70,
-  ];
-  const numPoints = data.length;
+  const faceData = result?.face_data;
+  const landmarks = faceData?.landmarks || [];
+  const bbox = faceData?.bounding_box || {};
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const W = canvas.width;
+  const H = canvas.height;
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0, 0, W, H);
 
-  // Background circles
-  ctx.strokeStyle = "#E8E4F3";
-  ctx.lineWidth = 1;
-  for (let i = 1; i <= 5; i++) {
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, (radius / 5) * i, 0, Math.PI * 2);
-    ctx.stroke();
+  function scoreColor(score, alpha = 0.5) {
+    if (score >= 75) return `rgba(168, 230, 207, ${alpha})`;
+    if (score >= 50) return `rgba(255, 220, 150, ${alpha})`;
+    return `rgba(255, 160, 160, ${alpha})`;
   }
 
-  // Axes + labels
-  ctx.strokeStyle = "#E8E4F3";
-  ctx.lineWidth = 1;
-  for (let i = 0; i < numPoints; i++) {
-    const angle = (Math.PI * 2 * i) / numPoints - Math.PI / 2;
-    const x = centerX + radius * Math.cos(angle);
-    const y = centerY + radius * Math.sin(angle);
+  // Add padding around the face bbox so we don't crop too tight
+  const pad = 0.02;
+  const padTop = 0.06; // extra room for forehead/hair
 
-    ctx.beginPath();
-    ctx.moveTo(centerX, centerY);
-    ctx.lineTo(x, y);
-    ctx.stroke();
+  // Find chinBottom landmark to crop exactly at chin, not neck
+  const chinLandmark = landmarks.find(l => l.Type === "chinBottom");
+  const chinFrac = chinLandmark ? chinLandmark.Y + 0.02 : (bbox.Top ?? 0.1) + (bbox.Height ?? 0.8) + pad;
 
-    const labelX = centerX + (radius + 30) * Math.cos(angle);
-    const labelY = centerY + (radius + 30) * Math.sin(angle);
-    ctx.fillStyle = "#7A7A8E";
-    ctx.font = "12px Outfit";
-    ctx.textAlign = "center";
-    ctx.fillText(labels[i], labelX, labelY);
-  }
+  const cropLeft   = Math.max(0, (bbox.Left ?? 0.2) - pad);
+  const cropTop    = Math.max(0, (bbox.Top  ?? 0.1) - padTop);
+  const cropRight  = Math.min(1, (bbox.Left ?? 0.2) + (bbox.Width ?? 0.6) + pad);
+  const cropBottom = Math.min(1, chinFrac);
+  const cropW = cropRight  - cropLeft;
+  const cropH = cropBottom - cropTop;
 
-  // Data polygon
-  ctx.beginPath();
-  for (let i = 0; i < numPoints; i++) {
-    const angle = (Math.PI * 2 * i) / numPoints - Math.PI / 2;
-    const value = data[i] / 100;
-    const x = centerX + radius * value * Math.cos(angle);
-    const y = centerY + radius * value * Math.sin(angle);
-    if (i === 0) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
-  }
-  ctx.closePath();
-
-  const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-  gradient.addColorStop(0, "rgba(168, 230, 207, 0.3)");
-  gradient.addColorStop(1, "rgba(255, 182, 217, 0.3)");
-  ctx.fillStyle = gradient;
-  ctx.fill();
-  ctx.strokeStyle = "#FFB6D9";
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
-  // Data points
-  for (let i = 0; i < numPoints; i++) {
-    const angle = (Math.PI * 2 * i) / numPoints - Math.PI / 2;
-    const value = data[i] / 100;
-    const x = centerX + radius * value * Math.cos(angle);
-    const y = centerY + radius * value * Math.sin(angle);
-
-    ctx.beginPath();
-    ctx.arc(x, y, 4, 0, Math.PI * 2);
-    ctx.fillStyle = "#FFB6D9";
-    ctx.fill();
-  }
-}
-
-// Set canvas size on load and resize
-function initRadarChart() {
-  const canvas = document.getElementById('skinRadar');
-  if (canvas) {
-    drawRadarChart();
-  }
-}
-
-window.addEventListener('load', initRadarChart);
-window.addEventListener('resize', drawRadarChart);
-
-
-// ===== PRODUCT RECOMMENDATIONS =====
-// Set canvas size on load and resize
-function initRadarChart() {
-    const canvas = document.getElementById('skinRadar');
-    if (canvas) {
-        drawRadarChart();
-    }
-}
-
-window.addEventListener('load', initRadarChart);
-window.addEventListener('resize', drawRadarChart);
-
-
-// ===== PRODUCT RECOMMENDATIONS =====
-
-function generateProductRecommendations(skinAnalysis, cyclePhase, skinType) {
-    /**
-     * Generate personalized product recommendations based on:
-     * - Skin analysis results (acne, dryness, oiliness, etc.)
-     * - Cycle phase (menstrual, follicular, ovulation, luteal)
-     * - Skin type (from user profile)
-     */
-    
-    const products = [];
-    
-    // Get skin type from localStorage if not provided
-    if (!skinType) {
-        skinType = localStorage.getItem('skinType') || 'normal';
-    }
-    
-    // Get cycle phase (simplified - you can enhance this)
-    if (!cyclePhase) {
-        cyclePhase = 'follicular'; // Default
-    }
-    
-    // PRODUCT DATABASE
-    const productDatabase = {
-        // CLEANSERS
-        gentle_cleanser: {
-            name: "CeraVe Hydrating Facial Cleanser",
-            category: "Cleanser",
-            icon: "🧼",
-            description: "A mild, non-stripping cleanser that removes impurities while maintaining skin's natural moisture barrier.",
-            benefits: ["Hydrating", "pH-Balanced", "Fragrance-Free"],
-            ingredients: "Ceramides, Hyaluronic Acid, Glycerin",
-            forSkinTypes: ["dry", "sensitive", "normal"],
-            forConcerns: ["dryness", "sensitivity"],
-            cyclePhases: ["menstrual", "luteal"],
-            price: "$14.99",
-            rating: 4.6,
-            reviews: 45000,
-            amazonLink: "AMAZON_LINK_PLACEHOLDER_1" // Tu compañera reemplazará esto
-        },
-        foaming_cleanser: {
-            name: "La Roche-Posay Effaclar Cleanser",
-            category: "Cleanser",
-            icon: "🫧",
-            description: "Deep-cleansing formula that removes excess oil and unclogs pores without over-drying.",
-            benefits: ["Oil Control", "Pore Cleansing", "Refreshing"],
-            ingredients: "Salicylic Acid, Zinc, Glycerin",
-            forSkinTypes: ["oily", "combination", "acne-prone"],
-            forConcerns: ["oiliness", "acne", "large_pores"],
-            cyclePhases: ["ovulation", "follicular"],
-            price: "$15.99",
-            rating: 4.5,
-            reviews: 32000,
-            amazonLink: "AMAZON_LINK_PLACEHOLDER_2"
-        },
-        
-        // SERUMS
-        vitamin_c_serum: {
-            name: "TruSkin Vitamin C Serum",
-            category: "Serum",
-            icon: "✨",
-            description: "Powerful antioxidant serum that brightens skin, evens tone, and boosts radiance.",
-            benefits: ["Brightening", "Antioxidant", "Anti-Aging"],
-            ingredients: "Vitamin C 20%, Hyaluronic Acid, Vitamin E",
-            forSkinTypes: ["normal", "dry", "combination"],
-            forConcerns: ["dullness", "dark_spots", "uneven_tone"],
-            cyclePhases: ["ovulation", "follicular"],
-            price: "$19.99",
-            rating: 4.3,
-            reviews: 78000,
-            amazonLink: "AMAZON_LINK_PLACEHOLDER_3"
-        },
-        hyaluronic_serum: {
-            name: "The Ordinary Hyaluronic Acid 2% + B5",
-            category: "Serum",
-            icon: "💧",
-            description: "Intense hydration serum that plumps skin and reduces the appearance of fine lines.",
-            benefits: ["Deep Hydration", "Plumping", "Soothing"],
-            ingredients: "Hyaluronic Acid, Vitamin B5",
-            forSkinTypes: ["dry", "sensitive", "normal", "combination"],
-            forConcerns: ["dryness", "fine_lines", "dehydration"],
-            cyclePhases: ["menstrual", "luteal"],
-            price: "$7.99",
-            rating: 4.5,
-            reviews: 95000,
-            amazonLink: "AMAZON_LINK_PLACEHOLDER_4"
-        },
-        niacinamide_serum: {
-            name: "The Ordinary Niacinamide 10% + Zinc 1%",
-            category: "Serum",
-            icon: "🌟",
-            description: "Multi-tasking serum that controls oil, minimizes pores, and reduces inflammation.",
-            benefits: ["Oil Control", "Pore Minimizing", "Anti-Inflammatory"],
-            ingredients: "Niacinamide 10%, Zinc 1%",
-            forSkinTypes: ["oily", "combination", "acne-prone"],
-            forConcerns: ["oiliness", "acne", "large_pores", "redness"],
-            cyclePhases: ["luteal", "ovulation"],
-            price: "$5.99",
-            rating: 4.4,
-            reviews: 120000,
-            amazonLink: "AMAZON_LINK_PLACEHOLDER_5"
-        },
-        retinol_serum: {
-            name: "RoC Retinol Correxion Deep Wrinkle Serum",
-            category: "Treatment",
-            icon: "🔬",
-            description: "Anti-aging powerhouse that accelerates cell turnover and reduces wrinkles.",
-            benefits: ["Anti-Aging", "Smoothing", "Acne Prevention"],
-            ingredients: "Retinol, Hyaluronic Acid, Glycerin",
-            forSkinTypes: ["normal", "oily", "combination", "acne-prone"],
-            forConcerns: ["wrinkles", "acne", "texture"],
-            cyclePhases: ["follicular", "ovulation"],
-            price: "$22.99",
-            rating: 4.4,
-            reviews: 28000,
-            amazonLink: "AMAZON_LINK_PLACEHOLDER_6"
-        },
-        
-        // MOISTURIZERS
-        rich_moisturizer: {
-            name: "CeraVe Moisturizing Cream",
-            category: "Moisturizer",
-            icon: "🧴",
-            description: "Deeply nourishing cream that repairs and strengthens the skin barrier.",
-            benefits: ["Intense Hydration", "Barrier Repair", "Soothing"],
-            ingredients: "Ceramides, Hyaluronic Acid, Petrolatum",
-            forSkinTypes: ["dry", "sensitive"],
-            forConcerns: ["dryness", "sensitivity", "barrier_damage"],
-            cyclePhases: ["menstrual", "luteal"],
-            price: "$16.99",
-            rating: 4.7,
-            reviews: 67000,
-            amazonLink: "AMAZON_LINK_PLACEHOLDER_7"
-        },
-        lightweight_moisturizer: {
-            name: "Neutrogena Hydro Boost Water Gel",
-            category: "Moisturizer",
-            icon: "💦",
-            description: "Oil-free gel formula that hydrates without clogging pores or adding shine.",
-            benefits: ["Oil-Free", "Non-Comedogenic", "Lightweight"],
-            ingredients: "Hyaluronic Acid, Glycerin, Dimethicone",
-            forSkinTypes: ["oily", "combination", "acne-prone"],
-            forConcerns: ["oiliness", "acne"],
-            cyclePhases: ["ovulation", "follicular"],
-            price: "$17.99",
-            rating: 4.5,
-            reviews: 52000,
-            amazonLink: "AMAZON_LINK_PLACEHOLDER_8"
-        },
-        
-        // TREATMENTS
-        salicylic_treatment: {
-            name: "Paula's Choice 2% BHA Liquid Exfoliant",
-            category: "Treatment",
-            icon: "🎯",
-            description: "Targeted treatment that quickly reduces breakouts and prevents new ones.",
-            benefits: ["Acne Fighting", "Pore Clearing", "Exfoliating"],
-            ingredients: "Salicylic Acid 2%, Green Tea Extract",
-            forSkinTypes: ["oily", "combination", "acne-prone"],
-            forConcerns: ["acne", "breakouts"],
-            cyclePhases: ["luteal", "menstrual"],
-            price: "$32.00",
-            rating: 4.5,
-            reviews: 41000,
-            amazonLink: "AMAZON_LINK_PLACEHOLDER_9"
-        },
-        azelaic_acid: {
-            name: "The Ordinary Azelaic Acid Suspension 10%",
-            category: "Treatment",
-            icon: "🌸",
-            description: "Multi-benefit treatment for acne, redness, and hyperpigmentation.",
-            benefits: ["Anti-Acne", "Brightening", "Anti-Redness"],
-            ingredients: "Azelaic Acid 10%",
-            forSkinTypes: ["sensitive", "acne-prone", "combination"],
-            forConcerns: ["acne", "redness", "dark_spots"],
-            cyclePhases: ["luteal", "menstrual"],
-            price: "$12.99",
-            rating: 4.3,
-            reviews: 38000,
-            amazonLink: "AMAZON_LINK_PLACEHOLDER_10"
-        },
-        
-        // SUNSCREEN
-        mineral_sunscreen: {
-            name: "EltaMD UV Clear Broad-Spectrum SPF 46",
-            category: "Sunscreen",
-            icon: "☀️",
-            description: "Gentle mineral sunscreen that protects without irritation.",
-            benefits: ["Broad Spectrum", "Oil-Free", "Lightweight"],
-            ingredients: "Zinc Oxide 9%, Niacinamide, Hyaluronic Acid",
-            forSkinTypes: ["sensitive", "dry", "normal"],
-            forConcerns: ["sensitivity", "sun_protection"],
-            cyclePhases: ["menstrual", "follicular", "ovulation", "luteal"],
-            price: "$39.00",
-            rating: 4.6,
-            reviews: 15000,
-            amazonLink: "AMAZON_LINK_PLACEHOLDER_11"
-        },
-        chemical_sunscreen: {
-            name: "La Roche-Posay Anthelios Melt-In Milk SPF 60",
-            category: "Sunscreen",
-            icon: "🌞",
-            description: "Invisible, lightweight sunscreen perfect for oily skin.",
-            benefits: ["Matte Finish", "Oil-Free", "Water-Resistant"],
-            ingredients: "Avobenzone, Homosalate, Octisalate",
-            forSkinTypes: ["oily", "combination", "acne-prone"],
-            forConcerns: ["oiliness", "sun_protection"],
-            cyclePhases: ["menstrual", "follicular", "ovulation", "luteal"],
-            price: "$35.99",
-            rating: 4.5,
-            reviews: 22000,
-            amazonLink: "AMAZON_LINK_PLACEHOLDER_12"
-        }
+  // Convert original image fraction → canvas pixel
+  // by mapping the cropped region to fill the canvas
+  function fc(fracX, fracY) {
+    return {
+      x: ((fracX - cropLeft) / cropW) * W,
+      y: ((fracY - cropTop)  / cropH) * H,
     };
-    
-    // RECOMMENDATION LOGIC
-    
-    // 1. CLEANSER - Based on skin type
-    if (skinType === 'dry' || skinType === 'sensitive') {
-        products.push({
-            ...productDatabase.gentle_cleanser,
-            why: `Perfect for ${skinType} skin. Your skin needs gentle cleansing to avoid stripping natural oils, especially during ${cyclePhase} phase.`
-        });
-    } else if (skinType === 'oily' || skinType === 'acne-prone' || skinType === 'combination') {
-        products.push({
-            ...productDatabase.foaming_cleanser,
-            why: `Ideal for ${skinType} skin. Controls excess oil and prevents breakouts, especially important during ${cyclePhase} phase.`
-        });
-    }
-    
-    // 2. SERUM - Based on skin analysis + cycle phase
-    if (skinAnalysis && skinAnalysis.acne_detected) {
-        // Acne detected
-        if (cyclePhase === 'luteal' || cyclePhase === 'menstrual') {
-            products.push({
-                ...productDatabase.niacinamide_serum,
-                why: "Acne detected + hormonal phase. Niacinamide reduces inflammation and controls oil production during PMS/period."
-            });
-            products.push({
-                ...productDatabase.salicylic_treatment,
-                why: "Target active breakouts with this spot treatment. Hormonal acne needs targeted care during luteal/menstrual phase."
-            });
-        } else {
-            products.push({
-                ...productDatabase.retinol_serum,
-                why: "Acne detected + follicular/ovulation phase. Perfect time for retinol - prevents future breakouts and improves texture."
-            });
-        }
-    } else if (skinAnalysis && skinAnalysis.dryness_detected) {
-        // Dryness detected
-        products.push({
-            ...productDatabase.hyaluronic_serum,
-            why: "Dryness detected. Hyaluronic acid provides intense hydration without heaviness."
-        });
-    } else if (cyclePhase === 'ovulation' || cyclePhase === 'follicular') {
-        // Peak glow phase
-        products.push({
-            ...productDatabase.vitamin_c_serum,
-            why: `${cyclePhase} phase = peak glow time! Vitamin C boosts your natural radiance and evens skin tone.`
-        });
-    } else {
-        // Default serum
-        products.push({
-            ...productDatabase.niacinamide_serum,
-            why: "Multi-tasking serum that balances oil, minimizes pores, and reduces redness. Perfect for all skin types."
-        });
-    }
-    
-    // 3. MOISTURIZER - Based on skin type
-    if (skinType === 'dry' || skinType === 'sensitive') {
-        products.push({
-            ...productDatabase.rich_moisturizer,
-            why: `${skinType} skin needs rich hydration. This cream repairs your skin barrier and locks in moisture.`
-        });
-    } else if (skinType === 'oily' || skinType === 'acne-prone' || skinType === 'combination') {
-        products.push({
-            ...productDatabase.lightweight_moisturizer,
-            why: `${skinType} skin needs hydration without heaviness. This gel moisturizer won't clog pores or add shine.`
-        });
-    }
-    
-    // 4. SUNSCREEN - Always recommend (based on skin type)
-    if (skinType === 'sensitive' || skinType === 'dry') {
-        products.push({
-            ...productDatabase.mineral_sunscreen,
-            why: "Gentle mineral sunscreen perfect for sensitive skin. Protects without irritation. Non-negotiable daily step!"
-        });
-    } else {
-        products.push({
-            ...productDatabase.chemical_sunscreen,
-            why: "Lightweight, invisible sunscreen that won't make your skin greasy. Essential daily protection!"
-        });
-    }
-    
-    // Return only top 3 most important products
-    return products.slice(0, 3);
-}
+  }
 
-function displayProductRecommendations(skinAnalysis, cyclePhase, skinType) {
-    const productsGrid = document.getElementById('products-grid');
-    if (!productsGrid) return;
-    
-    // Generate recommendations (limited to 3)
-    const products = generateProductRecommendations(skinAnalysis, cyclePhase, skinType);
-    
-    // Clear existing products
-    productsGrid.innerHTML = '';
-    
-    // Display products with ranking badges
-    products.forEach((product, index) => {
-        const rankBadges = ['🥇', '🥈', '🥉'];
-        const rankLabels = ['Top Pick', 'Essential', 'Recommended'];
-        const productCard = document.createElement('div');
-        productCard.className = 'product-card';
-        
-        productCard.innerHTML = `
-            <div class="product-rank-badge">${rankBadges[index]} <span>${rankLabels[index]}</span></div>
-            <div class="product-header">
-                <div class="product-icon">${product.icon}</div>
-                <div class="product-info">
-                    <div class="product-name">${product.name}</div>
-                    <div class="product-category">${product.category}</div>
-                    <div class="product-rating">
-                        <div class="stars">${'⭐'.repeat(Math.floor(product.rating))}${product.rating % 1 >= 0.5 ? '½' : ''}</div>
-                        <span class="rating-count">(${(product.reviews / 1000).toFixed(1)}k reviews)</span>
-                    </div>
-                </div>
-            </div>
-            <p class="product-description">${product.description}</p>
-            <div class="product-benefits">
-                ${product.benefits.map(benefit => `<span class="benefit-tag">${benefit}</span>`).join('')}
-            </div>
-            <div class="product-why">
-                <div class="product-why-title">💜 Why this for you?</div>
-                <div class="product-why-text">${product.why}</div>
-            </div>
-            <div class="product-ingredients">
-                <div class="ingredients-title">Key Ingredients</div>
-                <div class="ingredients-list">${product.ingredients}</div>
-            </div>
-            <div class="product-footer">
-                <a href="${product.amazonLink}" target="_blank" rel="noopener noreferrer" class="amazon-buy-btn">
-                    <span class="amazon-icon">🛍️</span>
-                    <span>Buy on Amazon</span>
-                </a>
-            </div>
-        `;
-        
-        productsGrid.appendChild(productCard);
+  // Build landmark lookup in canvas coords
+  const lm = {};
+  landmarks.forEach(l => {
+    lm[l.Type] = fc(l.X, l.Y);
+  });
+
+  function drawEverything(img) {
+    // ── 1. Draw cropped face region filling the canvas ────────────────
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(W / 2, H / 2.2, W / 2, H / 2.1, 0, 0, Math.PI * 2);
+    ctx.clip();
+
+    if (img) {
+      const srcX = cropLeft * img.naturalWidth;
+      const srcY = cropTop  * img.naturalHeight;
+      const srcW = cropW    * img.naturalWidth;
+      const srcH = cropH    * img.naturalHeight;
+      ctx.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, W, H);
+
+      // Subtle dark overlay so zone colours pop
+      ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
+      ctx.fillRect(0, 0, W, H);
+    } else {
+      ctx.fillStyle = "#f5ebff";
+      ctx.fillRect(0, 0, W, H);
+    }
+
+    ctx.restore();
+
+    // ── 2. Face outline using jawline landmarks ───────────────────────
+    const jawPoints = [
+      "upperJawlineLeft", "midJawlineLeft", "chinBottom",
+      "midJawlineRight",  "upperJawlineRight",
+    ].map(t => lm[t]).filter(Boolean);
+
+    if (jawPoints.length >= 3) {
+      ctx.beginPath();
+      ctx.moveTo(jawPoints[0].x, jawPoints[0].y);
+      jawPoints.forEach(p => ctx.lineTo(p.x, p.y));
+      ctx.closePath();
+      ctx.strokeStyle = "rgba(255,255,255,0.7)";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    // ── 3. Face centre & size from bbox remapped to canvas ────────────
+    const faceTopLeft     = fc(bbox.Left ?? 0.2,  bbox.Top  ?? 0.1);
+    const faceBottomRight = fc((bbox.Left ?? 0.2) + (bbox.Width ?? 0.6),
+                               (bbox.Top  ?? 0.1) + (bbox.Height ?? 0.8));
+    const fW = faceBottomRight.x - faceTopLeft.x;
+    const fH = faceBottomRight.y - faceTopLeft.y;
+    const fCX = faceTopLeft.x + fW / 2;
+    const fCY = faceTopLeft.y + fH / 2;
+
+    // ── 4. Zones using real landmarks ────────────────────────────────
+    const eyeL       = lm["eyeLeft"]        ?? { x: fCX - fW * 0.2, y: fCY - fH * 0.15 };
+    const eyeR       = lm["eyeRight"]       ?? { x: fCX + fW * 0.2, y: fCY - fH * 0.15 };
+    const nose       = lm["nose"]           ?? { x: fCX,             y: fCY };
+    const mouthUp    = lm["mouthUp"]        ?? { x: fCX,             y: fCY + fH * 0.2 };
+    const chinBottom = lm["chinBottom"]     ?? { x: fCX,             y: fCY + fH * 0.4 };
+    const browL      = lm["leftEyeBrowUp"]  ?? { x: eyeL.x,          y: eyeL.y - fH * 0.08 };
+    const browR      = lm["rightEyeBrowUp"] ?? { x: eyeR.x,          y: eyeR.y - fH * 0.08 };
+    const jawL       = lm["midJawlineLeft"] ?? { x: faceTopLeft.x + fW * 0.1, y: fCY + fH * 0.2 };
+    const jawR       = lm["midJawlineRight"]?? { x: faceTopLeft.x + fW * 0.9, y: fCY + fH * 0.2 };
+
+    const zones = [
+      {
+        label: "Forehead", key: "radiance",
+        cx: (eyeL.x + eyeR.x) / 2,
+        cy: browL.y - fH * 0.08,
+        rx: fW * 0.25, ry: fH * 0.07,
+      },
+      {
+        label: "Left Eye", key: "dark_circles",
+        cx: eyeL.x, cy: eyeL.y,
+        rx: fW * 0.12, ry: fH * 0.05,
+      },
+      {
+        label: "Right Eye", key: "dark_circles",
+        cx: eyeR.x, cy: eyeR.y,
+        rx: fW * 0.12, ry: fH * 0.05,
+      },
+      {
+        label: "Nose", key: "pores",
+        cx: nose.x, cy: nose.y,
+        rx: fW * 0.09, ry: fH * 0.08,
+      },
+      {
+        label: "Left Cheek", key: "oiliness",
+        cx: jawL.x + fW * 0.08, cy: (eyeL.y + mouthUp.y) / 2,
+        rx: fW * 0.12, ry: fH * 0.09,
+      },
+      {
+        label: "Right Cheek", key: "redness",
+        cx: jawR.x - fW * 0.08, cy: (eyeR.y + mouthUp.y) / 2,
+        rx: fW * 0.12, ry: fH * 0.09,
+      },
+      {
+        label: "Lips", key: "moisture",
+        cx: mouthUp.x,
+        cy: mouthUp.y + fH * 0.03,
+        rx: fW * 0.15, ry: fH * 0.05,
+      },
+      {
+        label: "Chin", key: "texture",
+        cx: chinBottom.x,
+        cy: chinBottom.y - fH * 0.03,
+        rx: fW * 0.12, ry: fH * 0.05,
+      },
+    ];
+
+    // ── 5. Draw zones ─────────────────────────────────────────────────
+    zones.forEach(zone => {
+      const score = m[zone.key] ?? 70;
+
+      ctx.beginPath();
+      ctx.ellipse(zone.cx, zone.cy, zone.rx, zone.ry, 0, 0, Math.PI * 2);
+      ctx.fillStyle = scoreColor(score, 0.4);
+      ctx.fill();
+      ctx.strokeStyle = scoreColor(score, 1);
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      ctx.save();
+      ctx.shadowColor = "rgba(0,0,0,0.9)";
+      ctx.shadowBlur = 4;
+      ctx.fillStyle = "#FFFFFF";
+      ctx.font = "bold 10px Outfit, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(zone.label, zone.cx, zone.cy - zone.ry - 4);
+
+      const pillW = 26, pillH = 14;
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = scoreColor(score, 0.95);
+      ctx.beginPath();
+      ctx.roundRect(zone.cx - pillW / 2, zone.cy + zone.ry + 2, pillW, pillH, 7);
+      ctx.fill();
+      ctx.fillStyle = "#2D2250";
+      ctx.font = "bold 9px Outfit, sans-serif";
+      ctx.fillText(score, zone.cx, zone.cy + zone.ry + 12);
+      ctx.restore();
     });
+
+    // ── 6. Legend ─────────────────────────────────────────────────────
+    const legend = [
+      { label: "Good (75+)",   color: "rgba(168,230,207,0.9)" },
+      { label: "Fair (50–74)", color: "rgba(255,220,150,0.9)" },
+      { label: "Needs care",   color: "rgba(255,160,160,0.9)" },
+    ];
+    legend.forEach((item, i) => {
+      const lx = 8, ly = H - 54 + i * 18;
+      ctx.fillStyle = "rgba(0,0,0,0.55)";
+      ctx.beginPath();
+      ctx.roundRect(lx - 2, ly, 88, 15, 3);
+      ctx.fill();
+      ctx.fillStyle = item.color;
+      ctx.beginPath();
+      ctx.roundRect(lx + 1, ly + 2, 10, 10, 2);
+      ctx.fill();
+      ctx.fillStyle = "#FFFFFF";
+      ctx.font = "9px Outfit, sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText(item.label, lx + 14, ly + 11);
+    });
+  }
+
+  if (capturedImageData) {
+    const img = new Image();
+    img.onload = () => drawEverything(img);
+    img.src = capturedImageData;
+  } else {
+    drawEverything(null);
+  }
 }
 
-// Call this function when showing results
-// Example: displayProductRecommendations(skinAnalysisData, 'luteal', 'acne-prone');
-
+// Set canvas size on load
+window.addEventListener("load", () => {
+  const canvas = document.getElementById("skinRadar");
+  if (canvas) {
+    canvas.width = 380;
+    canvas.height = 520;
+  }
+});
 
 // ===== SCAN HISTORY FUNCTIONALITY =====
 
@@ -1307,27 +1096,43 @@ function displayProductRecommendations(skinAnalysis, cyclePhase, skinType) {
  * Load scan history from localStorage
  * In production, this would fetch from backend API
  */
-function loadScanHistory() {
+async function loadScanHistory() {
     const userName = localStorage.getItem('userName');
-    if (!userName) {
-        console.log('No user logged in');
-        return;
+    if (!userName) return;
+
+    const apiConfig = typeof API_CONFIG !== "undefined" ? API_CONFIG : window.API_CONFIG;
+
+    try {
+        const resp = await fetch(`${apiConfig.BASE_URL}/skin/history?user=${encodeURIComponent(userName)}`);
+        if (!resp.ok) throw new Error("Failed to fetch history");
+        const data = await resp.json();
+
+        const scans = (data.analyses || []).map(entry => ({
+            date: entry.created_at,
+            overallScore: entry.overall_skin_health || 0,
+            cycleDay: entry.cycle_day || entry.cycleDay || 0,
+            cyclePhase: entry.cycle_phase || entry.cyclePhase || 'follicular',
+            metrics: {
+                radiance: entry.metrics?.radiance || 0,
+                texture: entry.metrics?.texture || 0,
+                hydration: entry.metrics?.moisture || 0,
+                spots: entry.metrics?.pores || 0,
+                darkCircles: entry.metrics?.dark_circles || 0,
+            },
+            summary: entry.summary || ''
+        }));
+
+        const scanCountEl = document.getElementById('scan-count');
+        if (scanCountEl) {
+            scanCountEl.textContent = `${scans.length} ${scans.length === 1 ? 'scan' : 'scans'}`;
+        }
+
+        displayScanHistory(scans);
+        window.__scanHistory = scans;
+
+    } catch (err) {
+        console.error("Failed to load scan history:", err);
     }
-    
-    // Get scans from localStorage (temporary storage)
-    const scansKey = `skinScans_${userName}`;
-    const scans = JSON.parse(localStorage.getItem(scansKey) || '[]');
-    
-    console.log(`Loaded ${scans.length} scans for user ${userName}`);
-    
-    // Update scan count
-    const scanCountEl = document.getElementById('scan-count');
-    if (scanCountEl) {
-        scanCountEl.textContent = `${scans.length} ${scans.length === 1 ? 'scan' : 'scans'}`;
-    }
-    
-    // Display scans
-    displayScanHistory(scans);
 }
 
 /**
@@ -1336,9 +1141,9 @@ function loadScanHistory() {
 function displayScanHistory(scans) {
     const historyList = document.getElementById('history-list');
     const emptyHistory = document.getElementById('empty-history');
-    
+
     if (!historyList) return;
-    
+
     if (scans.length === 0) {
         // Show empty state
         if (emptyHistory) {
@@ -1346,22 +1151,21 @@ function displayScanHistory(scans) {
         }
         return;
     }
-    
+
     // Hide empty state
     if (emptyHistory) {
         emptyHistory.style.display = 'none';
     }
-    
+
     // Sort scans by date (newest first)
     scans.sort((a, b) => new Date(b.date) - new Date(a.date));
-    
+
     // Create history cards
     scans.forEach((scan, index) => {
         const card = createHistoryCard(scan, index);
         historyList.appendChild(card);
     });
 }
-
 /**
  * Create a history card element
  */
@@ -1369,11 +1173,11 @@ function createHistoryCard(scan, index) {
     const card = document.createElement('div');
     card.className = 'history-card';
     card.onclick = () => viewScanReport(index);
-    
+
     // Determine score class
     const scoreClass = scan.overallScore >= 80 ? 'score-high' : 
                        scan.overallScore >= 60 ? 'score-medium' : 'score-low';
-    
+
     // Format date
     const scanDate = new Date(scan.date);
     const dateStr = scanDate.toLocaleDateString('en-US', { 
@@ -1381,19 +1185,17 @@ function createHistoryCard(scan, index) {
         day: 'numeric', 
         year: 'numeric' 
     });
-    
-    // Get cycle phase emoji
+ // Get cycle phase emoji
     const phaseEmoji = {
         'menstrual': '🌙',
         'follicular': '🌸',
         'ovulation': '✨',
         'luteal': '🌺'
     }[scan.cyclePhase] || '🌸';
-    
+
     card.innerHTML = `
         <div class="history-score ${scoreClass}">
             <div class="history-score-number">${scan.overallScore}</div>
-            <div class="history-score-label">/100</div>
         </div>
         
         <div class="history-info">
@@ -1422,7 +1224,7 @@ function createHistoryCard(scan, index) {
             View Report →
         </button>
     `;
-    
+
     return card;
 }
 
@@ -1432,26 +1234,17 @@ function createHistoryCard(scan, index) {
 function viewScanReport(scanIndex) {
     const userName = localStorage.getItem('userName');
     if (!userName) return;
-    
-    // Get scans from localStorage
-    const scansKey = `skinScans_${userName}`;
-    const scans = JSON.parse(localStorage.getItem(scansKey) || '[]');
-    
-    if (scanIndex < 0 || scanIndex >= scans.length) {
-        console.error('Invalid scan index');
-        return;
-    }
-    
+
     const scan = scans[scanIndex];
-    
-    // Store current scan in localStorage for the results view
-    localStorage.setItem('currentScanReport', JSON.stringify(scan));
-    
-    // Load the scan data into the results view
     loadScanIntoResultsView(scan);
-    
-    // Show results view
-    document.querySelector('.skin-dashboard-layout').style.display = 'none';
+
+    // Hide main content
+    document.querySelector('.method-selection-single').style.display = 'none';
+    document.querySelector('.scan-history-section').style.display = 'none';
+    document.querySelector('.page-header').style.display = 'none';
+    document.querySelector('.back-navigation').style.display = 'none';
+
+    // Show results
     document.getElementById('results-view').style.display = 'block';
 }
 
@@ -1468,16 +1261,16 @@ function loadScanIntoResultsView(scan) {
             'ovulation': '✨',
             'luteal': '🌺'
         }[scan.cyclePhase] || '🌸';
-        
+
         reportDateEl.textContent = `Day ${scan.cycleDay} • ${scan.cyclePhase.charAt(0).toUpperCase() + scan.cyclePhase.slice(1)} Phase ${phaseEmoji}`;
     }
-    
+
     // Update overall score
     const scoreNumber = document.querySelector('.score-number');
     if (scoreNumber) {
         scoreNumber.textContent = scan.overallScore;
     }
-    
+
     // Update score message
     const scoreMessage = document.querySelector('.score-message');
     if (scoreMessage) {
@@ -1489,7 +1282,7 @@ function loadScanIntoResultsView(scan) {
             scoreMessage.textContent = 'Let\'s work on improving your skin health 💜';
         }
     }
-    
+
     // Update metrics
     const metrics = scan.metrics;
     const metricItems = document.querySelectorAll('.metric-item');
@@ -1500,7 +1293,7 @@ function loadScanIntoResultsView(scan) {
         metricItems[3].querySelector('.metric-value').textContent = metrics.texture;
         metricItems[4].querySelector('.metric-value').textContent = metrics.darkCircles;
     }
-    
+
     // Update radar chart if it exists
     if (typeof updateRadarChart === 'function') {
         updateRadarChart(metrics);
@@ -1516,19 +1309,19 @@ function saveScanToHistory(scanData) {
         console.error('No user logged in');
         return;
     }
-    
+
     // Get existing scans
     const scansKey = `skinScans_${userName}`;
     const scans = JSON.parse(localStorage.getItem(scansKey) || '[]');
-    
+
     // Add new scan
     scans.push(scanData);
-    
+
     // Save back to localStorage
     localStorage.setItem(scansKey, JSON.stringify(scans));
-    
+
     console.log('Scan saved to history');
-    
+
     // Reload history display
     const historyList = document.getElementById('history-list');
     if (historyList) {
@@ -1537,15 +1330,17 @@ function saveScanToHistory(scanData) {
     }
 }
 
-// Add back button functionality for results view
-document.addEventListener('DOMContentLoaded', () => {
-    const saveBtn = document.querySelector('.save-btn');
-    if (saveBtn) {
-        // Change "Save Report" to "Back to History"
-        saveBtn.textContent = 'Back to History';
-        saveBtn.onclick = () => {
-            document.getElementById('results-view').style.display = 'none';
-            document.querySelector('.skin-dashboard-layout').style.display = 'grid';
-        };
-    }
+document.addEventListener("DOMContentLoaded", () => {
+  applyTheme();
+  loadUserProfile();
+  loadScanHistory(); // add this if not already there
+
+  // Enable accept button when consent checkbox is ticked
+  const consentCheck = document.getElementById("consent-check");
+  const acceptBtn = document.getElementById("accept-btn");
+  if (consentCheck && acceptBtn) {
+    consentCheck.addEventListener("change", () => {
+      acceptBtn.disabled = !consentCheck.checked;
+    });
+  }
 });
