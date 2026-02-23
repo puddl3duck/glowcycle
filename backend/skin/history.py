@@ -1,6 +1,7 @@
 import json
 import boto3
 import logging
+import decimal
 from datetime import datetime
 from typing import Optional
 
@@ -10,7 +11,12 @@ logger.setLevel(logging.INFO)
 dynamodb = boto3.resource("dynamodb")
 skin_table = dynamodb.Table("GlowCycleTable")
 
-
+class DecimalEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, decimal.Decimal):
+            return int(obj) if obj % 1 == 0 else float(obj)
+        return super().default(obj)
+    
 def save_skin_analysis(event):
     """
     POST - Save skin analysis result to DynamoDB.
@@ -42,6 +48,8 @@ def save_skin_analysis(event):
             "am_routine": analysis.get("am_routine", []),
             "pm_routine": analysis.get("pm_routine", []),
             "tips": analysis.get("tips", []),
+            "cycle_day": analysis.get("cycleDay"),    
+            "cycle_phase": analysis.get("cyclePhase"), 
         }
 
         logger.info(f"Saving skin analysis for user: {user}, sk: {sk}")
@@ -55,7 +63,7 @@ def save_skin_analysis(event):
                 "user": user,
                 "date": sk,
                 "message": "Skin analysis saved successfully"
-            })
+            },cls=DecimalEncoder)
         }
 
     except ValueError as e:
@@ -93,7 +101,7 @@ def get_skin_analyses(event):
             "headers": {"Content-Type": "application/json", "Access-Control-Allow-Origin": "*"},
             "body": json.dumps({
                 "analyses": items,
-            })
+            },cls=DecimalEncoder)
         }
 
     except ValueError as e:
@@ -107,21 +115,31 @@ def get_skin_analyses(event):
 def lambda_handler(event, context):
     try:
         method = event.get("httpMethod", "")
+
         if method == "OPTIONS":
-            return {"statusCode": 200, "headers": {"Access-Control-Allow-Origin": "*"}, "body": ""}
+            return {
+                "statusCode": 200,
+                "headers": {
+                    "Access-Control-Allow-Origin": "*",
+                    "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+                    "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
+                },
+                "body": ""
+            }
         if method == "POST":
             return save_skin_analysis(event)
         if method == "GET":
             return get_skin_analyses(event)
+
         return {
             "statusCode": 405,
             "headers": {"Content-Type": "application/json", "Access-Control-Allow-Origin": "*"},
-            "body": json.dumps({"error": f"Unsupported method: {method}"})
+            "body": json.dumps({"error": f"Unsupported method: {method}"}, cls=DecimalEncoder)
         }
     except Exception as e:
         logger.error(f"Lambda handler error: {str(e)}")
         return {
             "statusCode": 500,
             "headers": {"Content-Type": "application/json", "Access-Control-Allow-Origin": "*"},
-            "body": json.dumps({"error": str(e)})
+            "body": json.dumps({"error": str(e)},cls=DecimalEncoder)
         }
