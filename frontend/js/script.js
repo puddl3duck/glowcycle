@@ -719,6 +719,9 @@ function goToDashboard() {
     const isJudgeAccount = localStorage.getItem('isJudgeAccount') === 'true';
     const userName = localStorage.getItem('userName');
     
+    console.log('🔵 goToDashboard called - userName from localStorage:', userName);
+    console.log('🔵 isJudgeAccount:', isJudgeAccount);
+    
     // Get form inputs
     const userNameInput = document.getElementById('user-name');
     const ageInput = document.getElementById('age');
@@ -726,8 +729,8 @@ function goToDashboard() {
     
     let hasError = false;
     
-    // Validate name ONLY if NOT a judge account
-    if (!isJudgeAccount) {
+    // Validate name ONLY if NOT a judge account AND userName not already set
+    if (!isJudgeAccount && !userName) {
         if (!userNameInput || !userNameInput.value.trim()) {
             showPage('questionnaire-page');
             document.querySelectorAll('.question-card').forEach(card => card.classList.remove('active'));
@@ -787,12 +790,20 @@ function goToDashboard() {
     }
     
     // All validations passed - save data
-    if (!isJudgeAccount && userNameInput) {
+    // CRITICAL: DO NOT overwrite userName if it's already set (from createUserAccount)
+    // Only set it if it doesn't exist (for judge accounts or edge cases)
+    if (!userName && !isJudgeAccount && userNameInput) {
         const displayName = userNameInput.value.trim();
-        localStorage.setItem('userName', displayName.toLowerCase().replace(/\s+/g, '')); // ID: lowercase, no spaces
-        localStorage.setItem('userDisplayName', displayName); // Display name: as entered
+        const normalizedUserName = displayName.toLowerCase().replace(/\s+/g, '');
+        console.log('⚠️ Setting userName in goToDashboard (should have been set earlier):', normalizedUserName);
+        localStorage.setItem('userName', normalizedUserName);
+        localStorage.setItem('userDisplayName', displayName);
     }
-    // For judge accounts, userName and userDisplayName are already set from login
+    
+    console.log('✅ Final userName before saving other data:', localStorage.getItem('userName'));
+    
+    // Save other profile data (age, period, skin type, cycle days)
+    // For judge accounts, userName and userDisplayName are already set from handleSignIn()Name are already set from login
     
     localStorage.setItem('userAge', ageInput.value);
     
@@ -817,8 +828,12 @@ function goToDashboard() {
     localStorage.setItem('skinType', selectedSkinType);
     
     // Mark setup as complete - SAVE TO BACKEND
-    if (userName) {
-        console.log('🔵 Saving setup completion to backend for user:', userName);
+    // CRITICAL: Get userName from localStorage AFTER it's been set
+    const finalUserName = localStorage.getItem('userName');
+    console.log('🔵 Final userName for backend save:', finalUserName);
+    
+    if (finalUserName) {
+        console.log('🔵 Saving setup completion to backend for user:', finalUserName);
         
         if (isJudgeAccount) {
             // Prepare profile data for judges
@@ -832,11 +847,13 @@ function goToDashboard() {
             };
             
             // Save to backend (async, don't wait)
-            saveJudgeSetupToBackend(userName, profileData);
+            saveJudgeSetupToBackend(finalUserName, profileData);
         } else {
             // For regular users, just mark setup as completed
-            markUserSetupComplete(userName);
+            markUserSetupComplete(finalUserName);
         }
+    } else {
+        console.error('❌ ERROR: userName is null in goToDashboard - cannot save to backend');
     }
     
     completeOnboarding();
@@ -1304,6 +1321,7 @@ function confirmLogout() {
     localStorage.removeItem('userName');
     localStorage.removeItem('userDisplayName');
     localStorage.removeItem('onboardingCompleted');
+    localStorage.removeItem('isJudgeAccount');
     
     closeLogoutModal();
     
@@ -1423,8 +1441,13 @@ async function handleSignIn() {
     
     // Regular user account - try backend first, fallback to localStorage
     try {
+        // Normalize username for comparison
+        const normalizedInput = username.toLowerCase().replace(/\s+/g, '');
+        
         // Try backend authentication first
         const API_BASE = API_CONFIG?.BASE_URL || 'https://7ofiibs7k7.execute-api.ap-southeast-2.amazonaws.com/prod';
+        
+        console.log('🔵 Attempting backend authentication for:', normalizedInput);
         
         try {
             const response = await fetch(`${API_BASE}/user/authenticate`, {
@@ -1433,7 +1456,7 @@ async function handleSignIn() {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    username: username,
+                    username: normalizedInput,
                     password: password
                 })
             });
@@ -1441,7 +1464,9 @@ async function handleSignIn() {
             if (response.ok) {
                 const data = await response.json();
                 
-                // Backend authentication successful
+                console.log('✅ Backend authentication successful:', data);
+                
+                // Backend authentication successful - SAVE TO LOCALSTORAGE
                 localStorage.setItem('userName', data.username);
                 localStorage.setItem('userDisplayName', data.displayName);
                 localStorage.setItem('isJudgeAccount', 'false');
@@ -1459,24 +1484,32 @@ async function handleSignIn() {
                 
                 console.log('✅ User logged in via backend:', data.username);
                 return;
+            } else {
+                const errorData = await response.json();
+                console.log('❌ Backend authentication failed:', errorData);
             }
         } catch (backendError) {
             console.warn('⚠️ Backend not available, trying localStorage:', backendError.message);
         }
         
         // Fallback to localStorage authentication
-        const normalizedInput = username.toLowerCase().replace(/\s+/g, '');
+        console.log('🔵 Trying localStorage authentication');
         const storedUserName = localStorage.getItem('userName');
         const storedDisplayName = localStorage.getItem('userDisplayName');
         const storedPassword = localStorage.getItem('userPassword');
         
+        console.log('🔍 Stored userName:', storedUserName);
+        console.log('🔍 Stored displayName:', storedDisplayName);
+        console.log('🔍 Input normalized:', normalizedInput);
+        
         // Check if user exists in localStorage
         if (storedUserName === normalizedInput || 
-            (storedDisplayName && storedDisplayName.toLowerCase() === username.toLowerCase())) {
+            (storedDisplayName && storedDisplayName.toLowerCase().replace(/\s+/g, '') === normalizedInput)) {
             
             // Verify password
             if (storedPassword && storedPassword === password) {
-                // Authentication successful
+                // Authentication successful - ENSURE userName is set
+                console.log('✅ localStorage authentication successful');
                 localStorage.setItem('userName', normalizedInput);
                 localStorage.setItem('userDisplayName', storedDisplayName || username);
                 localStorage.setItem('isJudgeAccount', 'false');
@@ -1494,7 +1527,11 @@ async function handleSignIn() {
                 
                 console.log('✅ User logged in via localStorage:', normalizedInput);
                 return;
+            } else {
+                console.log('❌ Password mismatch');
             }
+        } else {
+            console.log('❌ User not found in localStorage');
         }
         
         // Authentication failed
