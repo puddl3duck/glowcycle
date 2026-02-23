@@ -20,6 +20,19 @@ An intelligent web app that uses AI to analyze the connection between your menst
 
 **Live Demo:** glowcycle.app
 
+### Judge Access Credentials
+
+Pre-configured accounts for judges to test the application:
+
+| Name | Username | Password |
+|------|----------|----------|
+| Rada Stanic | `Rada Stanic` | `glowcycle2026` |
+| Luke Anderson | `Luke Anderson` | `glowcycle2026` |
+| Sarah Basset | `Sarah Basset` | `glowcycle2026` |
+| Team | `Team` | `glowcycle2026` |
+
+**Note:** Judge accounts skip the name question in the onboarding questionnaire and proceed directly to the setup questions. Setup completion is persisted in the backend (DynamoDB), so it works even in incognito mode.
+
 ## ✨ Core Features
 
 **AI Skin Scanner** - Take a selfie, get instant AI analysis of your skin condition with personalized recommendations based on your cycle phase

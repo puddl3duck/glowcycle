@@ -414,8 +414,12 @@ function nextQuestion(questionNumber) {
     const currentCard = document.querySelector('.question-card.active');
     const currentQuestionNum = parseInt(currentCard.dataset.question);
     
+    // Check if this is a judge account
+    const isJudgeAccount = localStorage.getItem('isJudgeAccount') === 'true';
+    
     // Validation for each question
-    if (currentQuestionNum === 1) {
+    if (currentQuestionNum === 1 && !isJudgeAccount) {
+        // Only validate name for non-judge accounts
         const nameInput = document.getElementById('user-name');
         if (!nameInput.value.trim()) {
             showError('user-name', 'name-error', 'Name is required');
@@ -568,21 +572,28 @@ function goToDashboard() {
     document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
     document.querySelectorAll('.input-field').forEach(el => el.classList.remove('error'));
     
-    // Validate ALL required fields
+    // Check if this is a judge account
+    const isJudgeAccount = localStorage.getItem('isJudgeAccount') === 'true';
+    const userName = localStorage.getItem('userName');
+    
+    // Get form inputs
     const userNameInput = document.getElementById('user-name');
     const ageInput = document.getElementById('age');
     const lastPeriodInput = document.getElementById('last-period');
     
     let hasError = false;
     
-    if (!userNameInput || !userNameInput.value.trim()) {
-        showPage('questionnaire-page');
-        document.querySelectorAll('.question-card').forEach(card => card.classList.remove('active'));
-        document.querySelector('.question-card[data-question="1"]').classList.add('active');
-        currentQuestion = 1;
-        updateProgress();
-        showError('user-name', 'name-error', 'Name is required');
-        return;
+    // Validate name ONLY if NOT a judge account
+    if (!isJudgeAccount) {
+        if (!userNameInput || !userNameInput.value.trim()) {
+            showPage('questionnaire-page');
+            document.querySelectorAll('.question-card').forEach(card => card.classList.remove('active'));
+            document.querySelector('.question-card[data-question="1"]').classList.add('active');
+            currentQuestion = 1;
+            updateProgress();
+            showError('user-name', 'name-error', 'Name is required');
+            return;
+        }
     }
     
     if (!ageInput || !ageInput.value) {
@@ -633,9 +644,13 @@ function goToDashboard() {
     }
     
     // All validations passed - save data
-    const displayName = userNameInput.value.trim();
-    localStorage.setItem('userName', displayName.toLowerCase().replace(/\s+/g, '')); // ID: lowercase, no spaces
-    localStorage.setItem('userDisplayName', displayName); // Display name: as entered
+    if (!isJudgeAccount && userNameInput) {
+        const displayName = userNameInput.value.trim();
+        localStorage.setItem('userName', displayName.toLowerCase().replace(/\s+/g, '')); // ID: lowercase, no spaces
+        localStorage.setItem('userDisplayName', displayName); // Display name: as entered
+    }
+    // For judge accounts, userName and userDisplayName are already set from login
+    
     localStorage.setItem('userAge', ageInput.value);
     
     // Save period data based on selection
@@ -657,6 +672,24 @@ function goToDashboard() {
     
     localStorage.setItem('cycleDays', cycleDays);
     localStorage.setItem('skinType', selectedSkinType);
+    
+    // Mark judge setup as complete - SAVE TO BACKEND
+    if (isJudgeAccount && userName) {
+        console.log('🔵 Saving setup to BACKEND for judge:', userName);
+        
+        // Prepare profile data
+        const profileData = {
+            age: ageInput.value,
+            lastPeriod: lastPeriodInput ? lastPeriodInput.value : null,
+            periodOption: selectedPeriodOption,
+            skinType: selectedSkinType,
+            cycleDays: cycleDays,
+            timestamp: new Date().toISOString()
+        };
+        
+        // Save to backend (async, don't wait)
+        saveJudgeSetupToBackend(userName, profileData);
+    }
     
     completeOnboarding();
     
@@ -991,18 +1024,92 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
+// ===== JUDGE ACCOUNTS CONFIGURATION =====
+const JUDGE_ACCOUNTS = {
+    'Rada Stanic': {
+        password: 'glowcycle2026',
+        displayName: 'Rada Stanic',
+        title: 'Chief Technologist, ANZ'
+    },
+    'Luke Anderson': {
+        password: 'glowcycle2026',
+        displayName: 'Luke Anderson',
+        title: 'Managing Dir. Data & AI, APJ'
+    },
+    'Sarah Basset': {
+        password: 'glowcycle2026',
+        displayName: 'Sarah Basset',
+        title: 'Dir. Software & Saas, ANZ'
+    },
+    'Team': {
+        password: 'glowcycle2026',
+        displayName: 'Glow Cycle Team',
+        title: 'Development Team'
+    }
+};
+
+// Helper function to create consistent localStorage keys
+function getSetupKey(username) {
+    // Replace spaces with underscores for localStorage key
+    return `${username.replace(/\s+/g, '_')}_setupCompleted`;
+}
+
+// Helper function to save judge setup to backend
+async function saveJudgeSetupToBackend(username, profileData) {
+    try {
+        const API_BASE = API_CONFIG?.BASE_URL || 'https://7ofiibs7k7.execute-api.ap-southeast-2.amazonaws.com/prod';
+        const response = await fetch(`${API_BASE}/judge/setup`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                user: username,
+                profileData: profileData
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('🔵 Setup saved to backend successfully:', data);
+        return true;
+    } catch (error) {
+        console.error('🔴 Error saving setup to backend:', error);
+        return false;
+    }
+}
+
+// Initialize judge setup flags on page load (for demo purposes)
+function initializeJudgeSetupFlags() {
+    // Only initialize if not already set
+    const judges = ['Rada Stanic', 'Luke Anderson', 'Sarah Basset', 'Team'];
+    judges.forEach(judge => {
+        const key = getSetupKey(judge);
+        // If the key doesn't exist, we'll let them do setup once
+        // This is intentional - we want them to experience the onboarding
+    });
+}
+
 // ===== SIGN IN MODAL =====
 function openSignInModal() {
     const modal = document.getElementById('signInModal');
     if (modal) {
-        // Clear previous errors and input
+        // Clear previous errors and inputs
         const errorElement = document.getElementById('signin-error');
-        const inputElement = document.getElementById('signin-username');
+        const usernameInput = document.getElementById('signin-username');
+        const passwordInput = document.getElementById('signin-password');
         
         if (errorElement) errorElement.textContent = '';
-        if (inputElement) {
-            inputElement.value = '';
-            inputElement.classList.remove('error');
+        if (usernameInput) {
+            usernameInput.value = '';
+            usernameInput.classList.remove('error');
+        }
+        if (passwordInput) {
+            passwordInput.value = '';
+            passwordInput.classList.remove('error');
         }
         
         modal.classList.add('active');
@@ -1010,7 +1117,7 @@ function openSignInModal() {
         
         // Focus on username input
         setTimeout(() => {
-            if (inputElement) inputElement.focus();
+            if (usernameInput) usernameInput.focus();
         }, 100);
     }
 }
@@ -1025,60 +1132,173 @@ function closeSignInModal() {
 
 // ===== LOGOUT FUNCTION =====
 function handleLogout() {
-    if (confirm('Are you sure you want to logout?')) {
-        // Clear user session data (but keep other app data)
-        localStorage.removeItem('userName');
-        localStorage.removeItem('userDisplayName');
-        localStorage.removeItem('onboardingCompleted');
-        
-        // Redirect to landing page
-        showPage('landing-page');
-        
-        console.log('User logged out successfully');
+    openLogoutModal();
+}
+
+function openLogoutModal() {
+    const modal = document.getElementById('logoutModal');
+    if (modal) {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
     }
+}
+
+function closeLogoutModal() {
+    const modal = document.getElementById('logoutModal');
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+}
+
+function confirmLogout() {
+    // Clear user session data (but keep other app data)
+    localStorage.removeItem('userName');
+    localStorage.removeItem('userDisplayName');
+    localStorage.removeItem('onboardingCompleted');
+    
+    closeLogoutModal();
+    
+    // Redirect to landing page
+    showPage('landing-page');
+    
+    console.log('User logged out successfully');
 }
 
 async function handleSignIn() {
     const usernameInput = document.getElementById('signin-username');
+    const passwordInput = document.getElementById('signin-password');
     const errorElement = document.getElementById('signin-error');
     
-    if (!usernameInput || !errorElement) return;
+    if (!usernameInput || !passwordInput || !errorElement) return;
     
-    // Get username as entered (preserve original case for display)
-    const usernameDisplay = usernameInput.value.trim();
-    const username = usernameDisplay.toLowerCase().replace(/\s+/g, '');
+    // Get credentials
+    const username = usernameInput.value.trim();
+    const password = passwordInput.value.trim();
     
     // Clear previous errors
     errorElement.textContent = '';
     usernameInput.classList.remove('error');
+    passwordInput.classList.remove('error');
     
-    // Validate username
+    // Validate inputs
     if (!username) {
         usernameInput.classList.add('error');
         errorElement.textContent = 'Username is required';
         return;
     }
     
-    console.log('Sign in:', username);
-    
-    // Save to localStorage and login directly
-    localStorage.setItem('userName', username);
-    localStorage.setItem('userDisplayName', usernameDisplay);
-    localStorage.setItem('onboardingCompleted', 'true');
-    
-    closeSignInModal();
-    showPage('dashboard-page');
-    
-    // Update profile display
-    updateUserProfile();
-    
-    // Initialize wellness message
-    if (typeof initializeWellnessMessage === 'function') {
-        initializeWellnessMessage();
+    if (!password) {
+        passwordInput.classList.add('error');
+        errorElement.textContent = 'Password is required';
+        return;
     }
-    updateTimeBasedContent();
     
-    console.log('User logged in:', username);
+    console.log('Sign in attempt:', username);
+    
+    // Check if it's a judge account
+    const judgeAccount = JUDGE_ACCOUNTS[username];
+    
+    if (judgeAccount) {
+        // Validate judge password
+        if (password !== judgeAccount.password) {
+            usernameInput.classList.add('error');
+            passwordInput.classList.add('error');
+            errorElement.textContent = 'Invalid username or password';
+            return;
+        }
+        
+        // Judge account - successful login
+        console.log('🟢 Judge account login:', username);
+        
+        // Save judge info to localStorage (for current session)
+        localStorage.setItem('userName', username);
+        localStorage.setItem('userDisplayName', judgeAccount.displayName);
+        localStorage.setItem('isJudgeAccount', 'true');
+        localStorage.setItem('judgeTitle', judgeAccount.title);
+        
+        // Check setup status from BACKEND (not localStorage)
+        try {
+            const API_BASE = API_CONFIG?.BASE_URL || 'https://7ofiibs7k7.execute-api.ap-southeast-2.amazonaws.com/prod';
+            const response = await fetch(`${API_BASE}/judge/setup?user=${encodeURIComponent(username)}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            const hasCompletedSetup = data.setupCompleted === true;
+            
+            console.log('🟢 Setup status from backend:', hasCompletedSetup);
+            
+            closeSignInModal();
+            
+            if (!hasCompletedSetup) {
+                // First time login - go to setup questionnaire (skip name question)
+                showPage('questionnaire-page');
+                // Skip to question 2 (age)
+                document.querySelectorAll('.question-card').forEach(card => card.classList.remove('active'));
+                document.querySelector('.question-card[data-question="2"]').classList.add('active');
+                currentQuestion = 2;
+                updateProgress();
+            } else {
+                // Already completed setup - go to dashboard
+                localStorage.setItem('onboardingCompleted', 'true');
+                showPage('dashboard-page');
+                updateUserProfile();
+                if (typeof initializeWellnessMessage === 'function') {
+                    initializeWellnessMessage();
+                }
+                updateTimeBasedContent();
+            }
+            
+            console.log('Judge logged in:', username);
+            return;
+            
+        } catch (error) {
+            console.error('Error checking judge setup:', error);
+            // If backend fails, show questionnaire to be safe
+            closeSignInModal();
+            showPage('questionnaire-page');
+            document.querySelectorAll('.question-card').forEach(card => card.classList.remove('active'));
+            document.querySelector('.question-card[data-question="2"]').classList.add('active');
+            currentQuestion = 2;
+            updateProgress();
+            return;
+        }
+    }
+    
+    // Regular user account (no password validation for now)
+    // For regular users, just check if username exists in localStorage
+    const storedUsername = localStorage.getItem('userName');
+    
+    if (storedUsername && storedUsername.toLowerCase() === username.toLowerCase()) {
+        // Existing user
+        localStorage.setItem('userName', username.toLowerCase().replace(/\s+/g, ''));
+        localStorage.setItem('userDisplayName', username);
+        localStorage.setItem('onboardingCompleted', 'true');
+        
+        closeSignInModal();
+        showPage('dashboard-page');
+        
+        updateUserProfile();
+        if (typeof initializeWellnessMessage === 'function') {
+            initializeWellnessMessage();
+        }
+        updateTimeBasedContent();
+        
+        console.log('User logged in:', username);
+    } else {
+        // Username not found
+        usernameInput.classList.add('error');
+        passwordInput.classList.add('error');
+        errorElement.textContent = 'Invalid username or password';
+    }
 }
 
 // ===== ENTER KEY FUNCTIONALITY FOR QUESTIONNAIRE =====
@@ -1116,10 +1336,25 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // Add Enter key listener for sign in modal
+    // Add Enter key listener for sign in modal - username
     const signInInput = document.getElementById('signin-username');
     if (signInInput) {
         signInInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                // Focus on password field
+                const passwordInput = document.getElementById('signin-password');
+                if (passwordInput) {
+                    passwordInput.focus();
+                }
+            }
+        });
+    }
+    
+    // Add Enter key listener for sign in modal - password
+    const signInPassword = document.getElementById('signin-password');
+    if (signInPassword) {
+        signInPassword.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
                 handleSignIn();

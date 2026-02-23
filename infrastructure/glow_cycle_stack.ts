@@ -241,5 +241,27 @@ export class GlowCycleStack extends cdk.Stack {
       'GET',
       new apigateway.LambdaIntegration(wellnessLambda)
     );
+
+    // Judge setup endpoint
+    const judgeSetupLambda = new lambda.Function(this, 'JudgeSetupLambda', {
+      runtime: lambda.Runtime.PYTHON_3_11,
+      handler: 'judge/handler.lambda_handler',
+      code: lambda.Code.fromAsset('../backend'),
+      environment: { DYNAMODB_TABLE_NAME: table.tableName },
+    });
+    table.grantReadWriteData(judgeSetupLambda);
+
+    const judgeResource = api.root.addResource('judge');
+    const judgeSetupResource = judgeResource.addResource('setup');
+    
+    judgeSetupResource.addMethod(
+      'GET',
+      new apigateway.LambdaIntegration(judgeSetupLambda)
+    );
+    
+    judgeSetupResource.addMethod(
+      'POST',
+      new apigateway.LambdaIntegration(judgeSetupLambda)
+    );
   }
 }

@@ -625,13 +625,8 @@ function addCustomTag() {
     // Save to localStorage
     saveCustomTags();
     
-    // Render the tag
-    const newTagBtn = renderCustomTag(tagText);
-    
-    // Auto-select the new tag
-    if (newTagBtn && !newTagBtn.classList.contains('active')) {
-        newTagBtn.click();
-    }
+    // Render the tag (but don't auto-select it)
+    renderCustomTag(tagText);
     
     // Clear input
     input.value = '';

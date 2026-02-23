@@ -79,8 +79,8 @@
                     <div class="progress-fill" id="progress-fill"></div>
                 </div>
                 
-                <!-- Question 1: Name -->
-                <div class="question-card active" data-question="1">
+                <!-- Question 1: Name (skipped for pre-configured accounts) -->
+                <div class="question-card active" data-question="1" id="name-question">
                     <h2 class="question-title">What's your name?</h2>
                     <p class="question-subtitle">Let's make this personal ✨</p>
                     <input type="text" id="user-name" class="input-field" placeholder="Enter your name">
@@ -810,7 +810,7 @@
             
             <div class="modal-header">
                 <h2 class="modal-title">Welcome Back ✨</h2>
-                <p class="modal-subtitle">Enter your username to continue your wellness journey</p>
+                <p class="modal-subtitle">Enter your credentials to continue your wellness journey</p>
             </div>
             
             <div class="signin-form">
@@ -823,8 +823,20 @@
                         placeholder="Enter your username"
                         autocomplete="username"
                     />
-                    <div class="error-message" id="signin-error"></div>
                 </div>
+                
+                <div class="form-group">
+                    <label for="signin-password">Password</label>
+                    <input 
+                        type="password" 
+                        id="signin-password" 
+                        class="input-field" 
+                        placeholder="Enter your password"
+                        autocomplete="current-password"
+                    />
+                </div>
+                
+                <div class="error-message" id="signin-error"></div>
                 
                 <button class="modal-cta-button" onclick="handleSignIn()">
                     Sign In
@@ -834,6 +846,50 @@
                 <p class="signin-note">
                     Don't have an account? <a href="#" onclick="closeSignInModal(); openHowItWorksModal(); return false;">Start your journey</a>
                 </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logout Confirmation Modal -->
+    <div id="logoutModal" class="modal-overlay" onclick="closeLogoutModal()">
+        <div class="modal-content logout-modal-content" onclick="event.stopPropagation()">
+            <button class="modal-close" onclick="closeLogoutModal()">×</button>
+            
+            <div class="logout-icon">
+                <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="40" cy="40" r="38" fill="url(#logoutGrad)" opacity="0.2"/>
+                    <!-- Door frame -->
+                    <path d="M28 25C28 23.3431 29.3431 22 31 22H49C50.6569 22 52 23.3431 52 25V55C52 56.6569 50.6569 58 49 58H31C29.3431 58 28 56.6569 28 55V25Z" stroke="url(#logoutGrad2)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                    <!-- Arrow pointing out -->
+                    <path d="M40 32H54M54 32L49 27M54 32L49 37" stroke="url(#logoutGrad2)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                    <!-- Person leaving -->
+                    <circle cx="40" cy="45" r="4" fill="url(#logoutGrad2)"/>
+                    <path d="M34 53C34 50.2386 36.2386 48 39 48H41C43.7614 48 46 50.2386 46 53V55" stroke="url(#logoutGrad2)" stroke-width="2.5" stroke-linecap="round"/>
+                    <defs>
+                        <linearGradient id="logoutGrad" x1="2" y1="2" x2="78" y2="78">
+                            <stop offset="0%" stop-color="#FFB6D9"/>
+                            <stop offset="100%" stop-color="#9B7EBD"/>
+                        </linearGradient>
+                        <linearGradient id="logoutGrad2" x1="25" y1="25" x2="55" y2="55">
+                            <stop offset="0%" stop-color="#FFB6D9"/>
+                            <stop offset="100%" stop-color="#9B7EBD"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+            </div>
+            
+            <div class="modal-header">
+                <h2 class="modal-title">Logout?</h2>
+                <p class="modal-subtitle">Are you sure you want to logout? We'll miss you!</p>
+            </div>
+            
+            <div class="logout-buttons">
+                <button class="logout-cancel-btn" onclick="closeLogoutModal()">
+                    Stay
+                </button>
+                <button class="logout-confirm-btn" onclick="confirmLogout()">
+                    Logout
+                </button>
             </div>
         </div>
     </div>
