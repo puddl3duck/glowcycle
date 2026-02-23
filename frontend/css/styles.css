@@ -804,6 +804,64 @@ body {
     transform: rotate(90deg);
 }
 
+/* Logout Button - Subtle & Girly */
+.profile-logout-btn {
+    background: transparent;
+    border: none;
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 0.4rem 0.6rem;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    opacity: 0.6;
+    margin-left: 0.3rem;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.profile-logout-btn svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    color: var(--text-dark);
+    transition: all 0.3s ease;
+}
+
+.profile-logout-btn::before {
+    content: 'Logout';
+    position: absolute;
+    bottom: -30px;
+    right: 0;
+    background: linear-gradient(135deg, #FFB6D9, #D4C5E8);
+    color: white;
+    padding: 0.3rem 0.8rem;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(155, 126, 189, 0.2);
+}
+
+.profile-logout-btn:hover {
+    opacity: 1;
+    background: linear-gradient(135deg, rgba(255, 182, 217, 0.15), rgba(212, 197, 232, 0.15));
+    transform: translateY(-2px);
+}
+
+.profile-logout-btn:hover svg {
+    color: var(--accent-coral);
+}
+
+.profile-logout-btn:hover::before {
+    opacity: 1;
+    bottom: -35px;
+}
+
 .profile-settings-form {
     padding: 1.5rem 0;
 }
@@ -3717,6 +3775,23 @@ body.dark-theme label {
         width: 32px;
         height: 32px;
     }
+    
+    /* Logout button mobile adjustments */
+    .profile-logout-btn {
+        width: 35px;
+        height: 35px;
+        padding: 0.3rem;
+        margin-left: 0.2rem;
+    }
+    
+    .profile-logout-btn svg {
+        width: 16px;
+        height: 16px;
+    }
+    
+    .profile-logout-btn::before {
+        display: none; /* Hide tooltip on mobile */
+    }
 }
 
 /* Footer responsive */
@@ -4141,5 +4216,158 @@ body.dark-theme .floating-decoration img {
         padding: 0.5rem 0.9rem;
         font-size: 0.8rem;
         gap: 0.3rem;
+    }
+}
+
+
+/* ===== SIGN IN MODAL ===== */
+.signin-link {
+    margin-top: 1.5rem;
+    font-size: 0.95rem;
+    color: var(--text-medium);
+    text-align: left;
+}
+
+.signin-link a {
+    color: var(--accent-purple);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.3s ease;
+}
+
+.signin-link a:hover {
+    color: var(--accent-coral);
+    text-decoration: underline;
+}
+
+.signin-modal-content {
+    max-width: 450px;
+    padding: 3rem 2.5rem;
+}
+
+.signin-form {
+    margin-top: 2rem;
+}
+
+.signin-form .form-group {
+    margin-bottom: 1.5rem;
+}
+
+.signin-form label {
+    display: block;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+}
+
+.signin-form .input-field {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1rem;
+    border: 2px solid rgba(212, 197, 232, 0.3);
+    border-radius: 15px;
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--text-dark);
+    font-family: 'Outfit', sans-serif;
+    transition: all 0.3s ease;
+}
+
+.signin-form .input-field:focus {
+    outline: none;
+    border-color: var(--lavender);
+    box-shadow: 0 0 0 4px rgba(212, 197, 232, 0.1);
+}
+
+.signin-form .input-field.error {
+    border-color: #FF6B6B;
+    background: rgba(255, 107, 107, 0.05);
+}
+
+.signin-form .modal-cta-button {
+    width: 100%;
+    margin-top: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.signin-note {
+    text-align: center;
+    margin-top: 1.5rem;
+    font-size: 0.9rem;
+    color: var(--text-medium);
+}
+
+.signin-note a {
+    color: var(--accent-purple);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.3s ease;
+}
+
+.signin-note a:hover {
+    color: var(--accent-coral);
+}
+
+/* Dark mode for sign in */
+body.dark-theme .signin-link {
+    color: #D4C5E8;
+}
+
+body.dark-theme .signin-link a {
+    color: #FFB6D9;
+}
+
+body.dark-theme .signin-link a:hover {
+    color: #FFC8E8;
+}
+
+body.dark-theme .signin-form label {
+    color: #FFFFFF;
+}
+
+body.dark-theme .signin-form .input-field {
+    background: rgba(37, 37, 58, 0.9);
+    border-color: rgba(212, 197, 232, 0.3);
+    color: #FFFFFF;
+}
+
+body.dark-theme .signin-form .input-field::placeholder {
+    color: #B8A8D0;
+}
+
+body.dark-theme .signin-note {
+    color: #D4C5E8;
+}
+
+body.dark-theme .signin-note a {
+    color: #FFB6D9;
+}
+
+body.dark-theme .signin-note a:hover {
+    color: #FFC8E8;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .signin-modal-content {
+        padding: 2.5rem 2rem;
+    }
+    
+    .signin-link {
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .signin-modal-content {
+        padding: 2rem 1.5rem;
+    }
+    
+    .signin-link {
+        font-size: 0.85rem;
+        margin-top: 1rem;
     }
 }

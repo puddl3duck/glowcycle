@@ -780,15 +780,13 @@ document.addEventListener('DOMContentLoaded', () => {
         lastPeriodInput.max = today;  // Block future dates
     }
     
-    // Check if user has name - if not, force onboarding
+    // Check if user is logged in (has userName in localStorage)
     const userName = localStorage.getItem('userName');
-    if (!userName || userName.trim() === '') {
-        // No user name - force onboarding
-        localStorage.removeItem('onboardingCompleted');
-        showPage('landing-page');
-    } else if (window.location.hash === '#dashboard') {
-        // Has name and navigating to dashboard
-        if (hasCompletedOnboarding()) {
+    const hasOnboarding = hasCompletedOnboarding();
+    
+    if (userName && userName.trim() !== '' && hasOnboarding) {
+        // User is logged in - show dashboard
+        if (window.location.hash === '#dashboard' || hasOnboarding) {
             showPage('dashboard-page');
             // Initialize wellness message for existing user
             if (typeof initializeWellnessMessage === 'function') {
@@ -796,14 +794,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             updateTimeBasedContent();
         }
-    } else if (hasCompletedOnboarding()) {
-        // Has name and completed onboarding - show dashboard
-        showPage('dashboard-page');
-        // Initialize wellness message for existing user
-        if (typeof initializeWellnessMessage === 'function') {
-            initializeWellnessMessage();
-        }
-        updateTimeBasedContent();
+    } else {
+        // No user logged in - show landing page
+        showPage('landing-page');
     }
     
     // Update time-based content every minute
@@ -994,8 +987,99 @@ document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         closeHowItWorksModal();
         closeProfileSettings();
+        closeSignInModal();
     }
 });
+
+// ===== SIGN IN MODAL =====
+function openSignInModal() {
+    const modal = document.getElementById('signInModal');
+    if (modal) {
+        // Clear previous errors and input
+        const errorElement = document.getElementById('signin-error');
+        const inputElement = document.getElementById('signin-username');
+        
+        if (errorElement) errorElement.textContent = '';
+        if (inputElement) {
+            inputElement.value = '';
+            inputElement.classList.remove('error');
+        }
+        
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        
+        // Focus on username input
+        setTimeout(() => {
+            if (inputElement) inputElement.focus();
+        }, 100);
+    }
+}
+
+function closeSignInModal() {
+    const modal = document.getElementById('signInModal');
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+}
+
+// ===== LOGOUT FUNCTION =====
+function handleLogout() {
+    if (confirm('Are you sure you want to logout?')) {
+        // Clear user session data (but keep other app data)
+        localStorage.removeItem('userName');
+        localStorage.removeItem('userDisplayName');
+        localStorage.removeItem('onboardingCompleted');
+        
+        // Redirect to landing page
+        showPage('landing-page');
+        
+        console.log('User logged out successfully');
+    }
+}
+
+async function handleSignIn() {
+    const usernameInput = document.getElementById('signin-username');
+    const errorElement = document.getElementById('signin-error');
+    
+    if (!usernameInput || !errorElement) return;
+    
+    // Get username as entered (preserve original case for display)
+    const usernameDisplay = usernameInput.value.trim();
+    const username = usernameDisplay.toLowerCase().replace(/\s+/g, '');
+    
+    // Clear previous errors
+    errorElement.textContent = '';
+    usernameInput.classList.remove('error');
+    
+    // Validate username
+    if (!username) {
+        usernameInput.classList.add('error');
+        errorElement.textContent = 'Username is required';
+        return;
+    }
+    
+    console.log('Sign in:', username);
+    
+    // Save to localStorage and login directly
+    localStorage.setItem('userName', username);
+    localStorage.setItem('userDisplayName', usernameDisplay);
+    localStorage.setItem('onboardingCompleted', 'true');
+    
+    closeSignInModal();
+    showPage('dashboard-page');
+    
+    // Update profile display
+    updateUserProfile();
+    
+    // Initialize wellness message
+    if (typeof initializeWellnessMessage === 'function') {
+        initializeWellnessMessage();
+    }
+    updateTimeBasedContent();
+    
+    console.log('User logged in:', username);
+}
 
 // ===== ENTER KEY FUNCTIONALITY FOR QUESTIONNAIRE =====
 document.addEventListener('DOMContentLoaded', () => {
@@ -1028,6 +1112,17 @@ document.addEventListener('DOMContentLoaded', () => {
             if (e.key === 'Enter') {
                 e.preventDefault();
                 nextQuestion(4);
+            }
+        });
+    }
+    
+    // Add Enter key listener for sign in modal
+    const signInInput = document.getElementById('signin-username');
+    if (signInInput) {
+        signInInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handleSignIn();
             }
         });
     }

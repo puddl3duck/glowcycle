@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fix User - Glow Cycle</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+        .info {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .info strong {
+            color: #667eea;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            margin: 10px 0;
+            box-sizing: border-box;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            display: none;
+        }
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #667eea;
+            text-decoration: none;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Fix User Account</h1>
+        
+        <div class="info">
+            <p><strong>Current User:</strong> <span id="currentUser">Loading...</span></p>
+            <p><strong>Display Name:</strong> <span id="displayName">Loading...</span></p>
+        </div>
+
+        <h3>Change Username</h3>
+        <p>Enter the username you want to use (will be saved in lowercase without spaces):</p>
+        <input type="text" id="newUsername" placeholder="e.g., sophia">
+        <button onclick="changeUsername()">Change Username</button>
+
+        <h3>Quick Actions</h3>
+        <button onclick="setUserToSophia()">Set User to "sophia"</button>
+        <button onclick="clearAllData()">Clear All Data (Reset)</button>
+
+        <div class="success" id="successMessage"></div>
+
+        <a href="index.html" class="back-link">← Back to Glow Cycle</a>
+    </div>
+
+    <script>
+        // Display current user info
+        function displayCurrentUser() {
+            const userName = localStorage.getItem('userName') || 'None';
+            const displayName = localStorage.getItem('userDisplayName') || 'None';
+            document.getElementById('currentUser').textContent = userName;
+            document.getElementById('displayName').textContent = displayName;
+        }
+
+        // Change username
+        function changeUsername() {
+            const input = document.getElementById('newUsername');
+            const newUsername = input.value.trim().toLowerCase().replace(/\s+/g, '');
+            
+            if (!newUsername) {
+                alert('Please enter a username');
+                return;
+            }
+
+            localStorage.setItem('userName', newUsername);
+            localStorage.setItem('userDisplayName', input.value.trim());
+            
+            showSuccess(`Username changed to "${newUsername}"`);
+            displayCurrentUser();
+            input.value = '';
+        }
+
+        // Set user to sophia
+        function setUserToSophia() {
+            localStorage.setItem('userName', 'sophia');
+            localStorage.setItem('userDisplayName', 'Sophia');
+            
+            showSuccess('User set to "sophia"');
+            displayCurrentUser();
+        }
+
+        // Clear all data
+        function clearAllData() {
+            if (confirm('Are you sure you want to clear all data? This cannot be undone.')) {
+                localStorage.clear();
+                showSuccess('All data cleared. You can now start fresh.');
+                displayCurrentUser();
+            }
+        }
+
+        // Show success message
+        function showSuccess(message) {
+            const successDiv = document.getElementById('successMessage');
+            successDiv.textContent = '✓ ' + message;
+            successDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                successDiv.style.display = 'none';
+            }, 3000);
+        }
+
+        // Initialize on load
+        displayCurrentUser();
+    </script>
+</body>
+</html>

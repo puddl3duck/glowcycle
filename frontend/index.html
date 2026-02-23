@@ -7,6 +7,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/dark-mode-complete.css">
     <link rel="stylesheet" href="css/wellness-agent.css">
@@ -42,6 +46,10 @@
                         Start Your Journey
                         <span class="button-arrow">→</span>
                     </button>
+                    
+                    <p class="signin-link">
+                        Already have an account? <a href="#" onclick="openSignInModal(); return false;">Sign in</a>
+                    </p>
                 </div>
                 
                 <div class="hero-right">
@@ -198,6 +206,9 @@
                 <div class="profile-avatar" id="profile-avatar"></div>
                 <span class="profile-name" id="profile-name"></span>
                 <button class="profile-settings-btn" onclick="openProfileSettings()" title="Edit Profile">⚙️</button>
+                <button class="profile-logout-btn" onclick="handleLogout()" title="Logout">
+                    <i data-lucide="log-out"></i>
+                </button>
             </div>
         </nav>
 
@@ -792,9 +803,52 @@
         </div>
     </div>
 
+    <!-- Sign In Modal -->
+    <div id="signInModal" class="modal-overlay" onclick="closeSignInModal()">
+        <div class="modal-content signin-modal-content" onclick="event.stopPropagation()">
+            <button class="modal-close" onclick="closeSignInModal()">×</button>
+            
+            <div class="modal-header">
+                <h2 class="modal-title">Welcome Back ✨</h2>
+                <p class="modal-subtitle">Enter your username to continue your wellness journey</p>
+            </div>
+            
+            <div class="signin-form">
+                <div class="form-group">
+                    <label for="signin-username">Username</label>
+                    <input 
+                        type="text" 
+                        id="signin-username" 
+                        class="input-field" 
+                        placeholder="Enter your username"
+                        autocomplete="username"
+                    />
+                    <div class="error-message" id="signin-error"></div>
+                </div>
+                
+                <button class="modal-cta-button" onclick="handleSignIn()">
+                    Sign In
+                    <span class="button-arrow">→</span>
+                </button>
+                
+                <p class="signin-note">
+                    Don't have an account? <a href="#" onclick="closeSignInModal(); openHowItWorksModal(); return false;">Start your journey</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
     <script src="js/config.js"></script>
     <script src="js/wellness-agent.js"></script>
     <script src="js/script.js"></script>
+    
+    <!-- Initialize Lucide Icons -->
+    <script>
+        // Initialize Lucide icons when DOM is ready
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    </script>
 </body>
 </html>
 

@@ -402,6 +402,24 @@ body.dark-theme .profile-settings-btn:hover {
     background: rgba(255, 182, 217, 0.3);
 }
 
+/* Dark mode - Logout Button */
+body.dark-theme .profile-logout-btn svg {
+    color: #E8D4F0;
+}
+
+body.dark-theme .profile-logout-btn:hover {
+    background: linear-gradient(135deg, rgba(255, 182, 217, 0.2), rgba(212, 197, 232, 0.2));
+}
+
+body.dark-theme .profile-logout-btn:hover svg {
+    color: #FFB6D9;
+}
+
+body.dark-theme .profile-logout-btn::before {
+    background: linear-gradient(135deg, #D4C5E8, #FFB6D9);
+    box-shadow: 0 4px 12px rgba(212, 197, 232, 0.3);
+}
+
 body.dark-theme .form-group label {
     color: #E8E8F0;
 }
@@ -1682,4 +1700,54 @@ body.dark-theme .empty-history p {
 body.dark-theme .empty-subtitle {
     color: rgba(255, 255, 255, 0.7) !important;
     font-weight: 500 !important;
+}
+
+
+/* ===== LOGOUT BUTTON DARK MODE IMPROVEMENTS ===== */
+body.dark-theme .profile-logout-btn {
+    opacity: 0.8;
+}
+
+body.dark-theme .profile-logout-btn svg {
+    color: #E8D4F0;
+}
+
+body.dark-theme .profile-logout-btn:hover {
+    opacity: 1;
+    background: linear-gradient(135deg, rgba(255, 182, 217, 0.25), rgba(212, 197, 232, 0.25));
+}
+
+body.dark-theme .profile-logout-btn:hover svg {
+    color: #FFB6D9;
+}
+
+/* ===== TEXT CONTRAST IMPROVEMENTS ===== */
+body.dark-theme {
+    --text-medium: #E8D4F0;
+    --text-light: #D4C5E8;
+}
+
+/* ===== INPUT PLACEHOLDERS DARK MODE ===== */
+body.dark-theme input::placeholder,
+body.dark-theme textarea::placeholder {
+    color: #B8A8D0;
+    opacity: 0.8;
+}
+
+/* ===== MOBILE RESPONSIVE IMPROVEMENTS ===== */
+@media (max-width: 480px) {
+    body.dark-theme .profile-logout-btn {
+        width: 35px;
+        height: 35px;
+        padding: 0.3rem;
+    }
+    
+    body.dark-theme .profile-logout-btn svg {
+        width: 16px;
+        height: 16px;
+    }
+    
+    body.dark-theme .profile-logout-btn::before {
+        display: none;
+    }
 }

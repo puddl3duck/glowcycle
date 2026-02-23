@@ -50,8 +50,12 @@ def get_user_context(user: str, user_name: str = None) -> dict:
         journals = [item for item in items if item.get("feeling") and not item.get("date", "").startswith("PERIOD#")]
         skin_data = [item for item in items if item.get("skin_analysis")]
         
-        # Check if user has ANY data at all
-        has_any_data = len(periods) > 0 or len(journals) > 0 or len(skin_data) > 0
+        # Check if user has ANY meaningful data at all
+        # CRITICAL: Only count as "has data" if they have journal entries
+        # Period data alone doesn't count (could be from onboarding)
+        has_any_data = len(journals) > 0
+        
+        logger.info(f"User {user} data check: journals={len(journals)}, periods={len(periods)}, skin={len(skin_data)}, has_any_data={has_any_data}")
         
         # Calculate cycle info
         cycle_phase = "unknown"
@@ -126,7 +130,7 @@ def get_user_context(user: str, user_name: str = None) -> dict:
         
         return {
             "user_name": user_name or user,  # Use display name or fallback to user ID
-            "has_any_data": has_any_data,  # NEW: explicit flag for data presence
+            "has_any_data": has_any_data,  # CRITICAL: Only True if journal entries exist
             "cycle_phase": cycle_phase,
             "cycle_day": cycle_day,
             "cycle_length": cycle_length,
@@ -147,10 +151,10 @@ def get_user_context(user: str, user_name: str = None) -> dict:
         logger.error(f"Error gathering user context: {str(e)}")
         import traceback
         traceback.print_exc()
-        # Return safe defaults
+        # Return safe defaults for NEW USER
         return {
             "user_name": user_name or user,
-            "has_any_data": False,  # NEW: No data for new user
+            "has_any_data": False,  # NEW USER - No journal data
             "cycle_phase": "unknown",
             "cycle_day": 0,
             "cycle_length": 28,
