@@ -1257,6 +1257,14 @@ function viewScanReport(scanIndex) {
     const userName = localStorage.getItem('userName');
     if (!userName) return;
 
+    // Get scans from window.__scanHistory
+    const scans = window.__scanHistory || [];
+    
+    if (!scans || scans.length === 0 || scanIndex >= scans.length) {
+        console.error('No scan data available or invalid index');
+        return;
+    }
+
     const scan = scans[scanIndex];
     loadScanIntoResultsView(scan);
 
