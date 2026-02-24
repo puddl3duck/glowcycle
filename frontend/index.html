@@ -7,8 +7,13 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/dark-mode-complete.css">
+    <link rel="stylesheet" href="css/wellness-agent.css">
 </head>
 <body>
     <!-- Landing Page -->
@@ -36,25 +41,15 @@
                         and connect with your body's natural rhythm.
                     </p>
                     
-                    <div class="hero-stats">
-                        <div class="stat-item">
-                            <div class="stat-number">50K+</div>
-                            <div class="stat-label">Women in Our Community</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-number">1M+</div>
-                            <div class="stat-label">Cycles Tracked</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-number">🌸</div>
-                            <div class="stat-label">Made for Women</div>
-                        </div>
-                    </div>
                     
                     <button class="cta-button primary-cta" onclick="openHowItWorksModal()">
                         Start Your Journey
                         <span class="button-arrow">→</span>
                     </button>
+                    
+                    <p class="signin-link">
+                        Already have an account? <a href="#" onclick="openSignInModal(); return false;">Sign in</a>
+                    </p>
                 </div>
                 
                 <div class="hero-right">
@@ -75,16 +70,27 @@
         
         <div class="questionnaire-content">
             <div class="questionnaire-container">
+                <!-- Close/Back Button -->
+                <button class="questionnaire-close-btn" onclick="backToLanding()" title="Back to home">
+                    ← Back
+                </button>
+                
                 <div class="progress-bar">
                     <div class="progress-fill" id="progress-fill"></div>
                 </div>
                 
-                <!-- Question 1: Name -->
-                <div class="question-card active" data-question="1">
+                <!-- Question 1: Name (skipped for pre-configured accounts) -->
+                <div class="question-card active" data-question="1" id="name-question">
                     <h2 class="question-title">What's your name?</h2>
                     <p class="question-subtitle">Let's make this personal ✨</p>
                     <input type="text" id="user-name" class="input-field" placeholder="Enter your name">
                     <div class="error-message" id="name-error"></div>
+                    
+                    <h3 class="question-title" style="font-size: 1.3rem; margin-top: 2rem; margin-bottom: 0.5rem;">Choose a password</h3>
+                    <p class="question-subtitle">Minimum 6 characters, must contain lowercase, uppercase, and special character</p>
+                    <input type="password" id="user-password" class="input-field" placeholder="Enter a secure password" minlength="6">
+                    <div class="error-message" id="password-error"></div>
+                    
                     <button class="btn-next" onclick="nextQuestion(2)">Continue</button>
                 </div>
                 
@@ -130,11 +136,6 @@
                     <h2 class="question-title">What's your skin type?</h2>
                     <p class="question-subtitle">Choose the one that best describes your skin</p>
                     <div class="skin-type-grid">
-                        <div class="skin-type-option" data-type="normal" onclick="selectSkinType('normal')">
-                            <div class="skin-type-icon">✨</div>
-                            <h3>Normal</h3>
-                            <p>Balanced & clear</p>
-                        </div>
                         <div class="skin-type-option" data-type="dry" onclick="selectSkinType('dry')">
                             <div class="skin-type-icon">🏜️</div>
                             <h3>Dry</h3>
@@ -155,10 +156,15 @@
                             <h3>Sensitive</h3>
                             <p>Easily irritated</p>
                         </div>
-                        <div class="skin-type-option" data-type="not-sure" onclick="selectSkinType('not-sure')">
+                        <div class="skin-type-option" data-type="acne-prone" onclick="selectSkinType('acne-prone')">
                             <div class="skin-type-icon">🎯</div>
+                            <h3>Acne-Prone</h3>
+                            <p>Frequent breakouts</p>
+                        </div>
+                        <div class="skin-type-option" data-type="not-sure" onclick="selectSkinType('not-sure')">
+                            <div class="skin-type-icon">💭</div>
                             <h3>Not sure</h3>
-                            <p>Not sure of my skin type</p>
+                            <p>I'm not sure yet</p>
                         </div>
                     </div>
                     <div class="error-message" id="skin-type-error"></div>
@@ -206,26 +212,36 @@
                 <div class="profile-avatar" id="profile-avatar"></div>
                 <span class="profile-name" id="profile-name"></span>
                 <button class="profile-settings-btn" onclick="openProfileSettings()" title="Edit Profile">⚙️</button>
+                <button class="profile-logout-btn" onclick="handleLogout()" title="Logout">
+                    <i data-lucide="log-out"></i>
+                </button>
             </div>
         </nav>
 
         <!-- Dashboard View -->
         <div id="dashboard-view" class="dashboard-content active">
-            <!-- Motivational Hero -->
+            <!-- Motivational Message Section - PRINCIPAL -->
             <section class="motivational-hero">
+                <!-- Decorative floating images - OUTSIDE container for full freedom -->
+                <div class="floating-decoration left">
+                    <img src="images/decoration-sparkle.png" alt="" />
+                </div>
+                <div class="floating-decoration right">
+                    <img src="images/decoration-heart.png" alt="" />
+                </div>
+                
                 <div class="container">
-                    <!-- Decorative floating images -->
-                    <div class="floating-decoration left">
-                        <img src="images/decoration-sparkle.png" alt="" />
+                    <!-- AI Wellness Message - MAIN FOCUS -->
+                    <div id="wellness-message-container"></div>
+                </div>
+            </section>
+            
+            <!-- Welcome Section - Below, where background changes -->
+            <section class="welcome-section">
+                <div class="container">
+                    <div class="welcome-header">
+                    <h2 class="welcome-title">Welcome, <span id="user-name-display">Beautiful</span>! <span class="emoji">🌸</span></h2>                        <p class="welcome-subtitle">I'm here to support your skin journey through every phase of your cycle</p>
                     </div>
-                    <div class="floating-decoration right">
-                        <img src="images/decoration-heart.png" alt="" />
-                    </div>
-                    
-                    <h1 class="motivational-quote">
-                        "Let's understand your body's rhythm together 🌸"
-                    </h1>
-                    <p class="motivational-subtext">Your skin isn't broken, it's hormonal - and you're not alone. Let's figure it out together 💜</p>
                 </div>
             </section>
 
@@ -393,32 +409,6 @@
         </section>
 
         <!-- Example Preview -->
-        <section class="preview-section">
-            <div class="container">
-                <div class="section-intro">
-                    <h2 class="section-heading">Your Daily Glow Plan</h2>
-                    <p class="section-description"> Here's your daily guidance for today, based on your cycle</p>
-                </div>
-                
-                <div class="dashboard-card preview-card">
-                    <div class="card-header">
-                        <span class="card-icon">💗</span>
-                        <h3>Day 14 — Ovulation Phase</h3>
-                        <span class="card-icon">💗</span>
-                    </div>
-                    <div class="cycle-phase">
-                        <h4>✨ Your Glow Phase</h4>
-                        <p>Estrogen peaks — Your skin is radiant and energy is high</p>
-                    </div>
-                    <div class="today-actions">
-                        <h5>Suggested Actions:</h5>
-                        <div class="action-item">✓ Gentle Cleanser & Vitamin C Serum</div>
-                        <div class="action-item">✓ 20-Minute Walk in Nature</div>
-                        <div class="action-item">✓ Hydrate with 8 Glasses of Water</div>
-                    </div>
-                    <button class="preview-cta-btn" onclick="navigateToCyclePage()">Start Tracking Today</button>                </div>
-            </div>
-        </section>
         
         </div>
         <!-- End Dashboard View -->
@@ -570,7 +560,7 @@
             <div class="container">
                 <div class="section-intro">
                     <h2 class="section-heading">Understanding Changes Everything</h2>
-                    <p class="section-description">See how connecting with your cycle transforms your relationship with your body and skin</p>
+                    <p class="section-description">See how connecting with your cycle transforms your relationship with your body</p>
                 </div>
                 
                 <div class="comparison-grid">
@@ -675,6 +665,8 @@
                 </div>
             </div>
         </section>
+
+        
         </div>
         <!-- End About View -->
 
@@ -779,10 +771,6 @@
                     <label>Skin Type <span style="color: var(--accent-coral);">*</span></label>
                     <p style="font-size: 0.85rem; color: var(--text-medium); margin: 0.5rem 0 1rem 0;">Select your skin type for personalised recommendations</p>
                     <div class="skin-type-grid" style="grid-template-columns: repeat(3, 1fr);">
-                        <div class="skin-type-option" data-type="normal" onclick="selectSettingsSkinType('normal')">
-                            <div class="skin-type-icon">✨</div>
-                            <h3>Normal</h3>
-                        </div>
                         <div class="skin-type-option" data-type="dry" onclick="selectSettingsSkinType('dry')">
                             <div class="skin-type-icon">🏜️</div>
                             <h3>Dry</h3>
@@ -799,9 +787,13 @@
                             <div class="skin-type-icon">🌸</div>
                             <h3>Sensitive</h3>
                         </div>
-                        <div class="skin-type-option" data-type="not-sure" onclick="selectSettingsSkinType('not-sure')">
+                        <div class="skin-type-option" data-type="acne-prone" onclick="selectSettingsSkinType('acne-prone')">
                             <div class="skin-type-icon">🎯</div>
-                            <h3>Not-Sure</h3>
+                            <h3>Acne-Prone</h3>
+                        </div>
+                        <div class="skin-type-option" data-type="not-sure" onclick="selectSettingsSkinType('not-sure')">
+                            <div class="skin-type-icon">💭</div>
+                            <h3>Not sure</h3>
                         </div>
                     </div>
                     <div class="error-message" id="settings-skin-type-error"></div>
@@ -816,8 +808,108 @@
         </div>
     </div>
 
+    <!-- Sign In Modal -->
+    <div id="signInModal" class="modal-overlay" onclick="closeSignInModal()">
+        <div class="modal-content signin-modal-content" onclick="event.stopPropagation()">
+            <button class="modal-close" onclick="closeSignInModal()">×</button>
+            
+            <div class="modal-header">
+                <h2 class="modal-title">Welcome Back ✨</h2>
+                <p class="modal-subtitle">Enter your credentials to continue your wellness journey</p>
+            </div>
+            
+            <div class="signin-form">
+                <div class="form-group">
+                    <label for="signin-username">Username</label>
+                    <input 
+                        type="text" 
+                        id="signin-username" 
+                        class="input-field" 
+                        placeholder="Enter your username"
+                        autocomplete="username"
+                    />
+                </div>
+                
+                <div class="form-group">
+                    <label for="signin-password">Password</label>
+                    <input 
+                        type="password" 
+                        id="signin-password" 
+                        class="input-field" 
+                        placeholder="Enter your password"
+                        autocomplete="current-password"
+                    />
+                </div>
+                
+                <div class="error-message" id="signin-error"></div>
+                
+                <button class="modal-cta-button" onclick="handleSignIn()">
+                    Sign In
+                    <span class="button-arrow">→</span>
+                </button>
+                
+                <p class="signin-note">
+                    Don't have an account? <a href="#" onclick="closeSignInModal(); openHowItWorksModal(); return false;">Start your journey</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logout Confirmation Modal -->
+    <div id="logoutModal" class="modal-overlay" onclick="closeLogoutModal()">
+        <div class="modal-content logout-modal-content" onclick="event.stopPropagation()">
+            <button class="modal-close" onclick="closeLogoutModal()">×</button>
+            
+            <div class="logout-icon">
+                <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="40" cy="40" r="38" fill="url(#logoutGrad)" opacity="0.2"/>
+                    <!-- Door frame -->
+                    <path d="M28 25C28 23.3431 29.3431 22 31 22H49C50.6569 22 52 23.3431 52 25V55C52 56.6569 50.6569 58 49 58H31C29.3431 58 28 56.6569 28 55V25Z" stroke="url(#logoutGrad2)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                    <!-- Arrow pointing out -->
+                    <path d="M40 32H54M54 32L49 27M54 32L49 37" stroke="url(#logoutGrad2)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                    <!-- Person leaving -->
+                    <circle cx="40" cy="45" r="4" fill="url(#logoutGrad2)"/>
+                    <path d="M34 53C34 50.2386 36.2386 48 39 48H41C43.7614 48 46 50.2386 46 53V55" stroke="url(#logoutGrad2)" stroke-width="2.5" stroke-linecap="round"/>
+                    <defs>
+                        <linearGradient id="logoutGrad" x1="2" y1="2" x2="78" y2="78">
+                            <stop offset="0%" stop-color="#FFB6D9"/>
+                            <stop offset="100%" stop-color="#9B7EBD"/>
+                        </linearGradient>
+                        <linearGradient id="logoutGrad2" x1="25" y1="25" x2="55" y2="55">
+                            <stop offset="0%" stop-color="#FFB6D9"/>
+                            <stop offset="100%" stop-color="#9B7EBD"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+            </div>
+            
+            <div class="modal-header">
+                <h2 class="modal-title">Logout?</h2>
+                <p class="modal-subtitle">Are you sure you want to logout? We'll miss you!</p>
+            </div>
+            
+            <div class="logout-buttons">
+                <button class="logout-cancel-btn" onclick="closeLogoutModal()">
+                    Stay
+                </button>
+                <button class="logout-confirm-btn" onclick="confirmLogout()">
+                    Logout
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script src="js/config.js"></script>
+    <script src="js/wellness-agent.js"></script>
     <script src="js/script.js"></script>
+    
+    <!-- Initialize Lucide Icons -->
+    <script>
+        // Initialize Lucide icons when DOM is ready
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    </script>
 </body>
 </html>
 

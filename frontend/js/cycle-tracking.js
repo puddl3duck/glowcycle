@@ -4,6 +4,25 @@
 const API_BASE_URL = API_CONFIG?.BASE_URL || 'https://YOUR-API-ID.execute-api.YOUR-REGION.amazonaws.com/prod';
 const PERIOD_ENDPOINT = API_CONFIG?.ENDPOINTS?.PERIOD || '/period';
 
+// CRITICAL: Sync session data from sessionStorage to localStorage on page load
+(function syncSessionData() {
+  const savedSession = sessionStorage.getItem('userSession');
+  if (savedSession) {
+    try {
+      const session = JSON.parse(savedSession);
+      if (session.userName) {
+        localStorage.setItem('userName', session.userName);
+      }
+      if (session.userDisplayName) {
+        localStorage.setItem('userDisplayName', session.userDisplayName);
+      }
+      console.log('✅ Session synced to localStorage in cycle-tracking:', session);
+    } catch (e) {
+      console.error('❌ Error syncing session:', e);
+    }
+  }
+})();
+
 // Time-based functionality
 let timeMode = 'morning';
 let currentCalendarDate = new Date();
@@ -15,11 +34,17 @@ let isLoadingFromBackend = false;
 
 // Load user data from onboarding
 async function loadUserData() {
-    userName = localStorage.getItem('userName') || 'User';
+    // Try to get display name first, then username, then default
+    const userDisplayName = localStorage.getItem('userDisplayName');
+    userName = localStorage.getItem('userName') || 'Beautiful';
+    
+    console.log('🔍 Loading user data in cycle-tracking:', { userDisplayName, userName });
+    const finalName = userDisplayName || userName;
+    
     userAge = localStorage.getItem('userAge') || null;
     userCycleLength = parseInt(localStorage.getItem('cycleDays')) || 28;
     
-    console.log('Loading user data:', { userName, userAge, userCycleLength });
+    console.log('Loading user data:', { userName: finalName, userAge, userCycleLength });
     
     // Update profile display
     updateUserProfile();
@@ -95,6 +120,11 @@ async function savePeriodToBackend(date) {
         
         const data = await response.json();
         console.log('Period saved to backend:', data);
+        
+        // Mark cycle updated for wellness message refresh
+        if (typeof markCycleUpdated === 'function') {
+            markCycleUpdated();
+        }
         
         // Add to local history
         if (!periodHistory.some(d => d.getTime() === periodDate.getTime())) {
@@ -203,17 +233,21 @@ function updateUserProfile() {
     const profileNameElement = document.getElementById('profile-name');
     const profileAvatarElement = document.getElementById('profile-avatar');
     
-    console.log('Updating profile with userName:', userName);
+    // Get display name or username
+    const userDisplayName = localStorage.getItem('userDisplayName');
+    const finalName = userDisplayName || userName || 'Beautiful';
+    
+    console.log('Updating profile with userName:', finalName);
     
     if (profileNameElement) {
-        profileNameElement.textContent = userName;
+        profileNameElement.textContent = finalName;
         console.log('Profile name updated to:', profileNameElement.textContent);
     } else {
         console.warn('profile-name element not found');
     }
     
     if (profileAvatarElement) {
-        const initial = userName && userName !== 'User' ? userName.charAt(0).toUpperCase() : 'U';
+        const initial = finalName.charAt(0).toUpperCase();
         profileAvatarElement.textContent = initial;
         console.log('Profile avatar updated to:', initial);
     } else {

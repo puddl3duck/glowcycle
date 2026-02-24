@@ -10,7 +10,11 @@ const API_CONFIG = {
         SKIN_UPLOAD_URL: "/skin/upload-url",
         SKIN_ANALYZE: "/skin/analyze",
         SKIN: '/skin',
-        WELLNESS: '/wellness'
+        WELLNESS: '/wellness',
+        USER_CREATE: '/user/create',
+        USER_AUTHENTICATE: '/user/authenticate',
+        USER_COMPLETE_SETUP: '/user/complete-setup',
+        JUDGE_SETUP: '/judge/setup'
     }
 };
 

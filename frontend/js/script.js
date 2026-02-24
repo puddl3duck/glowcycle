@@ -3,6 +3,64 @@ let currentQuestion = 1;
 let selectedSkinType = null;
 let selectedPeriodOption = null; // 'date', 'cant-remember', or 'pregnant'
 
+// ===== USER SESSION =====
+// Global session object to store user data
+window.userSession = {
+    userName: null,
+    userDisplayName: null,
+    isJudgeAccount: false,
+    onboardingCompleted: false
+};
+
+// Load session from sessionStorage on page load
+function loadSession() {
+    const savedSession = sessionStorage.getItem('userSession');
+    if (savedSession) {
+        try {
+            window.userSession = JSON.parse(savedSession);
+            console.log('✅ Session loaded from sessionStorage:', window.userSession);
+            
+            // CRITICAL: Also sync to localStorage for other pages
+            if (window.userSession.userName) {
+                localStorage.setItem('userName', window.userSession.userName);
+            }
+            if (window.userSession.userDisplayName) {
+                localStorage.setItem('userDisplayName', window.userSession.userDisplayName);
+            }
+        } catch (e) {
+            console.error('❌ Error loading session:', e);
+        }
+    }
+}
+
+// Save session to sessionStorage AND localStorage
+function saveSession() {
+    try {
+        sessionStorage.setItem('userSession', JSON.stringify(window.userSession));
+        
+        // CRITICAL: Also save to localStorage so other pages can access it
+        if (window.userSession.userName) {
+            localStorage.setItem('userName', window.userSession.userName);
+        }
+        if (window.userSession.userDisplayName) {
+            localStorage.setItem('userDisplayName', window.userSession.userDisplayName);
+        }
+        if (window.userSession.isJudgeAccount !== undefined) {
+            localStorage.setItem('isJudgeAccount', window.userSession.isJudgeAccount.toString());
+        }
+        if (window.userSession.onboardingCompleted !== undefined) {
+            localStorage.setItem('onboardingCompleted', window.userSession.onboardingCompleted.toString());
+        }
+        
+        console.log('✅ Session saved to sessionStorage and localStorage');
+    } catch (e) {
+        console.error('❌ Error saving session:', e);
+    }
+}
+
+// Initialize session on page load
+loadSession();
+
 // ===== TIME-BASED PERSONALIZATION =====
 let timeMode = 'morning'; // 'morning', 'afternoon', or 'night'
 let themeOverride = localStorage.getItem('themeOverride'); // null, 'light', or 'dark'
@@ -296,7 +354,9 @@ function showDashboardView() {
     document.querySelectorAll('.nav-link').forEach(link => {
         link.classList.remove('active');
     });
-    event.target.classList.add('active');
+    if (event && event.target) {
+        event.target.classList.add('active');
+    }
 }
 
 function showAboutView() {
@@ -307,7 +367,9 @@ function showAboutView() {
     document.querySelectorAll('.nav-link').forEach(link => {
         link.classList.remove('active');
     });
-    event.target.classList.add('active');
+    if (event && event.target) {
+        event.target.classList.add('active');
+    }
 }
 
 // Navigation
@@ -316,10 +378,45 @@ function showPage(pageId) {
         page.classList.remove('active');
     });
     document.getElementById(pageId).classList.add('active');
+    
+    // CRITICAL: Refresh wellness message when returning to dashboard
+    // This ensures the message updates with any new data (journal, skin, cycle)
+    if (pageId === 'dashboard-page') {
+        // Small delay to ensure page is visible before loading message
+        setTimeout(() => {
+            if (typeof initializeWellnessMessage === 'function') {
+                const userName = window.userSession.userName;
+                if (userName) {
+                    console.log('🔄 Dashboard shown - refreshing wellness message with latest data');
+                    initializeWellnessMessage();
+                }
+            }
+        }, 100);
+    }
 }
 
 function startQuestionnaire() {
     showPage('questionnaire-page');
+    updateProgress();
+}
+
+function backToLanding() {
+    // Get current active question
+    const activeCard = document.querySelector('.question-card.active');
+    const currentQuestion = parseInt(activeCard.dataset.question);
+    
+    // If on first question, go back to landing page
+    if (currentQuestion === 1) {
+        showPage('landing-page');
+        return;
+    }
+    
+    // Otherwise, go to previous question
+    const previousQuestion = currentQuestion - 1;
+    document.querySelectorAll('.question-card').forEach(card => card.classList.remove('active'));
+    document.querySelector(`.question-card[data-question="${previousQuestion}"]`).classList.add('active');
+    
+    // Update progress bar
     updateProgress();
 }
 
@@ -394,13 +491,59 @@ function nextQuestion(questionNumber) {
     const currentCard = document.querySelector('.question-card.active');
     const currentQuestionNum = parseInt(currentCard.dataset.question);
     
+    // Check if this is a judge account
+    const isJudgeAccount = localStorage.getItem('isJudgeAccount') === 'true';
+    
     // Validation for each question
-    if (currentQuestionNum === 1) {
+    if (currentQuestionNum === 1 && !isJudgeAccount) {
+        // Validate name and password for non-judge accounts
         const nameInput = document.getElementById('user-name');
+        const passwordInput = document.getElementById('user-password');
+        
         if (!nameInput.value.trim()) {
             showError('user-name', 'name-error', 'Name is required');
             return;
         }
+        
+        if (!passwordInput.value.trim()) {
+            showError('user-password', 'password-error', 'Password is required');
+            return;
+        }
+        
+        // Validate password strength
+        const password = passwordInput.value;
+        if (password.length < 6) {
+            showError('user-password', 'password-error', 'Password must be at least 6 characters long');
+            return;
+        }
+        
+        if (!/[a-z]/.test(password)) {
+            showError('user-password', 'password-error', 'Password must contain at least one lowercase letter');
+            return;
+        }
+        
+        if (!/[A-Z]/.test(password)) {
+            showError('user-password', 'password-error', 'Password must contain at least one uppercase letter');
+            return;
+        }
+        
+        if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+            showError('user-password', 'password-error', 'Password must contain at least one special character');
+            return;
+        }
+        
+        // Save user credentials when moving from question 1
+        const username = nameInput.value.trim();
+        
+        // Create user account (async)
+        createUserAccount(username, password).then(success => {
+            if (success) {
+                // Continue to next question
+                proceedToNextQuestion(questionNumber);
+            }
+        });
+        return; // Don't continue immediately
+        
     } else if (currentQuestionNum === 2) {
         const ageInput = document.getElementById('age');
         if (!ageInput.value) {
@@ -431,6 +574,11 @@ function nextQuestion(questionNumber) {
         }
     }
     
+    // Continue to next question
+    proceedToNextQuestion(questionNumber);
+}
+
+function proceedToNextQuestion(questionNumber) {
     // Hide current question
     document.querySelectorAll('.question-card').forEach(card => {
         card.classList.remove('active');
@@ -460,6 +608,93 @@ function showError(inputId, errorId, message) {
     }
 }
 
+// Create user account function
+async function createUserAccount(displayName, password) {
+    try {
+        // Create normalized username from display name
+        const username = displayName.toLowerCase().replace(/\s+/g, '');
+        
+        console.log('🔵 Creating user account in AWS:', username);
+        console.log('🔵 Display name:', displayName);
+        
+        const API_BASE = API_CONFIG?.BASE_URL || 'https://7ofiibs7k7.execute-api.ap-southeast-2.amazonaws.com/prod';
+        
+        const response = await fetch(`${API_BASE}/user/create`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                username: username,
+                password: password,
+                displayName: displayName
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            console.log('✅ User account created in AWS:', data);
+            
+            // Save to window.userSession immediately after account creation
+            window.userSession.userName = username;
+            window.userSession.userDisplayName = displayName;
+            window.userSession.isJudgeAccount = false;
+            window.userSession.onboardingCompleted = false; // Not complete yet, still in questionnaire
+            
+            // Persist to sessionStorage
+            saveSession();
+            
+            console.log('✅ Session saved after account creation:', window.userSession);
+            
+            return true;
+        } else {
+            const errorData = await response.json();
+            console.error('❌ AWS user creation failed:', errorData);
+            console.error('❌ Response status:', response.status);
+            
+            if (response.status === 409) {
+                showError('user-name', 'name-error', 'Username already exists. Please choose a different name.');
+            } else if (response.status === 502) {
+                showError('user-name', 'name-error', 'Server error. Please try again later.');
+            } else {
+                showError('user-name', 'name-error', 'Failed to create account. Please try again.');
+            }
+            return false;
+        }
+        
+    } catch (error) {
+        console.error('❌ Error creating user account:', error);
+        console.error('❌ Error details:', error.message);
+        showError('user-name', 'name-error', 'Cannot connect to server. Please check your internet connection.');
+        return false;
+    }
+}
+
+// Mark user setup as complete
+async function markUserSetupComplete(username) {
+    try {
+        const API_BASE = API_CONFIG?.BASE_URL || 'https://7ofiibs7k7.execute-api.ap-southeast-2.amazonaws.com/prod';
+        
+        const response = await fetch(`${API_BASE}/user/complete-setup`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                username: username
+            })
+        });
+        
+        if (response.ok) {
+            console.log('✅ User setup marked as complete in backend');
+        } else {
+            console.error('❌ Failed to mark setup as complete in backend');
+        }
+        
+    } catch (error) {
+        console.error('Error marking setup complete:', error);
+    }
+}
 // Clear error when user starts typing
 document.addEventListener('DOMContentLoaded', () => {
     // Add event listeners to clear errors on input
@@ -510,31 +745,33 @@ function completeOnboarding() {
 
 // Update user profile display
 function updateUserProfile() {
-    const userName = localStorage.getItem('userName') || 'Sofia';
+    const userDisplayName = window.userSession.userDisplayName;
+    const userName = window.userSession.userName;
+    
+    console.log('🔍 DEBUG updateUserProfile:');
+    console.log('  - userDisplayName:', userDisplayName);
+    console.log('  - userName:', userName);
+    
+    const finalName = userDisplayName || userName || 'Beautiful';
+    console.log('  - finalName:', finalName);
+    
     const profileNameElement = document.getElementById('profile-name');
     const profileAvatarElement = document.getElementById('profile-avatar');
+    const userNameDisplayElement = document.getElementById('user-name-display');
     
     if (profileNameElement) {
-        profileNameElement.textContent = userName;
+        profileNameElement.textContent = finalName;
     }
     
     if (profileAvatarElement) {
         // Get first letter of name for avatar
-        profileAvatarElement.textContent = userName.charAt(0).toUpperCase();
+        profileAvatarElement.textContent = finalName.charAt(0).toUpperCase();
     }
-}
-
-// Navigation
-function showPage(pageId) {
-    document.querySelectorAll('.page').forEach(page => {
-        page.classList.remove('active');
-    });
-    document.getElementById(pageId).classList.add('active');
-}
-
-function startQuestionnaire() {
-    showPage('questionnaire-page');
-    updateProgress();
+    
+    // Update welcome message with user name
+    if (userNameDisplayElement) {
+        userNameDisplayElement.textContent = finalName;
+    }
 }
 
 function goToDashboard() {
@@ -542,21 +779,31 @@ function goToDashboard() {
     document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
     document.querySelectorAll('.input-field').forEach(el => el.classList.remove('error'));
     
-    // Validate ALL required fields
+    // Check if this is a judge account
+    const isJudgeAccount = window.userSession.isJudgeAccount;
+    const userName = window.userSession.userName;
+    
+    console.log('🔵 goToDashboard called - userName from localStorage:', userName);
+    console.log('🔵 isJudgeAccount:', isJudgeAccount);
+    
+    // Get form inputs
     const userNameInput = document.getElementById('user-name');
     const ageInput = document.getElementById('age');
     const lastPeriodInput = document.getElementById('last-period');
     
     let hasError = false;
     
-    if (!userNameInput || !userNameInput.value.trim()) {
-        showPage('questionnaire-page');
-        document.querySelectorAll('.question-card').forEach(card => card.classList.remove('active'));
-        document.querySelector('.question-card[data-question="1"]').classList.add('active');
-        currentQuestion = 1;
-        updateProgress();
-        showError('user-name', 'name-error', 'Name is required');
-        return;
+    // Validate name ONLY if NOT a judge account AND userName not already set
+    if (!isJudgeAccount && !userName) {
+        if (!userNameInput || !userNameInput.value.trim()) {
+            showPage('questionnaire-page');
+            document.querySelectorAll('.question-card').forEach(card => card.classList.remove('active'));
+            document.querySelector('.question-card[data-question="1"]').classList.add('active');
+            currentQuestion = 1;
+            updateProgress();
+            showError('user-name', 'name-error', 'Name is required');
+            return;
+        }
     }
     
     if (!ageInput || !ageInput.value) {
@@ -607,7 +854,28 @@ function goToDashboard() {
     }
     
     // All validations passed - save data
-    localStorage.setItem('userName', userNameInput.value.trim());
+    // CRITICAL: DO NOT overwrite userName if it's already set (from createUserAccount)
+    // Only set it if it doesn't exist (for judge accounts or edge cases)
+    if (!userName && !isJudgeAccount && userNameInput) {
+        const displayName = userNameInput.value.trim();
+        const normalizedUserName = displayName.toLowerCase().replace(/\s+/g, '');
+        console.log('⚠️ Setting userName in goToDashboard (should have been set earlier):', normalizedUserName);
+        
+        // Save to window.userSession
+        window.userSession.userName = normalizedUserName;
+        window.userSession.userDisplayName = displayName;
+        window.userSession.isJudgeAccount = false;
+        window.userSession.onboardingCompleted = true;
+        
+        // Persist to sessionStorage
+        saveSession();
+    }
+    
+    console.log('✅ Final userName before saving other data:', window.userSession.userName);
+    
+    // Save other profile data (age, period, skin type, cycle days)
+    // For judge accounts, userName and userDisplayName are already set from handleSignIn()Name are already set from login
+    
     localStorage.setItem('userAge', ageInput.value);
     
     // Save period data based on selection
@@ -630,14 +898,55 @@ function goToDashboard() {
     localStorage.setItem('cycleDays', cycleDays);
     localStorage.setItem('skinType', selectedSkinType);
     
+    // Mark setup as complete - SAVE TO BACKEND
+    // CRITICAL: Get userName from window.userSession AFTER it's been set
+    const finalUserName = window.userSession.userName;
+    console.log('🔵 Final userName for backend save:', finalUserName);
+    
+    if (finalUserName) {
+        console.log('🔵 Saving setup completion to backend for user:', finalUserName);
+        
+        if (isJudgeAccount) {
+            // Prepare profile data for judges
+            const profileData = {
+                age: ageInput.value,
+                lastPeriod: lastPeriodInput ? lastPeriodInput.value : null,
+                periodOption: selectedPeriodOption,
+                skinType: selectedSkinType,
+                cycleDays: cycleDays,
+                timestamp: new Date().toISOString()
+            };
+            
+            // Save to backend (async, don't wait)
+            saveJudgeSetupToBackend(finalUserName, profileData);
+        } else {
+            // For regular users, just mark setup as completed
+            markUserSetupComplete(finalUserName);
+        }
+    } else {
+        console.error('❌ ERROR: userName is null in goToDashboard - cannot save to backend');
+    }
+    
+    // Mark onboarding as complete in session
+    window.userSession.onboardingCompleted = true;
+    saveSession();
+    
     completeOnboarding();
+    
+    // Update profile BEFORE showing dashboard
+    updateUserProfile();
+    
+    // Show dashboard page
     showPage('dashboard-page');
     
-    // Update profile and content after showing dashboard
-    setTimeout(() => {
-        updateUserProfile();
-        updateTimeBasedContent();
-    }, 100);
+    // Initialize wellness message immediately after showing dashboard
+    // This ensures the message loads with the new user data
+    if (typeof initializeWellnessMessage === 'function') {
+        initializeWellnessMessage();
+    }
+    
+    // Update other time-based content
+    updateTimeBasedContent();
 }
 
 function updatePreviewCard() {
@@ -744,26 +1053,23 @@ document.addEventListener('DOMContentLoaded', () => {
         lastPeriodInput.max = today;  // Block future dates
     }
     
-    // Check if user has name - if not, force onboarding
-    const userName = localStorage.getItem('userName');
-    if (!userName || userName.trim() === '') {
-        // No user name - force onboarding
-        localStorage.removeItem('onboardingCompleted');
-        showPage('landing-page');
-    } else if (window.location.hash === '#dashboard') {
-        // Has name and navigating to dashboard
-        if (hasCompletedOnboarding()) {
+    // Check if user is logged in (has userName in window.userSession)
+    const userName = window.userSession.userName;
+    const hasOnboarding = window.userSession.onboardingCompleted;
+    
+    if (userName && userName.trim() !== '' && hasOnboarding) {
+        // User is logged in - show dashboard
+        if (window.location.hash === '#dashboard' || hasOnboarding) {
             showPage('dashboard-page');
-            setTimeout(() => {
-                updateTimeBasedContent();
-            }, 100);
-        }
-    } else if (hasCompletedOnboarding()) {
-        // Has name and completed onboarding - show dashboard
-        showPage('dashboard-page');
-        setTimeout(() => {
+            // Initialize wellness message for existing user
+            if (typeof initializeWellnessMessage === 'function') {
+                initializeWellnessMessage();
+            }
             updateTimeBasedContent();
-        }, 100);
+        }
+    } else {
+        // No user logged in - show landing page
+        showPage('landing-page');
     }
     
     // Update time-based content every minute
@@ -919,7 +1225,8 @@ function saveProfileSettings() {
     }
     
     // Save all settings
-    localStorage.setItem('userName', name);
+    localStorage.setItem('userName', name.toLowerCase().replace(/\s+/g, '')); // ID: lowercase, no spaces
+    localStorage.setItem('userDisplayName', name); // Display name: as entered
     localStorage.setItem('userAge', age);
     localStorage.setItem('lastPeriod', lastPeriod);
     localStorage.setItem('cycleDays', cycleDays);
@@ -953,5 +1260,430 @@ document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         closeHowItWorksModal();
         closeProfileSettings();
+        closeSignInModal();
+    }
+});
+
+// ===== JUDGE ACCOUNTS CONFIGURATION =====
+const JUDGE_ACCOUNTS = {
+    'Rada Stanic': {
+        password: 'glowcycle2026',
+        displayName: 'Rada Stanic',
+        title: 'Chief Technologist, ANZ'
+    },
+    'Luke Anderson': {
+        password: 'glowcycle2026',
+        displayName: 'Luke Anderson',
+        title: 'Managing Dir. Data & AI, APJ'
+    },
+    'Sarah Basset': {
+        password: 'glowcycle2026',
+        displayName: 'Sarah Basset',
+        title: 'Dir. Software & Saas, ANZ'
+    },
+    'Team': {
+        password: 'glowcycle2026',
+        displayName: 'Glow Cycle Team',
+        title: 'Development Team'
+    }
+};
+
+// Helper function to create consistent localStorage keys
+function getSetupKey(username) {
+    // Replace spaces with underscores for localStorage key
+    return `${username.replace(/\s+/g, '_')}_setupCompleted`;
+}
+
+// Helper function to save judge setup to backend
+async function saveJudgeSetupToBackend(username, profileData) {
+    try {
+        const API_BASE = API_CONFIG?.BASE_URL || 'https://7ofiibs7k7.execute-api.ap-southeast-2.amazonaws.com/prod';
+        const response = await fetch(`${API_BASE}/judge/setup`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                user: username,
+                profileData: profileData
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('🔵 Setup saved to backend successfully:', data);
+        return true;
+    } catch (error) {
+        console.error('🔴 Error saving setup to backend:', error);
+        return false;
+    }
+}
+
+// Initialize judge setup flags on page load (for demo purposes)
+function initializeJudgeSetupFlags() {
+    // Only initialize if not already set
+    const judges = ['Rada Stanic', 'Luke Anderson', 'Sarah Basset', 'Team'];
+    judges.forEach(judge => {
+        const key = getSetupKey(judge);
+        // If the key doesn't exist, we'll let them do setup once
+        // This is intentional - we want them to experience the onboarding
+    });
+}
+
+// ===== SIGN IN MODAL =====
+function openSignInModal() {
+    const modal = document.getElementById('signInModal');
+    if (modal) {
+        // Clear previous errors and inputs
+        const errorElement = document.getElementById('signin-error');
+        const usernameInput = document.getElementById('signin-username');
+        const passwordInput = document.getElementById('signin-password');
+        
+        if (errorElement) errorElement.textContent = '';
+        if (usernameInput) {
+            usernameInput.value = '';
+            usernameInput.classList.remove('error');
+        }
+        if (passwordInput) {
+            passwordInput.value = '';
+            passwordInput.classList.remove('error');
+        }
+        
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        
+        // Focus on username input
+        setTimeout(() => {
+            if (usernameInput) usernameInput.focus();
+        }, 100);
+    }
+}
+
+function closeSignInModal() {
+    const modal = document.getElementById('signInModal');
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+}
+
+// ===== LOGOUT FUNCTION =====
+function handleLogout() {
+    openLogoutModal();
+}
+
+function openLogoutModal() {
+    const modal = document.getElementById('logoutModal');
+    if (modal) {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeLogoutModal() {
+    const modal = document.getElementById('logoutModal');
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+}
+
+function confirmLogout() {
+    // Clear window.userSession
+    window.userSession = {
+        userName: null,
+        userDisplayName: null,
+        isJudgeAccount: false,
+        onboardingCompleted: false
+    };
+    
+    // Clear sessionStorage
+    sessionStorage.removeItem('userSession');
+    
+    // Clear localStorage for backward compatibility
+    localStorage.removeItem('userName');
+    localStorage.removeItem('userDisplayName');
+    localStorage.removeItem('onboardingCompleted');
+    localStorage.removeItem('isJudgeAccount');
+    
+    closeLogoutModal();
+    
+    // Redirect to landing page
+    showPage('landing-page');
+    
+    console.log('User logged out successfully');
+}
+
+async function handleSignIn() {
+    const usernameInput = document.getElementById('signin-username');
+    const passwordInput = document.getElementById('signin-password');
+    const errorElement = document.getElementById('signin-error');
+    
+    if (!usernameInput || !passwordInput || !errorElement) return;
+    
+    // Get credentials
+    const username = usernameInput.value.trim();
+    const password = passwordInput.value.trim();
+    
+    // Clear previous errors
+    errorElement.textContent = '';
+    usernameInput.classList.remove('error');
+    passwordInput.classList.remove('error');
+    
+    // Validate inputs
+    if (!username) {
+        usernameInput.classList.add('error');
+        errorElement.textContent = 'Username is required';
+        return;
+    }
+    
+    if (!password) {
+        passwordInput.classList.add('error');
+        errorElement.textContent = 'Password is required';
+        return;
+    }
+    
+    console.log('Sign in attempt:', username);
+    
+    // Check if it's a judge account
+    const judgeAccount = JUDGE_ACCOUNTS[username];
+    
+    if (judgeAccount) {
+        // Validate judge password
+        if (password !== judgeAccount.password) {
+            usernameInput.classList.add('error');
+            passwordInput.classList.add('error');
+            errorElement.textContent = 'Invalid username or password';
+            return;
+        }
+        
+        // Judge account - successful login
+        console.log('🟢 Judge account login:', username);
+        
+        // Save judge info to window.userSession
+        window.userSession.userName = username;
+        window.userSession.userDisplayName = judgeAccount.displayName;
+        window.userSession.isJudgeAccount = true;
+        
+        // Persist to sessionStorage
+        saveSession();
+        
+        // Also save to localStorage for backward compatibility
+        localStorage.setItem('userName', username);
+        localStorage.setItem('userDisplayName', judgeAccount.displayName);
+        localStorage.setItem('isJudgeAccount', 'true');
+        localStorage.setItem('judgeTitle', judgeAccount.title);
+        
+        // Check setup status from BACKEND (not localStorage)
+        try {
+            const API_BASE = API_CONFIG?.BASE_URL || 'https://7ofiibs7k7.execute-api.ap-southeast-2.amazonaws.com/prod';
+            const response = await fetch(`${API_BASE}/judge/setup?user=${encodeURIComponent(username)}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            const hasCompletedSetup = data.setupCompleted === true;
+            
+            console.log('🟢 Setup status from backend:', hasCompletedSetup);
+            
+            closeSignInModal();
+            
+            if (!hasCompletedSetup) {
+                // First time login - go to setup questionnaire (skip name question)
+                window.userSession.onboardingCompleted = false;
+                saveSession();
+                
+                showPage('questionnaire-page');
+                // Skip to question 2 (age)
+                document.querySelectorAll('.question-card').forEach(card => card.classList.remove('active'));
+                document.querySelector('.question-card[data-question="2"]').classList.add('active');
+                currentQuestion = 2;
+                updateProgress();
+            } else {
+                // Already completed setup - go to dashboard
+                window.userSession.onboardingCompleted = true;
+                saveSession();
+                
+                localStorage.setItem('onboardingCompleted', 'true');
+                showPage('dashboard-page');
+                updateUserProfile();
+                if (typeof initializeWellnessMessage === 'function') {
+                    initializeWellnessMessage();
+                }
+                updateTimeBasedContent();
+            }
+            
+            console.log('Judge logged in:', username);
+            return;
+            
+        } catch (error) {
+            console.error('Error checking judge setup:', error);
+            // If backend fails, show questionnaire to be safe
+            window.userSession.onboardingCompleted = false;
+            saveSession();
+            
+            closeSignInModal();
+            showPage('questionnaire-page');
+            document.querySelectorAll('.question-card').forEach(card => card.classList.remove('active'));
+            document.querySelector('.question-card[data-question="2"]').classList.add('active');
+            currentQuestion = 2;
+            updateProgress();
+            return;
+        }
+    }
+    
+    // Regular user account - try backend first, fallback to localStorage
+    try {
+        // Normalize username for comparison
+        const normalizedInput = username.toLowerCase().replace(/\s+/g, '');
+        
+        // Try backend authentication first
+        const API_BASE = API_CONFIG?.BASE_URL || 'https://7ofiibs7k7.execute-api.ap-southeast-2.amazonaws.com/prod';
+        
+        console.log('🔵 Attempting backend authentication for:', normalizedInput);
+        
+        try {
+            const response = await fetch(`${API_BASE}/user/authenticate`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    username: normalizedInput,
+                    password: password
+                })
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                
+                console.log('✅ Backend authentication successful:', data);
+                
+                // Save to session object
+                window.userSession.userName = data.username;
+                window.userSession.userDisplayName = data.displayName;
+                window.userSession.isJudgeAccount = false;
+                window.userSession.onboardingCompleted = true;
+                
+                // Persist session
+                saveSession();
+                
+                closeSignInModal();
+                
+                // EXISTING USER - Always go to dashboard (they already registered)
+                showPage('dashboard-page');
+                updateUserProfile();
+                if (typeof initializeWellnessMessage === 'function') {
+                    initializeWellnessMessage();
+                }
+                updateTimeBasedContent();
+                
+                console.log('✅ User logged in via backend:', data.username);
+                return;
+            } else {
+                const errorData = await response.json();
+                console.log('❌ Backend authentication failed:', errorData);
+                console.log('❌ Response status:', response.status);
+                console.log('❌ Response statusText:', response.statusText);
+                
+                // Show error to user
+                usernameInput.classList.add('error');
+                passwordInput.classList.add('error');
+                
+                if (response.status === 502) {
+                    errorElement.textContent = 'Server error. Please try again later or contact support.';
+                } else if (response.status === 401) {
+                    errorElement.textContent = 'Invalid username or password';
+                } else {
+                    errorElement.textContent = 'Authentication failed. Please try again.';
+                }
+            }
+        } catch (backendError) {
+            console.error('❌ Backend authentication error:', backendError);
+            console.error('❌ Error details:', backendError.message);
+            
+            // Show error to user
+            usernameInput.classList.add('error');
+            passwordInput.classList.add('error');
+            errorElement.textContent = 'Cannot connect to server. Please check your internet connection.';
+        }
+        
+    } catch (error) {
+        console.error('❌ Error authenticating user:', error);
+        usernameInput.classList.add('error');
+        passwordInput.classList.add('error');
+        errorElement.textContent = 'Login failed. Please try again.';
+    }
+}
+
+// ===== ENTER KEY FUNCTIONALITY FOR QUESTIONNAIRE =====
+document.addEventListener('DOMContentLoaded', () => {
+    // Add Enter key listener for name input (Question 1)
+    const nameInput = document.getElementById('user-name');
+    if (nameInput) {
+        nameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                nextQuestion(2);
+            }
+        });
+    }
+    
+    // Add Enter key listener for age input (Question 2)
+    const ageInput = document.getElementById('age');
+    if (ageInput) {
+        ageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                nextQuestion(3);
+            }
+        });
+    }
+    
+    // Add Enter key listener for last period input (Question 3)
+    const lastPeriodInput = document.getElementById('last-period');
+    if (lastPeriodInput) {
+        lastPeriodInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                nextQuestion(4);
+            }
+        });
+    }
+    
+    // Add Enter key listener for sign in modal - username
+    const signInInput = document.getElementById('signin-username');
+    if (signInInput) {
+        signInInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                // Focus on password field
+                const passwordInput = document.getElementById('signin-password');
+                if (passwordInput) {
+                    passwordInput.focus();
+                }
+            }
+        });
+    }
+    
+    // Add Enter key listener for sign in modal - password
+    const signInPassword = document.getElementById('signin-password');
+    if (signInPassword) {
+        signInPassword.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handleSignIn();
+            }
+        });
     }
 });

@@ -68,6 +68,18 @@ body.dark-theme .logo {
 }
 
 /* ===== QUESTIONNAIRE ===== */
+body.dark-theme .questionnaire-close-btn {
+    background: rgba(37, 37, 58, 0.95);
+    border-color: rgba(255, 182, 217, 0.3);
+    color: #FFFFFF;
+}
+
+body.dark-theme .questionnaire-close-btn:hover {
+    background: rgba(37, 37, 58, 1);
+    border-color: #FFB6D9;
+    box-shadow: 0 8px 20px rgba(255, 182, 217, 0.3);
+}
+
 body.dark-theme .question-title {
     color: #FFFFFF !important;
     text-shadow: 0 2px 15px rgba(255, 182, 217, 0.3);
@@ -115,7 +127,9 @@ body.dark-theme .input-field.error:focus {
 }
 
 body.dark-theme .error-message {
-    color: #FF8A8A;
+    background: rgba(255, 107, 107, 0.12);
+    border-left-color: #FF8A8A;
+    color: #FFB6D9;
 }
 
 body.dark-theme .cycle-btn {
@@ -275,10 +289,6 @@ body.dark-theme .step-number {
     font-weight: 700;
 }
 
-body.dark-theme .step-card:hover {
-    border-color: rgba(255, 182, 217, 0.5);
-}
-
 /* ===== COMPARISON SECTION ===== */
 body.dark-theme .comparison-card {
     background: rgba(37, 37, 58, 0.95);
@@ -388,8 +398,35 @@ body.dark-theme .nav-profile:hover {
     background: linear-gradient(135deg, rgba(255, 182, 217, 0.3), rgba(168, 230, 207, 0.3));
 }
 
+/* Dark mode for mobile nav-links dropdown */
+@media (max-width: 768px) {
+    body.dark-theme .nav-links {
+        background: rgba(37, 37, 58, 0.98);
+        border-top: 1px solid rgba(255, 182, 217, 0.3);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+}
+
 body.dark-theme .profile-settings-btn:hover {
     background: rgba(255, 182, 217, 0.3);
+}
+
+/* Dark mode - Logout Button */
+body.dark-theme .profile-logout-btn svg {
+    color: #E8D4F0;
+}
+
+body.dark-theme .profile-logout-btn:hover {
+    background: linear-gradient(135deg, rgba(255, 182, 217, 0.2), rgba(212, 197, 232, 0.2));
+}
+
+body.dark-theme .profile-logout-btn:hover svg {
+    color: #FFB6D9;
+}
+
+body.dark-theme .profile-logout-btn::before {
+    background: linear-gradient(135deg, #D4C5E8, #FFB6D9);
+    box-shadow: 0 4px 12px rgba(212, 197, 232, 0.3);
 }
 
 body.dark-theme .form-group label {
@@ -865,12 +902,14 @@ body.dark-theme * {
 .dark-theme .modal-step {
     background: rgba(255, 255, 255, 0.05);
     border-color: rgba(255, 182, 217, 0.1);
+    cursor: default;
 }
 
 .dark-theme .modal-step:hover {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: #FFB6D9;
-    box-shadow: 0 8px 24px rgba(255, 182, 217, 0.3);
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 182, 217, 0.1);
+    box-shadow: none;
+    transform: none;
 }
 
 .dark-theme .modal-step-number {
@@ -920,11 +959,14 @@ body.dark-theme * {
 .dark-theme .modal-step-compact {
     background: rgba(255, 255, 255, 0.05);
     border-color: rgba(255, 182, 217, 0.1);
+    cursor: default;
 }
 
 .dark-theme .modal-step-compact:hover {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: #FFB6D9;
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 182, 217, 0.1);
+    box-shadow: none;
+    transform: none;
 }
 
 .dark-theme .step-number-compact {
@@ -1243,8 +1285,8 @@ body.dark-theme .alt-text {
 
 /* Error messages */
 body.dark-theme .error-message {
-    background: rgba(255, 107, 107, 0.2);
-    border-color: rgba(255, 107, 107, 0.4);
+    background: rgba(255, 107, 107, 0.12);
+    border-left-color: #FF8A8A;
     color: #FFB6D9;
 }
 
@@ -1389,5 +1431,332 @@ body.dark-theme .floating-decoration {
     body.dark-theme .cta-button,
     body.dark-theme .primary-cta {
         box-shadow: 0 10px 30px rgba(255, 182, 217, 0.4);
+    }
+}
+
+
+/* ===== BACK NAVIGATION FIX ===== */
+body.dark-theme .back-navigation {
+    background: transparent;
+}
+
+body.dark-theme .back-link {
+    background: rgba(255, 182, 217, 0.2) !important;
+    border: 2px solid rgba(255, 182, 217, 0.4) !important;
+    color: #FFFFFF !important;
+    font-weight: 600 !important;
+}
+
+body.dark-theme .back-link:hover {
+    background: rgba(255, 182, 217, 0.3) !important;
+    border-color: #FFB6D9 !important;
+    box-shadow: 0 4px 16px rgba(255, 182, 217, 0.3) !important;
+}
+
+body.dark-theme .back-arrow {
+    color: #FFFFFF !important;
+    font-weight: 900 !important;
+}
+
+body.dark-theme .back-link span {
+    color: #FFFFFF !important;
+    font-weight: 600 !important;
+}
+
+/* ===== CALENDAR DARK MODE FIX ===== */
+body.dark-theme .calendar-card {
+    background: rgba(37, 37, 58, 0.95) !important;
+    border: 2px solid rgba(255, 182, 217, 0.3) !important;
+}
+
+body.dark-theme .calendar-header {
+    background: rgba(255, 182, 217, 0.15) !important;
+    border-bottom: 2px solid rgba(255, 182, 217, 0.3) !important;
+}
+
+body.dark-theme .calendar-month {
+    color: #FFFFFF !important;
+    font-weight: 700 !important;
+}
+
+body.dark-theme .calendar-nav-btn {
+    background: rgba(255, 182, 217, 0.2) !important;
+    color: #FFFFFF !important;
+    border: 2px solid rgba(255, 182, 217, 0.3) !important;
+}
+
+body.dark-theme .calendar-nav-btn:hover {
+    background: rgba(255, 182, 217, 0.3) !important;
+    border-color: #FFB6D9 !important;
+}
+
+body.dark-theme .calendar-weekdays {
+    background: rgba(255, 182, 217, 0.1) !important;
+    border-bottom: 2px solid rgba(255, 182, 217, 0.2) !important;
+}
+
+body.dark-theme .calendar-weekday {
+    color: #FFB6D9 !important;
+    font-weight: 700 !important;
+}
+
+body.dark-theme .calendar-day {
+    background: rgba(37, 37, 58, 0.8) !important;
+    color: #FFFFFF !important;
+    border: 1px solid rgba(255, 182, 217, 0.2) !important;
+    font-weight: 600 !important;
+}
+
+body.dark-theme .calendar-day:hover {
+    background: rgba(255, 182, 217, 0.2) !important;
+    border-color: #FFB6D9 !important;
+}
+
+body.dark-theme .calendar-day.other-month {
+    background: rgba(37, 37, 58, 0.4) !important;
+    color: rgba(255, 255, 255, 0.3) !important;
+}
+
+body.dark-theme .calendar-day.today {
+    background: rgba(168, 230, 207, 0.3) !important;
+    border: 3px solid #A8E6CF !important;
+    color: #FFFFFF !important;
+    font-weight: 700 !important;
+}
+
+/* PERIOD DAYS - HIGHLY VISIBLE */
+body.dark-theme .calendar-day.period {
+    background: linear-gradient(135deg, #FF6B9D, #FF8FB3) !important;
+    color: #FFFFFF !important;
+    border: 3px solid #FFB6D9 !important;
+    font-weight: 900 !important;
+    box-shadow: 0 4px 12px rgba(255, 107, 157, 0.5) !important;
+}
+
+body.dark-theme .calendar-day.period:hover {
+    background: linear-gradient(135deg, #FF8FB3, #FFB6D9) !important;
+    box-shadow: 0 6px 16px rgba(255, 107, 157, 0.6) !important;
+}
+
+/* PREDICTED PERIOD DAYS - VISIBLE */
+body.dark-theme .calendar-day.predicted {
+    background: rgba(255, 107, 157, 0.4) !important;
+    border: 2px dashed #FFB6D9 !important;
+    color: #FFFFFF !important;
+    font-weight: 700 !important;
+}
+
+body.dark-theme .calendar-day.predicted:hover {
+    background: rgba(255, 107, 157, 0.5) !important;
+    border-color: #FF8FB3 !important;
+}
+
+/* OVULATION DAY - VISIBLE */
+body.dark-theme .calendar-day.ovulation {
+    background: linear-gradient(135deg, rgba(168, 230, 207, 0.4), rgba(200, 230, 230, 0.4)) !important;
+    border: 3px solid #A8E6CF !important;
+    color: #FFFFFF !important;
+    font-weight: 700 !important;
+}
+
+body.dark-theme .calendar-day.ovulation:hover {
+    background: linear-gradient(135deg, rgba(168, 230, 207, 0.5), rgba(200, 230, 230, 0.5)) !important;
+}
+
+/* FERTILE WINDOW - VISIBLE */
+body.dark-theme .calendar-day.fertile {
+    background: rgba(168, 230, 207, 0.25) !important;
+    border: 2px solid rgba(168, 230, 207, 0.5) !important;
+    color: #FFFFFF !important;
+    font-weight: 600 !important;
+}
+
+body.dark-theme .calendar-day.fertile:hover {
+    background: rgba(168, 230, 207, 0.35) !important;
+    border-color: #A8E6CF !important;
+}
+
+/* Calendar Legend */
+body.dark-theme .calendar-legend {
+    background: rgba(37, 37, 58, 0.8) !important;
+    border: 2px solid rgba(255, 182, 217, 0.3) !important;
+}
+
+body.dark-theme .legend-item {
+    color: #FFFFFF !important;
+    font-weight: 600 !important;
+}
+
+body.dark-theme .legend-color {
+    border: 2px solid rgba(255, 182, 217, 0.4) !important;
+}
+
+body.dark-theme .legend-color.period {
+    background: linear-gradient(135deg, #FF6B9D, #FF8FB3) !important;
+}
+
+body.dark-theme .legend-color.predicted {
+    background: rgba(255, 107, 157, 0.4) !important;
+    border: 2px dashed #FFB6D9 !important;
+}
+
+body.dark-theme .legend-color.ovulation {
+    background: linear-gradient(135deg, rgba(168, 230, 207, 0.4), rgba(200, 230, 230, 0.4)) !important;
+}
+
+body.dark-theme .legend-color.fertile {
+    background: rgba(168, 230, 207, 0.25) !important;
+}
+
+/* ===== PAGE HEADERS ===== */
+body.dark-theme .page-header h1 {
+    color: #FFFFFF !important;
+    text-shadow: 0 2px 20px rgba(255, 182, 217, 0.4) !important;
+    font-weight: 700 !important;
+}
+
+body.dark-theme .page-header p {
+    color: #FFFFFF !important;
+    font-weight: 600 !important;
+}
+
+/* ===== SKIN TRACKING PAGE ===== */
+body.dark-theme .new-scan-card {
+    background: rgba(37, 37, 58, 0.95) !important;
+    border: 2px solid rgba(255, 182, 217, 0.3) !important;
+}
+
+body.dark-theme .new-scan-card h3 {
+    color: #FFFFFF !important;
+    background: linear-gradient(135deg, #FFB6D9, #FFC9E0) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+}
+
+body.dark-theme .new-scan-card p {
+    color: #FFFFFF !important;
+    font-weight: 500 !important;
+}
+
+body.dark-theme .scan-history-section {
+    background: rgba(37, 37, 58, 0.8) !important;
+    border: 2px solid rgba(255, 182, 217, 0.3) !important;
+}
+
+body.dark-theme .history-header h2 {
+    color: #FFFFFF !important;
+    background: linear-gradient(135deg, #FFB6D9, #FFC9E0) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+}
+
+body.dark-theme .scan-count {
+    background: rgba(255, 182, 217, 0.2) !important;
+    color: #FFFFFF !important;
+    font-weight: 600 !important;
+}
+
+body.dark-theme .history-card {
+    background: rgba(37, 37, 58, 0.95) !important;
+    border: 2px solid rgba(255, 182, 217, 0.3) !important;
+}
+
+body.dark-theme .history-card:hover {
+    border-color: #FFB6D9 !important;
+    box-shadow: 0 6px 24px rgba(255, 182, 217, 0.3) !important;
+}
+
+body.dark-theme .history-date {
+    color: #FFFFFF !important;
+    font-weight: 700 !important;
+}
+
+body.dark-theme .history-cycle {
+    color: #FFFFFF !important;
+    font-weight: 600 !important;
+}
+
+body.dark-theme .history-metric-label {
+    color: #FFB6D9 !important;
+    font-weight: 600 !important;
+}
+
+body.dark-theme .history-metric-value {
+    color: #FFFFFF !important;
+    font-weight: 700 !important;
+}
+
+body.dark-theme .history-view-btn {
+    background: rgba(255, 182, 217, 0.2) !important;
+    border: 2px solid rgba(255, 182, 217, 0.4) !important;
+    color: #FFFFFF !important;
+    font-weight: 700 !important;
+}
+
+body.dark-theme .history-view-btn:hover {
+    background: linear-gradient(135deg, #FF9B9B, #9B7EBD) !important;
+    color: #FFFFFF !important;
+    border-color: transparent !important;
+}
+
+body.dark-theme .empty-history p {
+    color: #FFFFFF !important;
+    font-weight: 600 !important;
+}
+
+body.dark-theme .empty-subtitle {
+    color: rgba(255, 255, 255, 0.7) !important;
+    font-weight: 500 !important;
+}
+
+
+/* ===== LOGOUT BUTTON DARK MODE IMPROVEMENTS ===== */
+body.dark-theme .profile-logout-btn {
+    opacity: 0.8;
+}
+
+body.dark-theme .profile-logout-btn svg {
+    color: #E8D4F0;
+}
+
+body.dark-theme .profile-logout-btn:hover {
+    opacity: 1;
+    background: linear-gradient(135deg, rgba(255, 182, 217, 0.25), rgba(212, 197, 232, 0.25));
+}
+
+body.dark-theme .profile-logout-btn:hover svg {
+    color: #FFB6D9;
+}
+
+/* ===== TEXT CONTRAST IMPROVEMENTS ===== */
+body.dark-theme {
+    --text-medium: #E8D4F0;
+    --text-light: #D4C5E8;
+}
+
+/* ===== INPUT PLACEHOLDERS DARK MODE ===== */
+body.dark-theme input::placeholder,
+body.dark-theme textarea::placeholder {
+    color: #B8A8D0;
+    opacity: 0.8;
+}
+
+/* ===== MOBILE RESPONSIVE IMPROVEMENTS ===== */
+@media (max-width: 480px) {
+    body.dark-theme .profile-logout-btn {
+        width: 35px;
+        height: 35px;
+        padding: 0.3rem;
+    }
+    
+    body.dark-theme .profile-logout-btn svg {
+        width: 16px;
+        height: 16px;
+    }
+    
+    body.dark-theme .profile-logout-btn::before {
+        display: none;
     }
 }

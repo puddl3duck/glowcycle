@@ -1,18 +1,40 @@
 // Time-based functionality
 let timeMode = "morning"; // 'morning', 'afternoon', or 'night'
 
+// CRITICAL: Sync session data from sessionStorage to localStorage on page load
+(function syncSessionData() {
+  const savedSession = sessionStorage.getItem('userSession');
+  if (savedSession) {
+    try {
+      const session = JSON.parse(savedSession);
+      if (session.userName) {
+        localStorage.setItem('userName', session.userName);
+      }
+      if (session.userDisplayName) {
+        localStorage.setItem('userDisplayName', session.userDisplayName);
+      }
+    } catch (e) {
+      console.error('Error syncing session:', e);
+    }
+  }
+})();
+
 // Load user profile
 function loadUserProfile() {
-  const userName = localStorage.getItem('userName') || 'User';
+  // Try to get display name first, then username, then default
+  const userDisplayName = localStorage.getItem('userDisplayName');
+  const userName = localStorage.getItem('userName');
+  const finalName = userDisplayName || userName || 'Beautiful';
+  
   const profileNameElement = document.getElementById('profile-name');
   const profileAvatarElement = document.getElementById('profile-avatar');
   
   if (profileNameElement) {
-    profileNameElement.textContent = userName;
+    profileNameElement.textContent = finalName;
   }
   
   if (profileAvatarElement) {
-    profileAvatarElement.textContent = userName.charAt(0).toUpperCase();
+    profileAvatarElement.textContent = finalName.charAt(0).toUpperCase();
   }
 }
 
@@ -286,13 +308,13 @@ function detectFaceInVideo(video, guideOval) {
 
   const faceDetected =
     avgBrightness > 50 && avgBrightness < 210 &&
-    topSkinRatio > 0.2 &&
-    middleSkinRatio > 0.3 &&
-    bottomSkinRatio > 0.25 &&
-    edgeCount > 80 &&
-    symmetryRatio > 0.4 &&
-    Math.abs(topBrightness - middleBrightness) < 60 &&
-    Math.abs(middleBrightness - bottomBrightness) < 60;
+    topSkinRatio > 0.15 &&
+    middleSkinRatio > 0.2 &&
+    bottomSkinRatio > 0.15 &&
+    edgeCount > 60 &&
+    symmetryRatio > 0.3 &&
+    Math.abs(topBrightness - middleBrightness) < 70 &&
+    Math.abs(middleBrightness - bottomBrightness) < 70;
 
   if (faceDetected) {
     guideOval.classList.add("face-detected");
@@ -486,6 +508,11 @@ async function sendCapturedImageToBackend(dataUrl) {
     }
 
     const analysis = await analyzeResp.json();
+    
+    // CRITICAL: Store both the captured image (for immediate view) and S3 key (for history)
+    analysis.capturedImage = dataUrl;
+    analysis.s3ImageKey = s3Key; // Store S3 key for loading from history
+    
     window.__skinAnalysisResult = analysis;
 
   } catch (err) {
@@ -502,9 +529,10 @@ async function saveReport() {
   }
 
   const apiConfig = typeof API_CONFIG !== "undefined" ? API_CONFIG : window.API_CONFIG;
-  const user = document.querySelector(".profile-name")?.textContent?.trim()
-    || localStorage.getItem("userName")
-    || "anonymous";
+  // CRITICAL: Convert to lowercase to match DynamoDB storage
+  const user = (localStorage.getItem("userName") || "anonymous").toLowerCase();
+  
+  console.log('Saving report for user:', user);
 
   const saveBtn = document.querySelector(".save-btn");
   if (saveBtn) {
@@ -515,25 +543,36 @@ async function saveReport() {
   try {
     const cycleInfo = getCycleDayAndPhase();
 
+    // CRITICAL: Remove capturedImage before saving to avoid DynamoDB size limit (400KB)
+    // The image is already in S3, we don't need to duplicate it in DynamoDB
+    const analysisToSave = {
+      ...result,
+      cycleDay: cycleInfo.day,
+      cyclePhase: cycleInfo.phase,
+    };
+    
+    // Remove the large capturedImage data URL to avoid exceeding DynamoDB limits
+    delete analysisToSave.capturedImage;
+
     const resp = await fetch(apiConfig.BASE_URL + "/skin/history", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         user,
-        analysis: {
-          ...result,
-          cycleDay: cycleInfo.day,
-          cyclePhase: cycleInfo.phase,
-        }
+        analysis: analysisToSave
       }),
     });
 
-    if (!resp.ok) throw new Error("Save failed");
-
-    if (saveBtn) {
-      saveBtn.textContent = "✓ Saved!";
-      saveBtn.style.background = "linear-gradient(135deg, #A8E6CF, #68C9A3)";
+    if (!resp.ok) {
+      const errorText = await resp.text();
+      console.error('Backend error:', resp.status, errorText);
+      throw new Error(`Save failed: ${resp.status} - ${errorText}`);
     }
+
+    console.log('Report saved successfully for user:', user);
+
+    // Show success popup and automatically go back
+    showSaveSuccessPopup();
 
     // Reload history so the new entry appears immediately
     await loadScanHistory();
@@ -545,6 +584,41 @@ async function saveReport() {
       saveBtn.disabled = false;
     }
   }
+}
+
+// Show success popup after saving
+function showSaveSuccessPopup() {
+  // Create popup if it doesn't exist
+  let popup = document.getElementById('save-success-popup');
+  if (!popup) {
+    popup = document.createElement('div');
+    popup.id = 'save-success-popup';
+    popup.className = 'save-success-popup';
+    popup.innerHTML = `
+      <div class="save-success-content">
+        <div class="success-icon">✓</div>
+        <h3>Saved Successfully!</h3>
+        <p>Your skin report has been saved to history</p>
+      </div>
+    `;
+    document.body.appendChild(popup);
+  }
+  
+  // Show popup with animation
+  popup.style.display = 'flex';
+  setTimeout(() => {
+    popup.classList.add('show');
+  }, 10);
+  
+  // Hide after 2 seconds and go back to history
+  setTimeout(() => {
+    popup.classList.remove('show');
+    setTimeout(() => {
+      popup.style.display = 'none';
+      // Automatically go back to history
+      closeResultsView();
+    }, 300);
+  }, 2000);
 }
 
 // Runs progress bar + step animations for a guaranteed minimum duration,
@@ -664,6 +738,14 @@ function showResults() {
 
   // Show results
   document.getElementById("results-view").style.display = "block";
+  
+  // Show Save Report button for fresh scans
+  const saveBtn = document.querySelector('.save-btn');
+  if (saveBtn) saveBtn.style.display = 'block';
+  
+  // Hide Back button for fresh scans
+  const backBtn = document.querySelector('.back-to-history-btn');
+  if (backBtn) backBtn.style.display = 'none';
 
   // Update cycle day dynamically
   const { day, phase, emoji } = getCycleDayAndPhase();
@@ -676,6 +758,43 @@ function showResults() {
 
   renderSkinAnalysisResult();
   drawRadarChart();
+}
+
+// Close results view and return to main page
+function closeResultsView() {
+  // Hide results
+  document.getElementById('results-view').style.display = 'none';
+  
+  // Show main content with proper display values
+  const methodSelection = document.querySelector('.method-selection-single');
+  const scanHistory = document.querySelector('.scan-history-section');
+  const pageHeader = document.querySelector('.page-header');
+  const backNav = document.querySelector('.back-navigation');
+  
+  if (methodSelection) methodSelection.style.display = 'flex'; // CRITICAL: Use flex, not block
+  if (scanHistory) scanHistory.style.display = 'block';
+  if (pageHeader) pageHeader.style.display = 'block';
+  if (backNav) backNav.style.display = 'block';
+  
+  // Reset save button
+  const saveBtn = document.querySelector('.save-btn');
+  if (saveBtn) {
+    saveBtn.style.display = 'block';
+    saveBtn.textContent = 'Save Report';
+    saveBtn.disabled = false;
+    saveBtn.style.background = '';
+  }
+  
+  // CRITICAL: Clear and reload history to prevent duplicates
+  const historyList = document.getElementById('history-list');
+  if (historyList) {
+    // Remove all history cards
+    const existingCards = historyList.querySelectorAll('.history-card');
+    existingCards.forEach(card => card.remove());
+    
+    // Reload history fresh
+    loadScanHistory();
+  }
 }
 
 // Toggle for routine step product section 
@@ -1097,15 +1216,28 @@ window.addEventListener("load", () => {
  * In production, this would fetch from backend API
  */
 async function loadScanHistory() {
-    const userName = localStorage.getItem('userName');
-    if (!userName) return;
+    // CRITICAL: Convert to lowercase to match DynamoDB storage
+    const userName = (localStorage.getItem('userName') || '').toLowerCase();
+    console.log('Loading scan history for user:', userName);
+    
+    if (!userName) {
+        console.log('No userName found in localStorage');
+        return;
+    }
 
     const apiConfig = typeof API_CONFIG !== "undefined" ? API_CONFIG : window.API_CONFIG;
 
     try {
-        const resp = await fetch(`${apiConfig.BASE_URL}/skin/history?user=${encodeURIComponent(userName)}`);
-        if (!resp.ok) throw new Error("Failed to fetch history");
+        const url = `${apiConfig.BASE_URL}/skin/history?user=${encodeURIComponent(userName)}`;
+        console.log('Fetching from:', url);
+        
+        const resp = await fetch(url);
+        if (!resp.ok) {
+            console.error('Failed to fetch history:', resp.status);
+            throw new Error("Failed to fetch history");
+        }
         const data = await resp.json();
+        console.log('Received history data:', data);
 
         const scans = (data.analyses || []).map(entry => ({
             date: entry.created_at,
@@ -1115,12 +1247,26 @@ async function loadScanHistory() {
             metrics: {
                 radiance: entry.metrics?.radiance || 0,
                 texture: entry.metrics?.texture || 0,
-                hydration: entry.metrics?.moisture || 0,
-                spots: entry.metrics?.pores || 0,
-                darkCircles: entry.metrics?.dark_circles || 0,
+                hydration: entry.metrics?.moisture || entry.metrics?.hydration || 0,
+                moisture: entry.metrics?.moisture || entry.metrics?.hydration || 0,
+                spots: entry.metrics?.pores || entry.metrics?.spots || 0,
+                pores: entry.metrics?.pores || entry.metrics?.spots || 0,
+                darkCircles: entry.metrics?.dark_circles || entry.metrics?.darkCircles || 0,
+                dark_circles: entry.metrics?.dark_circles || entry.metrics?.darkCircles || 0,
+                redness: entry.metrics?.redness || 0,
+                oiliness: entry.metrics?.oiliness || 0
             },
-            summary: entry.summary || ''
+            summary: entry.summary || '',
+            am_routine: entry.am_routine || [],
+            pm_routine: entry.pm_routine || [],
+            tips: entry.tips || [],
+            concerns_detected: entry.concerns_detected || [],
+            disclaimer: entry.disclaimer || 'This analysis is for informational purposes only.',
+            s3ImageKey: entry.s3_image_key || entry.s3ImageKey || null,
+            face_data: entry.face_data || null
         }));
+
+        console.log('Processed scans:', scans.length);
 
         const scanCountEl = document.getElementById('scan-count');
         if (scanCountEl) {
@@ -1143,6 +1289,10 @@ function displayScanHistory(scans) {
     const emptyHistory = document.getElementById('empty-history');
 
     if (!historyList) return;
+
+    // CRITICAL: Clear existing cards (except empty state) to prevent duplicates
+    const existingCards = historyList.querySelectorAll('.history-card');
+    existingCards.forEach(card => card.remove());
 
     if (scans.length === 0) {
         // Show empty state
@@ -1232,27 +1382,100 @@ function createHistoryCard(scan, index) {
  * View a specific scan report
  */
 function viewScanReport(scanIndex) {
-    const userName = localStorage.getItem('userName');
+    // CRITICAL: Convert to lowercase to match DynamoDB storage
+    const userName = (localStorage.getItem('userName') || '').toLowerCase();
     if (!userName) return;
+
+    // Get scans from window.__scanHistory
+    const scans = window.__scanHistory || [];
+    
+    if (!scans || scans.length === 0 || scanIndex >= scans.length) {
+        console.error('No scan data available or invalid index');
+        return;
+    }
 
     const scan = scans[scanIndex];
     loadScanIntoResultsView(scan);
 
     // Hide main content
-    document.querySelector('.method-selection-single').style.display = 'none';
-    document.querySelector('.scan-history-section').style.display = 'none';
-    document.querySelector('.page-header').style.display = 'none';
-    document.querySelector('.back-navigation').style.display = 'none';
+    const methodSelection = document.querySelector('.method-selection-single');
+    const scanHistory = document.querySelector('.scan-history-section');
+    const pageHeader = document.querySelector('.page-header');
+    const backNav = document.querySelector('.back-navigation');
+    
+    if (methodSelection) methodSelection.style.display = 'none';
+    if (scanHistory) scanHistory.style.display = 'none';
+    if (pageHeader) pageHeader.style.display = 'none';
+    if (backNav) backNav.style.display = 'none';
 
     // Show results
     document.getElementById('results-view').style.display = 'block';
+    
+    // Hide Save Report button for history views
+    const saveBtn = document.querySelector('.save-btn');
+    if (saveBtn) saveBtn.style.display = 'none';
 }
 
 /**
  * Load scan data into the results view
  */
-function loadScanIntoResultsView(scan) {
-    // Update report date
+async function loadScanIntoResultsView(scan) {
+    // Simulate the result structure that renderSkinAnalysisResult expects
+    window.__skinAnalysisResult = {
+        overall_skin_health: scan.overallScore,
+        summary: scan.summary || 'Your skin analysis results',
+        metrics: {
+            radiance: scan.metrics?.radiance || 0,
+            moisture: scan.metrics?.hydration || scan.metrics?.moisture || 0,
+            texture: scan.metrics?.texture || 0,
+            pores: scan.metrics?.spots || scan.metrics?.pores || 0,
+            dark_circles: scan.metrics?.darkCircles || scan.metrics?.dark_circles || 0,
+            redness: scan.metrics?.redness || 0,
+            oiliness: scan.metrics?.oiliness || 0
+        },
+        am_routine: scan.am_routine || [],
+        pm_routine: scan.pm_routine || [],
+        tips: scan.tips || [],
+        concerns_detected: scan.concerns_detected || [],
+        disclaimer: scan.disclaimer || 'This analysis is for informational purposes only.',
+        face_data: scan.face_data || null
+    };
+    
+    // CRITICAL: Load image from S3 if available
+    if (scan.s3ImageKey) {
+        try {
+            const apiConfig = typeof API_CONFIG !== "undefined" ? API_CONFIG : window.API_CONFIG;
+            // Construct S3 URL - using the correct bucket name from infrastructure
+            const s3Url = `https://glowcycle-assets.s3.amazonaws.com/${scan.s3ImageKey}`;
+            
+            console.log('Loading image from S3:', s3Url);
+            
+            // Load image and convert to data URL
+            const response = await fetch(s3Url);
+            if (!response.ok) {
+                throw new Error(`Failed to fetch image: ${response.status}`);
+            }
+            const blob = await response.blob();
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                capturedImageData = reader.result;
+                console.log('Image loaded successfully from S3');
+                // Redraw radar chart with the loaded image
+                if (typeof drawRadarChart === 'function') {
+                    drawRadarChart();
+                }
+            };
+            reader.readAsDataURL(blob);
+        } catch (error) {
+            console.error('Error loading image from S3:', error);
+            capturedImageData = null;
+        }
+    } else {
+        console.log('No s3ImageKey found for this scan');
+        capturedImageData = null;
+    }
+
+    // Update report date with cycle info
     const reportDateEl = document.querySelector('.report-date');
     if (reportDateEl) {
         const phaseEmoji = {
@@ -1262,41 +1485,19 @@ function loadScanIntoResultsView(scan) {
             'luteal': '🌺'
         }[scan.cyclePhase] || '🌸';
 
-        reportDateEl.textContent = `Day ${scan.cycleDay} • ${scan.cyclePhase.charAt(0).toUpperCase() + scan.cyclePhase.slice(1)} Phase ${phaseEmoji}`;
-    }
-
-    // Update overall score
-    const scoreNumber = document.querySelector('.score-number');
-    if (scoreNumber) {
-        scoreNumber.textContent = scan.overallScore;
-    }
-
-    // Update score message
-    const scoreMessage = document.querySelector('.score-message');
-    if (scoreMessage) {
-        if (scan.overallScore >= 80) {
-            scoreMessage.textContent = 'Your skin is glowing! ✨';
-        } else if (scan.overallScore >= 60) {
-            scoreMessage.textContent = 'Your skin is doing well! 🌸';
+        if (scan.cycleDay) {
+            reportDateEl.textContent = `Day ${scan.cycleDay} • ${scan.cyclePhase.charAt(0).toUpperCase() + scan.cyclePhase.slice(1)} Phase ${phaseEmoji}`;
         } else {
-            scoreMessage.textContent = 'Let\'s work on improving your skin health 💜';
+            reportDateEl.textContent = `${scan.cyclePhase.charAt(0).toUpperCase() + scan.cyclePhase.slice(1)} Phase ${phaseEmoji}`;
         }
     }
 
-    // Update metrics
-    const metrics = scan.metrics;
-    const metricItems = document.querySelectorAll('.metric-item');
-    if (metricItems.length >= 5) {
-        metricItems[0].querySelector('.metric-value').textContent = metrics.radiance;
-        metricItems[1].querySelector('.metric-value').textContent = metrics.spots;
-        metricItems[2].querySelector('.metric-value').textContent = metrics.wrinkles;
-        metricItems[3].querySelector('.metric-value').textContent = metrics.texture;
-        metricItems[4].querySelector('.metric-value').textContent = metrics.darkCircles;
-    }
-
-    // Update radar chart if it exists
-    if (typeof updateRadarChart === 'function') {
-        updateRadarChart(metrics);
+    // Use the same rendering function as fresh scans
+    renderSkinAnalysisResult();
+    
+    // Draw radar chart (will use capturedImageData if loaded)
+    if (typeof drawRadarChart === 'function') {
+        drawRadarChart();
     }
 }
 

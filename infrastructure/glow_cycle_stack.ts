@@ -20,6 +20,8 @@ export class GlowCycleStack extends cdk.Stack {
       versioned: true,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
+      publicReadAccess: true, // Allow public read access for frontend to load images
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ACLS, // Block ACLs but allow bucket policy
       cors: [
         {
           allowedMethods: [s3.HttpMethods.PUT, s3.HttpMethods.GET, s3.HttpMethods.HEAD],
@@ -131,6 +133,14 @@ export class GlowCycleStack extends cdk.Stack {
         resources: ["*"],
       }),
     );
+    
+    wellnessLambda.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ["bedrock:InvokeModel"],
+        resources: ["*"],
+      }),
+    );
+    
     skinAnalyzeLambda.addToRolePolicy(
       new iam.PolicyStatement({
         actions: ["rekognition:DetectFaces"],
@@ -245,6 +255,66 @@ export class GlowCycleStack extends cdk.Stack {
     wellnessResource.addMethod(
       'GET',
       new apigateway.LambdaIntegration(wellnessLambda)
+    );
+
+    // Judge setup endpoint
+    const judgeSetupLambda = new lambda.Function(this, 'JudgeSetupLambda', {
+      runtime: lambda.Runtime.PYTHON_3_11,
+      handler: 'judge/handler.lambda_handler',
+      code: lambda.Code.fromAsset('../backend'),
+      environment: { DYNAMODB_TABLE_NAME: table.tableName },
+    });
+    table.grantReadWriteData(judgeSetupLambda);
+
+    const judgeResource = api.root.addResource('judge');
+    const judgeSetupResource = judgeResource.addResource('setup');
+    
+    judgeSetupResource.addMethod(
+      'GET',
+      new apigateway.LambdaIntegration(judgeSetupLambda)
+    );
+    
+    judgeSetupResource.addMethod(
+      'POST',
+      new apigateway.LambdaIntegration(judgeSetupLambda)
+    );
+
+    // User management endpoints
+    const userLambda = new lambda.Function(this, 'UserLambda', {
+      runtime: lambda.Runtime.PYTHON_3_11,
+      handler: 'user/lambda_handler.lambda_handler',
+      code: lambda.Code.fromAsset('../backend'),
+      environment: { DYNAMODB_TABLE_NAME: table.tableName },
+    });
+    table.grantReadWriteData(userLambda);
+    
+    // Grant additional DynamoDB permissions for describe operations
+    userLambda.addToRolePolicy(new iam.PolicyStatement({
+      actions: ['dynamodb:DescribeLimits'],
+      resources: ['*']
+    }));
+
+    const userResource = api.root.addResource('user');
+    
+    // User creation endpoint
+    const userCreateResource = userResource.addResource('create');
+    userCreateResource.addMethod(
+      'POST',
+      new apigateway.LambdaIntegration(userLambda)
+    );
+    
+    // User authentication endpoint
+    const userAuthResource = userResource.addResource('authenticate');
+    userAuthResource.addMethod(
+      'POST',
+      new apigateway.LambdaIntegration(userLambda)
+    );
+    
+    // User setup completion endpoint
+    const userSetupResource = userResource.addResource('complete-setup');
+    userSetupResource.addMethod(
+      'POST',
+      new apigateway.LambdaIntegration(userLambda)
     );
   }
 }

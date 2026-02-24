@@ -26,10 +26,14 @@ def calculate_cycle_phase(cycle_day: int, cycle_length: int = 28) -> str:
         return "luteal"
 
 
-def get_user_context(user: str) -> dict:
+def get_user_context(user: str, user_name: str = None) -> dict:
     """
     Gather comprehensive user context from DynamoDB
     Returns cycle info, recent journal entries, and skin data
+    
+    Args:
+        user: User ID
+        user_name: Display name for the user (for welcome message)
     """
     try:
         # Query all user data
@@ -46,9 +50,16 @@ def get_user_context(user: str) -> dict:
         journals = [item for item in items if item.get("feeling") and not item.get("date", "").startswith("PERIOD#")]
         skin_data = [item for item in items if item.get("skin_analysis")]
         
+        # Check if user has ANY meaningful data at all
+        # CRITICAL: Only count as "has data" if they have journal entries
+        # Period data alone doesn't count (could be from onboarding)
+        has_any_data = len(journals) > 0
+        
+        logger.info(f"User {user} data check: journals={len(journals)}, periods={len(periods)}, skin={len(skin_data)}, has_any_data={has_any_data}")
+        
         # Calculate cycle info
-        cycle_phase = "follicular"  # Default to a positive phase
-        cycle_day = 14
+        cycle_phase = "unknown"
+        cycle_day = 0  # 0 means no cycle data
         cycle_length = 28
         
         if periods and len(periods) > 0:
@@ -90,7 +101,7 @@ def get_user_context(user: str) -> dict:
         # Get most recent skin analysis
         latest_skin = skin_data[0] if skin_data else {}
         
-        # Analyze recent patterns (last 7 days)
+        # Analyse recent patterns (last 7 days)
         recent_journals = journals[:7] if journals else []
         feelings_count = {}
         energy_levels = []
@@ -118,14 +129,16 @@ def get_user_context(user: str) -> dict:
         top_tags = sorted(common_tags.items(), key=lambda x: x[1], reverse=True)[:3]
         
         return {
+            "user_name": user_name or user,  # Use display name or fallback to user ID
+            "has_any_data": has_any_data,  # CRITICAL: Only True if journal entries exist
             "cycle_phase": cycle_phase,
             "cycle_day": cycle_day,
             "cycle_length": cycle_length,
-            "feeling": latest_journal.get("feeling", "calm"),
-            "energy": int(latest_journal.get("energy", 70)),
-            "thoughts": latest_journal.get("thoughts", ""),
-            "tags": latest_journal.get("tags", []),
-            "skin_condition": latest_skin.get("skin_analysis", {}),
+            "feeling": latest_journal.get("feeling", "calm") if latest_journal else "calm",
+            "energy": int(latest_journal.get("energy", 70)) if latest_journal else 70,
+            "thoughts": latest_journal.get("thoughts", "") if latest_journal else "",
+            "tags": latest_journal.get("tags", []) if latest_journal else [],
+            "skin_condition": latest_skin.get("skin_analysis", {}) if latest_skin else {},
             "recent_patterns": {
                 "avg_energy_7d": round(avg_energy, 1),
                 "dominant_feeling_7d": dominant_feeling,
@@ -138,10 +151,12 @@ def get_user_context(user: str) -> dict:
         logger.error(f"Error gathering user context: {str(e)}")
         import traceback
         traceback.print_exc()
-        # Return safe defaults
+        # Return safe defaults for NEW USER
         return {
-            "cycle_phase": "follicular",
-            "cycle_day": 14,
+            "user_name": user_name or user,
+            "has_any_data": False,  # NEW USER - No journal data
+            "cycle_phase": "unknown",
+            "cycle_day": 0,
             "cycle_length": 28,
             "feeling": "calm",
             "energy": 70,
@@ -160,26 +175,26 @@ def get_user_context(user: str) -> dict:
 def generate_support(event):
     """
     Generate AI wellness support based on user context
-    GET /wellness?user=username
+    GET /wellness?user=username&name=displayname
     """
     try:
         params = event.get("queryStringParameters") or {}
         user = params.get("user")
+        user_name = params.get("name")  # Optional display name
         
         if not user:
             raise ValueError("Missing user parameter")
         
-        logger.info(f"Generating wellness support for user: {user}")
+        logger.info(f"Generating wellness support for user: {user} (name: {user_name})")
         
         # Gather comprehensive user context
-        user_context = get_user_context(user)
+        user_context = get_user_context(user, user_name)
         logger.info(f"User context: {json.dumps(user_context, default=str)}")
         
-        # Generate AI support using Bedrock
+        # Generate AI support using Bedrock (AI-only, no fallbacks)
         wellness_response = generate_wellness_support(user_context)
         
-        # Add metadata
-        wellness_response["generated_at"] = datetime.now().isoformat()
+        # Add user context metadata
         wellness_response["user_context"] = {
             "cycle_phase": user_context["cycle_phase"],
             "cycle_day": user_context["cycle_day"],
