@@ -6,32 +6,74 @@ Your AI-powered companion to understand how your hormones affect your skin, mood
 
 An intelligent web app that uses AI to analyse the connection between your menstrual cycle, skin condition, and emotional wellbeing - giving you personalized insights no other app provides.
 
-## 🎯 For Judges (60-second overview)
+## 🎯 For Judges - Quick Evaluation Guide
 
-**The Problem:** Women struggle to understand how their hormonal cycle affects their skin and emotions.
+### 🔗 Essential Links
 
-**Our Solution:** AI-powered skin analysis that connects menstrual cycle data with skin condition and mood patterns.
+**Live Demo:** [https://glowcycle-lemon.vercel.app/](https://glowcycle-lemon.vercel.app/)
 
-**Key Innovation:** First app combining AWS Bedrock AI with real-time skin analysis to provide personalized hormonal insights.
+**Video Demo (3 min):** [https://youtu.be/BysnDCeSQGo](https://youtu.be/BysnDCeSQGo)
 
-**Impact:** Empowers women to understand their body's natural rhythm and make informed skincare decisions.
+**GitHub Repository:** [https://github.com/puddl3duck/glowcycle](https://github.com/puddl3duck/glowcycle)
 
-**Tech Stack:** AWS (Lambda, DynamoDB, Bedrock), Python, JavaScript, TypeScript CDK
+### 👤 Judge Test Accounts
 
-**Live Demo:** glowcycle.app
-
-### Judge Access Credentials
-
-Pre-configured accounts for judges to test the application:
+Pre-configured accounts ready for immediate testing:
 
 | Name | Username | Password |
-|------|----------|----------|
+| --- | --- | --- |
 | Rada Stanic | `Rada Stanic` | `glowcycle2026` |
 | Luke Anderson | `Luke Anderson` | `glowcycle2026` |
 | Sarah Basset | `Sarah Basset` | `glowcycle2026` |
 | Team | `Team` | `glowcycle2026` |
 
-**Note:** Judge accounts skip the name question in the onboarding questionnaire and proceed directly to the setup questions. Setup completion is persisted in the backend (DynamoDB), so it works even in incognito mode.
+**Testing Note:** Judge accounts skip the name question and go directly to setup. All data persists in DynamoDB, so it works in incognito mode.
+
+### 📊 60-Second Overview
+
+**The Problem:** Women struggle to understand how their hormonal cycle affects their skin and emotions. Existing apps are siloed - period trackers don't connect to skincare, mood journals don't link to hormonal phases.
+
+**Our Solution:** GlowCycle is the first AI-powered app that connects menstrual cycle data with skin condition analysis and mood patterns to provide personalized hormonal insights.
+
+**Key Innovation:** 
+- Real-time AI skin analysis using AWS Bedrock (Claude Haiku) and Rekognition
+- Correlates skin condition with cycle phase for personalized recommendations
+- Unified wellness dashboard connecting cycle, mood, and skin data
+
+**Impact:** Empowers women to understand their body's natural rhythm, make informed skincare decisions, and anticipate hormonal changes.
+
+**Tech Stack:** 
+- Frontend: HTML5, CSS3, Vanilla JavaScript
+- Backend: AWS Lambda (Python 3.11), API Gateway
+- Data: DynamoDB, S3
+- AI: AWS Bedrock (Claude Haiku), Amazon Rekognition
+- Infrastructure: AWS CDK (TypeScript)
+
+### 🧪 Recommended Testing Flow
+
+1. **Login** with any judge account above
+2. **Complete Setup** - answer 3-4 quick questions about cycle and preferences
+3. **Track Period** - add a period start date to see cycle predictions
+4. **Scan Skin** - upload a selfie to get AI-powered skin analysis
+5. **Log Mood** - add a journal entry with mood and energy levels
+6. **Get AI Insights** - visit Wellness Agent for personalized guidance
+7. **Explore Dark Mode** - toggle theme to see accessibility features
+
+### 🏆 Hackathon Alignment
+
+**AWS Services Used:**
+- AWS Bedrock for AI-powered insights and skin analysis
+- AWS Lambda for serverless backend
+- Amazon DynamoDB for data persistence
+- Amazon S3 for image storage
+- Amazon Rekognition for face detection
+- AWS CDK for infrastructure as code
+
+**Diversity & Inclusion Impact:**
+- Addresses women's health - an underserved area in tech
+- Provides accessible, personalized wellness guidance
+- Empowers users with knowledge about their bodies
+- Built with WCAG accessibility standards
 
 ## ✨ Core Features
 
