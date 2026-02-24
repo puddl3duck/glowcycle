@@ -71,9 +71,9 @@ Pre-configured accounts ready for immediate testing:
 
 **Diversity & Inclusion Impact:**
 - Addresses women's health - an underserved area in tech
-- Provides accessible, personalized wellness guidance
+- Provides accessible, personalised wellness guidance
 - Empowers users with knowledge about their bodies
-- Built with WCAG accessibility standards
+
 
 ## ✨ Core Features
 
