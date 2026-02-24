@@ -129,11 +129,23 @@ async function refreshWellnessMessage() {
     }
 }
 
+// Track last fetch to prevent duplicate calls
+let lastWellnessFetch = 0;
+const WELLNESS_FETCH_COOLDOWN = 2000; // 2 seconds cooldown
+
 /**
  * Initialize wellness message on page load
  * ALWAYS FRESH - No cache
  */
 async function initializeWellnessMessage(containerId = 'wellness-message-container') {
+    // Prevent duplicate calls within cooldown period
+    const now = Date.now();
+    if (now - lastWellnessFetch < WELLNESS_FETCH_COOLDOWN) {
+        console.log('⏸️ Skipping wellness fetch - too soon since last call');
+        return;
+    }
+    lastWellnessFetch = now;
+    
     // CRITICAL: Get userName (normalized) for API call
     const userName = localStorage.getItem('userName');
     const userDisplayName = localStorage.getItem('userDisplayName');

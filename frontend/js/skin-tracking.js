@@ -335,11 +335,18 @@ function stopFaceDetection() {
 
 // Show Scanner View
 function showScanner() {
-  // Hide main content
-  document.querySelector('.method-selection-single').style.display = 'none';
-  document.querySelector('.scan-history-section').style.display = 'none';
-  document.querySelector('.page-header').style.display = 'none';
-  document.querySelector('.back-navigation').style.display = 'none';
+  // Hide main content (only if elements exist)
+  const methodSelection = document.querySelector('.method-selection-single');
+  const scanHistory = document.querySelector('.scan-history-section');
+  const pageHeader = document.querySelector('.page-header');
+  const backNav = document.querySelector('.back-navigation');
+  const newScanSection = document.querySelector('.new-scan-section');
+  
+  if (methodSelection) methodSelection.style.display = 'none';
+  if (scanHistory) scanHistory.style.display = 'none';
+  if (pageHeader) pageHeader.style.display = 'none';
+  if (backNav) backNav.style.display = 'none';
+  if (newScanSection) newScanSection.style.display = 'none';
 
   // Show scanner
   document.getElementById('scanner-view').style.display = 'block';
@@ -359,11 +366,18 @@ function closeScanner() {
   // Hide scanner
   document.getElementById('scanner-view').style.display = 'none';
 
-  // Restore main content
-  document.querySelector('.method-selection-single').style.display = 'block';
-  document.querySelector('.scan-history-section').style.display = 'block';
-  document.querySelector('.page-header').style.display = 'block';
-  document.querySelector('.back-navigation').style.display = 'block';
+  // Restore main content (only if elements exist)
+  const methodSelection = document.querySelector('.method-selection-single');
+  const scanHistory = document.querySelector('.scan-history-section');
+  const pageHeader = document.querySelector('.page-header');
+  const backNav = document.querySelector('.back-navigation');
+  const newScanSection = document.querySelector('.new-scan-section');
+  
+  if (methodSelection) methodSelection.style.display = 'block';
+  if (scanHistory) scanHistory.style.display = 'block';
+  if (pageHeader) pageHeader.style.display = 'block';
+  if (backNav) backNav.style.display = 'block';
+  if (newScanSection) newScanSection.style.display = 'block';
 }
 
 // Stop Camera
@@ -655,12 +669,20 @@ function retakePhoto() {
 }
 
 function showResults() {
-  // Hide scanner and main content
+  // Hide scanner and main content (only if elements exist)
   document.getElementById("scanner-view").style.display = "none";
-  document.querySelector('.method-selection-single').style.display = 'none';
-  document.querySelector('.scan-history-section').style.display = 'none';
-  document.querySelector('.page-header').style.display = 'none';
-  document.querySelector('.back-navigation').style.display = 'none';
+  
+  const methodSelection = document.querySelector('.method-selection-single');
+  const scanHistory = document.querySelector('.scan-history-section');
+  const pageHeader = document.querySelector('.page-header');
+  const backNav = document.querySelector('.back-navigation');
+  const newScanSection = document.querySelector('.new-scan-section');
+  
+  if (methodSelection) methodSelection.style.display = 'none';
+  if (scanHistory) scanHistory.style.display = 'none';
+  if (pageHeader) pageHeader.style.display = 'none';
+  if (backNav) backNav.style.display = 'none';
+  if (newScanSection) newScanSection.style.display = 'none';
 
   // Show results
   document.getElementById("results-view").style.display = "block";
@@ -1235,14 +1257,24 @@ function viewScanReport(scanIndex) {
     const userName = localStorage.getItem('userName');
     if (!userName) return;
 
+    const scans = window.__scanHistory || [];
     const scan = scans[scanIndex];
+    if (!scan) return;
+    
     loadScanIntoResultsView(scan);
 
-    // Hide main content
-    document.querySelector('.method-selection-single').style.display = 'none';
-    document.querySelector('.scan-history-section').style.display = 'none';
-    document.querySelector('.page-header').style.display = 'none';
-    document.querySelector('.back-navigation').style.display = 'none';
+    // Hide main content (only if elements exist)
+    const methodSelection = document.querySelector('.method-selection-single');
+    const scanHistory = document.querySelector('.scan-history-section');
+    const pageHeader = document.querySelector('.page-header');
+    const backNav = document.querySelector('.back-navigation');
+    const newScanSection = document.querySelector('.new-scan-section');
+    
+    if (methodSelection) methodSelection.style.display = 'none';
+    if (scanHistory) scanHistory.style.display = 'none';
+    if (pageHeader) pageHeader.style.display = 'none';
+    if (backNav) backNav.style.display = 'none';
+    if (newScanSection) newScanSection.style.display = 'none';
 
     // Show results
     document.getElementById('results-view').style.display = 'block';

@@ -285,6 +285,12 @@ export class GlowCycleStack extends cdk.Stack {
       environment: { DYNAMODB_TABLE_NAME: table.tableName },
     });
     table.grantReadWriteData(userLambda);
+    
+    // Grant additional DynamoDB permissions for describe operations
+    userLambda.addToRolePolicy(new iam.PolicyStatement({
+      actions: ['dynamodb:DescribeLimits'],
+      resources: ['*']
+    }));
 
     const userResource = api.root.addResource('user');
     
