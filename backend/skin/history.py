@@ -37,20 +37,30 @@ def save_skin_analysis(event):
         time_str = now.strftime("%H-%M-%S")
         sk = f"SKIN#{date_str}#{time_str}"
 
+        # Convert float values to Decimal for DynamoDB
+        def convert_floats(obj):
+            if isinstance(obj, float):
+                return decimal.Decimal(str(obj))
+            elif isinstance(obj, dict):
+                return {k: convert_floats(v) for k, v in obj.items()}
+            elif isinstance(obj, list):
+                return [convert_floats(item) for item in obj]
+            return obj
+
         item = {
             "user": user,
             "date": sk,
             "created_at": now.isoformat(),
             "summary": analysis.get("summary", ""),
-            "overall_skin_health": analysis.get("overall_skin_health"),
-            "metrics": analysis.get("metrics", {}),
+            "overall_skin_health": convert_floats(analysis.get("overall_skin_health")),
+            "metrics": convert_floats(analysis.get("metrics", {})),
             "concerns_detected": analysis.get("concerns_detected", []),
             "am_routine": analysis.get("am_routine", []),
             "pm_routine": analysis.get("pm_routine", []),
             "tips": analysis.get("tips", []),
-            "cycle_day": analysis.get("cycleDay"),    
+            "cycle_day": convert_floats(analysis.get("cycleDay")),    
             "cycle_phase": analysis.get("cyclePhase"),
-            "face_data": analysis.get("face_data"),
+            "face_data": convert_floats(analysis.get("face_data")),
             "disclaimer": analysis.get("disclaimer", "This analysis is for informational purposes only.")
         }
 
