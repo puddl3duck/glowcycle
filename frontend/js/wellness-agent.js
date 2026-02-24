@@ -147,8 +147,8 @@ async function initializeWellnessMessage(containerId = 'wellness-message-contain
     lastWellnessFetch = now;
     
     // CRITICAL: Get userName (normalized) for API call
-    const userName = localStorage.getItem('userName');
-    const userDisplayName = localStorage.getItem('userDisplayName');
+    const userName = window.userSession?.userName;
+    const userDisplayName = window.userSession?.userDisplayName;
     
     console.log('🔍 DEBUG initializeWellnessMessage:');
     console.log('  - userName:', userName);

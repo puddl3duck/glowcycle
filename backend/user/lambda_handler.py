@@ -1,5 +1,11 @@
 import json
-from .handler import create_user, authenticate_user, complete_setup
+import sys
+import os
+
+# Add parent directory to path for imports
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from user.handler import create_user, authenticate_user, complete_setup
 
 def lambda_handler(event, context):
     """Main Lambda handler for user management"""

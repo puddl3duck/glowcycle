@@ -398,6 +398,15 @@ body.dark-theme .nav-profile:hover {
     background: linear-gradient(135deg, rgba(255, 182, 217, 0.3), rgba(168, 230, 207, 0.3));
 }
 
+/* Dark mode for mobile nav-links dropdown */
+@media (max-width: 768px) {
+    body.dark-theme .nav-links {
+        background: rgba(37, 37, 58, 0.98);
+        border-top: 1px solid rgba(255, 182, 217, 0.3);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+}
+
 body.dark-theme .profile-settings-btn:hover {
     background: rgba(255, 182, 217, 0.3);
 }

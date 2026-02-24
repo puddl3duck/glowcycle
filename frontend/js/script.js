@@ -3,6 +3,15 @@ let currentQuestion = 1;
 let selectedSkinType = null;
 let selectedPeriodOption = null; // 'date', 'cant-remember', or 'pregnant'
 
+// ===== USER SESSION =====
+// Global session object to store user data (replaces localStorage for session data)
+window.userSession = {
+    userName: null,
+    userDisplayName: null,
+    isJudgeAccount: false,
+    onboardingCompleted: false
+};
+
 // ===== TIME-BASED PERSONALIZATION =====
 let timeMode = 'morning'; // 'morning', 'afternoon', or 'night'
 let themeOverride = localStorage.getItem('themeOverride'); // null, 'light', or 'dark'
@@ -448,14 +457,30 @@ function nextQuestion(questionNumber) {
             return;
         }
         
-        if (passwordInput.value.length < 4) {
-            showError('user-password', 'password-error', 'Password must be at least 4 characters long');
+        // Validate password strength
+        const password = passwordInput.value;
+        if (password.length < 6) {
+            showError('user-password', 'password-error', 'Password must be at least 6 characters long');
+            return;
+        }
+        
+        if (!/[a-z]/.test(password)) {
+            showError('user-password', 'password-error', 'Password must contain at least one lowercase letter');
+            return;
+        }
+        
+        if (!/[A-Z]/.test(password)) {
+            showError('user-password', 'password-error', 'Password must contain at least one uppercase letter');
+            return;
+        }
+        
+        if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+            showError('user-password', 'password-error', 'Password must contain at least one special character');
             return;
         }
         
         // Save user credentials when moving from question 1
         const username = nameInput.value.trim();
-        const password = passwordInput.value.trim();
         
         // Create user account (async)
         createUserAccount(username, password).then(success => {
@@ -536,44 +561,46 @@ async function createUserAccount(displayName, password) {
         // Create normalized username from display name
         const username = displayName.toLowerCase().replace(/\s+/g, '');
         
-        // ALWAYS save to localStorage first (works without backend)
-        localStorage.setItem('userName', username);
-        localStorage.setItem('userDisplayName', displayName);
-        localStorage.setItem('isJudgeAccount', 'false');
-        localStorage.setItem('userPassword', password); // Store for later backend sync
+        console.log('🔵 Creating user account in AWS:', username);
+        console.log('🔵 Display name:', displayName);
         
-        console.log('✅ User account saved locally:', username);
+        const API_BASE = API_CONFIG?.BASE_URL || 'https://7ofiibs7k7.execute-api.ap-southeast-2.amazonaws.com/prod';
         
-        // Try to save to backend (optional - won't block if backend not deployed)
-        try {
-            const API_BASE = API_CONFIG?.BASE_URL || 'https://7ofiibs7k7.execute-api.ap-southeast-2.amazonaws.com/prod';
+        const response = await fetch(`${API_BASE}/user/create`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                username: username,
+                password: password,
+                displayName: displayName
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            console.log('✅ User account created in AWS:', data);
+            return true;
+        } else {
+            const errorData = await response.json();
+            console.error('❌ AWS user creation failed:', errorData);
+            console.error('❌ Response status:', response.status);
             
-            const response = await fetch(`${API_BASE}/user/create`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    username: username,
-                    password: password,
-                    displayName: displayName
-                })
-            });
-            
-            if (response.ok) {
-                console.log('✅ User account also saved to backend');
+            if (response.status === 409) {
+                showError('user-name', 'name-error', 'Username already exists. Please choose a different name.');
+            } else if (response.status === 502) {
+                showError('user-name', 'name-error', 'Server error. Please try again later.');
             } else {
-                console.warn('⚠️ Backend save failed, but local save succeeded');
+                showError('user-name', 'name-error', 'Failed to create account. Please try again.');
             }
-        } catch (backendError) {
-            console.warn('⚠️ Backend not available, using local storage only:', backendError.message);
+            return false;
         }
-        
-        return true;
         
     } catch (error) {
         console.error('❌ Error creating user account:', error);
-        showError('user-name', 'name-error', 'Failed to create account. Please try again.');
+        console.error('❌ Error details:', error.message);
+        showError('user-name', 'name-error', 'Cannot connect to server. Please check your internet connection.');
         return false;
     }
 }
@@ -653,8 +680,8 @@ function completeOnboarding() {
 
 // Update user profile display
 function updateUserProfile() {
-    const userDisplayName = localStorage.getItem('userDisplayName');
-    const userName = localStorage.getItem('userName');
+    const userDisplayName = window.userSession.userDisplayName;
+    const userName = window.userSession.userName;
     
     console.log('🔍 DEBUG updateUserProfile:');
     console.log('  - userDisplayName:', userDisplayName);
@@ -1466,11 +1493,11 @@ async function handleSignIn() {
                 
                 console.log('✅ Backend authentication successful:', data);
                 
-                // Backend authentication successful - SAVE TO LOCALSTORAGE
-                localStorage.setItem('userName', data.username);
-                localStorage.setItem('userDisplayName', data.displayName);
-                localStorage.setItem('isJudgeAccount', 'false');
-                localStorage.setItem('onboardingCompleted', 'true'); // ALWAYS true for existing users
+                // Save to session object
+                window.userSession.userName = data.username;
+                window.userSession.userDisplayName = data.displayName;
+                window.userSession.isJudgeAccount = false;
+                window.userSession.onboardingCompleted = true;
                 
                 closeSignInModal();
                 
@@ -1487,57 +1514,30 @@ async function handleSignIn() {
             } else {
                 const errorData = await response.json();
                 console.log('❌ Backend authentication failed:', errorData);
+                console.log('❌ Response status:', response.status);
+                console.log('❌ Response statusText:', response.statusText);
+                
+                // Show error to user
+                usernameInput.classList.add('error');
+                passwordInput.classList.add('error');
+                
+                if (response.status === 502) {
+                    errorElement.textContent = 'Server error. Please try again later or contact support.';
+                } else if (response.status === 401) {
+                    errorElement.textContent = 'Invalid username or password';
+                } else {
+                    errorElement.textContent = 'Authentication failed. Please try again.';
+                }
             }
         } catch (backendError) {
-            console.warn('⚠️ Backend not available, trying localStorage:', backendError.message);
-        }
-        
-        // Fallback to localStorage authentication
-        console.log('🔵 Trying localStorage authentication');
-        const storedUserName = localStorage.getItem('userName');
-        const storedDisplayName = localStorage.getItem('userDisplayName');
-        const storedPassword = localStorage.getItem('userPassword');
-        
-        console.log('🔍 Stored userName:', storedUserName);
-        console.log('🔍 Stored displayName:', storedDisplayName);
-        console.log('🔍 Input normalized:', normalizedInput);
-        
-        // Check if user exists in localStorage
-        if (storedUserName === normalizedInput || 
-            (storedDisplayName && storedDisplayName.toLowerCase().replace(/\s+/g, '') === normalizedInput)) {
+            console.error('❌ Backend authentication error:', backendError);
+            console.error('❌ Error details:', backendError.message);
             
-            // Verify password
-            if (storedPassword && storedPassword === password) {
-                // Authentication successful - ENSURE userName is set
-                console.log('✅ localStorage authentication successful');
-                localStorage.setItem('userName', normalizedInput);
-                localStorage.setItem('userDisplayName', storedDisplayName || username);
-                localStorage.setItem('isJudgeAccount', 'false');
-                localStorage.setItem('onboardingCompleted', 'true'); // ALWAYS true for existing users
-                
-                closeSignInModal();
-                
-                // EXISTING USER - Always go to dashboard (they already registered)
-                showPage('dashboard-page');
-                updateUserProfile();
-                if (typeof initializeWellnessMessage === 'function') {
-                    initializeWellnessMessage();
-                }
-                updateTimeBasedContent();
-                
-                console.log('✅ User logged in via localStorage:', normalizedInput);
-                return;
-            } else {
-                console.log('❌ Password mismatch');
-            }
-        } else {
-            console.log('❌ User not found in localStorage');
+            // Show error to user
+            usernameInput.classList.add('error');
+            passwordInput.classList.add('error');
+            errorElement.textContent = 'Cannot connect to server. Please check your internet connection.';
         }
-        
-        // Authentication failed
-        usernameInput.classList.add('error');
-        passwordInput.classList.add('error');
-        errorElement.textContent = 'Invalid username or password';
         
     } catch (error) {
         console.error('❌ Error authenticating user:', error);
