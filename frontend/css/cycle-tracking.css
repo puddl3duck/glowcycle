@@ -961,6 +961,8 @@ body {
 .custom-date-picker {
     padding-top: 1.5rem;
     border-top: 1px solid rgba(212, 197, 232, 0.2);
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .custom-date-picker label {
@@ -968,10 +970,12 @@ body {
     font-weight: 600;
     color: var(--text-dark);
     margin-bottom: 0.8rem;
+    word-wrap: break-word;
 }
 
 .date-input {
     width: 100%;
+    max-width: 100%;
     padding: 1rem;
     border: 2px solid rgba(212, 197, 232, 0.3);
     border-radius: 12px;
@@ -981,6 +985,7 @@ body {
     background: rgba(255, 255, 255, 0.8);
     margin-bottom: 1rem;
     transition: border-color 0.3s ease;
+    box-sizing: border-box;
 }
 
 .date-input:focus {
@@ -1266,10 +1271,15 @@ body {
         width: 95%;
         max-width: 500px;
         padding: 2rem 1.5rem;
+        box-sizing: border-box;
     }
     
     .modal-header h3 {
         font-size: 1.3rem;
+    }
+    
+    .modal-instruction {
+        font-size: 0.9rem;
     }
     
     .date-options {
@@ -1279,6 +1289,19 @@ body {
     
     .date-option-btn {
         padding: 1.2rem;
+        font-size: 0.95rem;
+    }
+    
+    .custom-date-picker {
+        padding-top: 1.2rem;
+    }
+    
+    .custom-date-picker label {
+        font-size: 0.9rem;
+    }
+    
+    .date-input {
+        padding: 0.9rem;
         font-size: 0.95rem;
     }
     
@@ -1485,15 +1508,35 @@ body {
     .modal-content {
         padding: 1.5rem 1rem;
         width: 95%;
+        box-sizing: border-box;
     }
     
     .modal-header h3 {
         font-size: 1.2rem;
     }
     
+    .modal-instruction {
+        font-size: 0.85rem;
+    }
+    
     .date-option-btn {
         padding: 1rem;
         font-size: 0.9rem;
+    }
+    
+    .custom-date-picker {
+        padding-top: 1rem;
+    }
+    
+    .custom-date-picker label {
+        font-size: 0.85rem;
+        margin-bottom: 0.6rem;
+    }
+    
+    .date-input {
+        padding: 0.8rem;
+        font-size: 0.9rem;
+        border-radius: 10px;
     }
     
     .theme-toggle {
