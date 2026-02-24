@@ -4,13 +4,62 @@ let selectedSkinType = null;
 let selectedPeriodOption = null; // 'date', 'cant-remember', or 'pregnant'
 
 // ===== USER SESSION =====
-// Global session object to store user data (replaces localStorage for session data)
+// Global session object to store user data
 window.userSession = {
     userName: null,
     userDisplayName: null,
     isJudgeAccount: false,
     onboardingCompleted: false
 };
+
+// Load session from sessionStorage on page load
+function loadSession() {
+    const savedSession = sessionStorage.getItem('userSession');
+    if (savedSession) {
+        try {
+            window.userSession = JSON.parse(savedSession);
+            console.log('✅ Session loaded from sessionStorage:', window.userSession);
+            
+            // CRITICAL: Also sync to localStorage for other pages
+            if (window.userSession.userName) {
+                localStorage.setItem('userName', window.userSession.userName);
+            }
+            if (window.userSession.userDisplayName) {
+                localStorage.setItem('userDisplayName', window.userSession.userDisplayName);
+            }
+        } catch (e) {
+            console.error('❌ Error loading session:', e);
+        }
+    }
+}
+
+// Save session to sessionStorage AND localStorage
+function saveSession() {
+    try {
+        sessionStorage.setItem('userSession', JSON.stringify(window.userSession));
+        
+        // CRITICAL: Also save to localStorage so other pages can access it
+        if (window.userSession.userName) {
+            localStorage.setItem('userName', window.userSession.userName);
+        }
+        if (window.userSession.userDisplayName) {
+            localStorage.setItem('userDisplayName', window.userSession.userDisplayName);
+        }
+        if (window.userSession.isJudgeAccount !== undefined) {
+            localStorage.setItem('isJudgeAccount', window.userSession.isJudgeAccount.toString());
+        }
+        if (window.userSession.onboardingCompleted !== undefined) {
+            localStorage.setItem('onboardingCompleted', window.userSession.onboardingCompleted.toString());
+        }
+        
+        console.log('✅ Session saved to sessionStorage and localStorage');
+    } catch (e) {
+        console.error('❌ Error saving session:', e);
+    }
+}
+
+// Initialize session on page load
+loadSession();
 
 // ===== TIME-BASED PERSONALIZATION =====
 let timeMode = 'morning'; // 'morning', 'afternoon', or 'night'
@@ -305,7 +354,9 @@ function showDashboardView() {
     document.querySelectorAll('.nav-link').forEach(link => {
         link.classList.remove('active');
     });
-    event.target.classList.add('active');
+    if (event && event.target) {
+        event.target.classList.add('active');
+    }
 }
 
 function showAboutView() {
@@ -316,7 +367,9 @@ function showAboutView() {
     document.querySelectorAll('.nav-link').forEach(link => {
         link.classList.remove('active');
     });
-    event.target.classList.add('active');
+    if (event && event.target) {
+        event.target.classList.add('active');
+    }
 }
 
 // Navigation
@@ -332,7 +385,7 @@ function showPage(pageId) {
         // Small delay to ensure page is visible before loading message
         setTimeout(() => {
             if (typeof initializeWellnessMessage === 'function') {
-                const userName = localStorage.getItem('userName');
+                const userName = window.userSession.userName;
                 if (userName) {
                     console.log('🔄 Dashboard shown - refreshing wellness message with latest data');
                     initializeWellnessMessage();
@@ -581,6 +634,18 @@ async function createUserAccount(displayName, password) {
         if (response.ok) {
             const data = await response.json();
             console.log('✅ User account created in AWS:', data);
+            
+            // Save to window.userSession immediately after account creation
+            window.userSession.userName = username;
+            window.userSession.userDisplayName = displayName;
+            window.userSession.isJudgeAccount = false;
+            window.userSession.onboardingCompleted = false; // Not complete yet, still in questionnaire
+            
+            // Persist to sessionStorage
+            saveSession();
+            
+            console.log('✅ Session saved after account creation:', window.userSession);
+            
             return true;
         } else {
             const errorData = await response.json();
@@ -709,42 +774,14 @@ function updateUserProfile() {
     }
 }
 
-// Navigation
-function showPage(pageId) {
-    document.querySelectorAll('.page').forEach(page => {
-        page.classList.remove('active');
-    });
-    document.getElementById(pageId).classList.add('active');
-    
-    // CRITICAL: Refresh wellness message when returning to dashboard
-    // This ensures the message updates with any new data (journal, skin, cycle)
-    if (pageId === 'dashboard-page') {
-        // Small delay to ensure page is visible before loading message
-        setTimeout(() => {
-            if (typeof initializeWellnessMessage === 'function') {
-                const userName = localStorage.getItem('userName');
-                if (userName) {
-                    console.log('🔄 Dashboard shown - refreshing wellness message with latest data');
-                    initializeWellnessMessage();
-                }
-            }
-        }, 100);
-    }
-}
-
-function startQuestionnaire() {
-    showPage('questionnaire-page');
-    updateProgress();
-}
-
 function goToDashboard() {
     // Clear all previous errors
     document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
     document.querySelectorAll('.input-field').forEach(el => el.classList.remove('error'));
     
     // Check if this is a judge account
-    const isJudgeAccount = localStorage.getItem('isJudgeAccount') === 'true';
-    const userName = localStorage.getItem('userName');
+    const isJudgeAccount = window.userSession.isJudgeAccount;
+    const userName = window.userSession.userName;
     
     console.log('🔵 goToDashboard called - userName from localStorage:', userName);
     console.log('🔵 isJudgeAccount:', isJudgeAccount);
@@ -823,11 +860,18 @@ function goToDashboard() {
         const displayName = userNameInput.value.trim();
         const normalizedUserName = displayName.toLowerCase().replace(/\s+/g, '');
         console.log('⚠️ Setting userName in goToDashboard (should have been set earlier):', normalizedUserName);
-        localStorage.setItem('userName', normalizedUserName);
-        localStorage.setItem('userDisplayName', displayName);
+        
+        // Save to window.userSession
+        window.userSession.userName = normalizedUserName;
+        window.userSession.userDisplayName = displayName;
+        window.userSession.isJudgeAccount = false;
+        window.userSession.onboardingCompleted = true;
+        
+        // Persist to sessionStorage
+        saveSession();
     }
     
-    console.log('✅ Final userName before saving other data:', localStorage.getItem('userName'));
+    console.log('✅ Final userName before saving other data:', window.userSession.userName);
     
     // Save other profile data (age, period, skin type, cycle days)
     // For judge accounts, userName and userDisplayName are already set from handleSignIn()Name are already set from login
@@ -855,8 +899,8 @@ function goToDashboard() {
     localStorage.setItem('skinType', selectedSkinType);
     
     // Mark setup as complete - SAVE TO BACKEND
-    // CRITICAL: Get userName from localStorage AFTER it's been set
-    const finalUserName = localStorage.getItem('userName');
+    // CRITICAL: Get userName from window.userSession AFTER it's been set
+    const finalUserName = window.userSession.userName;
     console.log('🔵 Final userName for backend save:', finalUserName);
     
     if (finalUserName) {
@@ -882,6 +926,10 @@ function goToDashboard() {
     } else {
         console.error('❌ ERROR: userName is null in goToDashboard - cannot save to backend');
     }
+    
+    // Mark onboarding as complete in session
+    window.userSession.onboardingCompleted = true;
+    saveSession();
     
     completeOnboarding();
     
@@ -1005,9 +1053,9 @@ document.addEventListener('DOMContentLoaded', () => {
         lastPeriodInput.max = today;  // Block future dates
     }
     
-    // Check if user is logged in (has userName in localStorage)
-    const userName = localStorage.getItem('userName');
-    const hasOnboarding = hasCompletedOnboarding();
+    // Check if user is logged in (has userName in window.userSession)
+    const userName = window.userSession.userName;
+    const hasOnboarding = window.userSession.onboardingCompleted;
     
     if (userName && userName.trim() !== '' && hasOnboarding) {
         // User is logged in - show dashboard
@@ -1344,7 +1392,18 @@ function closeLogoutModal() {
 }
 
 function confirmLogout() {
-    // Clear user session data (but keep other app data)
+    // Clear window.userSession
+    window.userSession = {
+        userName: null,
+        userDisplayName: null,
+        isJudgeAccount: false,
+        onboardingCompleted: false
+    };
+    
+    // Clear sessionStorage
+    sessionStorage.removeItem('userSession');
+    
+    // Clear localStorage for backward compatibility
     localStorage.removeItem('userName');
     localStorage.removeItem('userDisplayName');
     localStorage.removeItem('onboardingCompleted');
@@ -1404,7 +1463,15 @@ async function handleSignIn() {
         // Judge account - successful login
         console.log('🟢 Judge account login:', username);
         
-        // Save judge info to localStorage (for current session)
+        // Save judge info to window.userSession
+        window.userSession.userName = username;
+        window.userSession.userDisplayName = judgeAccount.displayName;
+        window.userSession.isJudgeAccount = true;
+        
+        // Persist to sessionStorage
+        saveSession();
+        
+        // Also save to localStorage for backward compatibility
         localStorage.setItem('userName', username);
         localStorage.setItem('userDisplayName', judgeAccount.displayName);
         localStorage.setItem('isJudgeAccount', 'true');
@@ -1433,6 +1500,9 @@ async function handleSignIn() {
             
             if (!hasCompletedSetup) {
                 // First time login - go to setup questionnaire (skip name question)
+                window.userSession.onboardingCompleted = false;
+                saveSession();
+                
                 showPage('questionnaire-page');
                 // Skip to question 2 (age)
                 document.querySelectorAll('.question-card').forEach(card => card.classList.remove('active'));
@@ -1441,6 +1511,9 @@ async function handleSignIn() {
                 updateProgress();
             } else {
                 // Already completed setup - go to dashboard
+                window.userSession.onboardingCompleted = true;
+                saveSession();
+                
                 localStorage.setItem('onboardingCompleted', 'true');
                 showPage('dashboard-page');
                 updateUserProfile();
@@ -1456,6 +1529,9 @@ async function handleSignIn() {
         } catch (error) {
             console.error('Error checking judge setup:', error);
             // If backend fails, show questionnaire to be safe
+            window.userSession.onboardingCompleted = false;
+            saveSession();
+            
             closeSignInModal();
             showPage('questionnaire-page');
             document.querySelectorAll('.question-card').forEach(card => card.classList.remove('active'));
@@ -1498,6 +1574,9 @@ async function handleSignIn() {
                 window.userSession.userDisplayName = data.displayName;
                 window.userSession.isJudgeAccount = false;
                 window.userSession.onboardingCompleted = true;
+                
+                // Persist session
+                saveSession();
                 
                 closeSignInModal();
                 

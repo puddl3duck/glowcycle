@@ -3,6 +3,25 @@
 // API URL - Production endpoint
 const API_URL = 'https://7ofiibs7k7.execute-api.ap-southeast-2.amazonaws.com/prod';
 
+// CRITICAL: Sync session data from sessionStorage to localStorage on page load
+(function syncSessionData() {
+  const savedSession = sessionStorage.getItem('userSession');
+  if (savedSession) {
+    try {
+      const session = JSON.parse(savedSession);
+      if (session.userName) {
+        localStorage.setItem('userName', session.userName);
+      }
+      if (session.userDisplayName) {
+        localStorage.setItem('userDisplayName', session.userDisplayName);
+      }
+      console.log('✅ Session synced to localStorage in journal-mood:', session);
+    } catch (e) {
+      console.error('❌ Error syncing session:', e);
+    }
+  }
+})();
+
 let selectedMood = null;
 let selectedTags = [];
 let customTags = [];
@@ -111,16 +130,20 @@ function getUserName() {
 }
 
 function updateUserProfile() {
-    const userName = currentUser || localStorage.getItem('userName') || 'User';
+    // Try to get display name first, then username, then default
+    const userDisplayName = localStorage.getItem('userDisplayName');
+    const userName = currentUser || localStorage.getItem('userName') || 'Beautiful';
+    const finalName = userDisplayName || userName;
+    
     const profileNameElement = document.getElementById('profile-name');
     const profileAvatarElement = document.getElementById('profile-avatar');
     
     if (profileNameElement) {
-        profileNameElement.textContent = userName;
+        profileNameElement.textContent = finalName;
     }
     
     if (profileAvatarElement) {
-        profileAvatarElement.textContent = userName.charAt(0).toUpperCase();
+        profileAvatarElement.textContent = finalName.charAt(0).toUpperCase();
     }
 }
 

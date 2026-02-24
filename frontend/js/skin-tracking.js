@@ -1,18 +1,43 @@
 // Time-based functionality
 let timeMode = "morning"; // 'morning', 'afternoon', or 'night'
 
+// CRITICAL: Sync session data from sessionStorage to localStorage on page load
+(function syncSessionData() {
+  const savedSession = sessionStorage.getItem('userSession');
+  if (savedSession) {
+    try {
+      const session = JSON.parse(savedSession);
+      if (session.userName) {
+        localStorage.setItem('userName', session.userName);
+      }
+      if (session.userDisplayName) {
+        localStorage.setItem('userDisplayName', session.userDisplayName);
+      }
+      console.log('✅ Session synced to localStorage in skin-tracking:', session);
+    } catch (e) {
+      console.error('❌ Error syncing session:', e);
+    }
+  }
+})();
+
 // Load user profile
 function loadUserProfile() {
-  const userName = localStorage.getItem('userName') || 'User';
+  // Try to get display name first, then username, then default
+  const userDisplayName = localStorage.getItem('userDisplayName');
+  const userName = localStorage.getItem('userName');
+  const finalName = userDisplayName || userName || 'Beautiful';
+  
+  console.log('🔍 Loading user profile in skin-tracking:', { userDisplayName, userName, finalName });
+  
   const profileNameElement = document.getElementById('profile-name');
   const profileAvatarElement = document.getElementById('profile-avatar');
   
   if (profileNameElement) {
-    profileNameElement.textContent = userName;
+    profileNameElement.textContent = finalName;
   }
   
   if (profileAvatarElement) {
-    profileAvatarElement.textContent = userName.charAt(0).toUpperCase();
+    profileAvatarElement.textContent = finalName.charAt(0).toUpperCase();
   }
 }
 
