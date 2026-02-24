@@ -49,7 +49,10 @@ def save_skin_analysis(event):
             "pm_routine": analysis.get("pm_routine", []),
             "tips": analysis.get("tips", []),
             "cycle_day": analysis.get("cycleDay"),    
-            "cycle_phase": analysis.get("cyclePhase"), 
+            "cycle_phase": analysis.get("cyclePhase"),
+            "capturedImage": analysis.get("capturedImage"),
+            "face_data": analysis.get("face_data"),
+            "disclaimer": analysis.get("disclaimer", "This analysis is for informational purposes only.")
         }
 
         logger.info(f"Saving skin analysis for user: {user}, sk: {sk}")
