@@ -1,0 +1,24 @@
+{
+  "buildCommand": "echo 'No build needed'",
+  "outputDirectory": "frontend",
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/skin-tracking",
+      "destination": "/pages/skin-tracking.html"
+    },
+    {
+      "source": "/cycle-tracking",
+      "destination": "/pages/cycle-tracking.html"
+    },
+    {
+      "source": "/journal-mood",
+      "destination": "/pages/journal-mood.html"
+    }
+  ]
+}

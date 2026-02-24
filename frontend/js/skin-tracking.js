@@ -529,9 +529,10 @@ async function saveReport() {
   }
 
   const apiConfig = typeof API_CONFIG !== "undefined" ? API_CONFIG : window.API_CONFIG;
-  const user = document.querySelector(".profile-name")?.textContent?.trim()
-    || localStorage.getItem("userName")
-    || "anonymous";
+  // CRITICAL: Convert to lowercase to match DynamoDB storage
+  const user = (localStorage.getItem("userName") || "anonymous").toLowerCase();
+  
+  console.log('Saving report for user:', user);
 
   const saveBtn = document.querySelector(".save-btn");
   if (saveBtn) {
@@ -567,6 +568,8 @@ async function saveReport() {
       console.error('Backend error:', resp.status, errorText);
       throw new Error(`Save failed: ${resp.status} - ${errorText}`);
     }
+
+    console.log('Report saved successfully for user:', user);
 
     // Show success popup and automatically go back
     showSaveSuccessPopup();
@@ -1213,15 +1216,28 @@ window.addEventListener("load", () => {
  * In production, this would fetch from backend API
  */
 async function loadScanHistory() {
-    const userName = localStorage.getItem('userName');
-    if (!userName) return;
+    // CRITICAL: Convert to lowercase to match DynamoDB storage
+    const userName = (localStorage.getItem('userName') || '').toLowerCase();
+    console.log('Loading scan history for user:', userName);
+    
+    if (!userName) {
+        console.log('No userName found in localStorage');
+        return;
+    }
 
     const apiConfig = typeof API_CONFIG !== "undefined" ? API_CONFIG : window.API_CONFIG;
 
     try {
-        const resp = await fetch(`${apiConfig.BASE_URL}/skin/history?user=${encodeURIComponent(userName)}`);
-        if (!resp.ok) throw new Error("Failed to fetch history");
+        const url = `${apiConfig.BASE_URL}/skin/history?user=${encodeURIComponent(userName)}`;
+        console.log('Fetching from:', url);
+        
+        const resp = await fetch(url);
+        if (!resp.ok) {
+            console.error('Failed to fetch history:', resp.status);
+            throw new Error("Failed to fetch history");
+        }
         const data = await resp.json();
+        console.log('Received history data:', data);
 
         const scans = (data.analyses || []).map(entry => ({
             date: entry.created_at,
@@ -1249,6 +1265,8 @@ async function loadScanHistory() {
             s3ImageKey: entry.s3_image_key || entry.s3ImageKey || null,
             face_data: entry.face_data || null
         }));
+
+        console.log('Processed scans:', scans.length);
 
         const scanCountEl = document.getElementById('scan-count');
         if (scanCountEl) {
@@ -1364,7 +1382,8 @@ function createHistoryCard(scan, index) {
  * View a specific scan report
  */
 function viewScanReport(scanIndex) {
-    const userName = localStorage.getItem('userName');
+    // CRITICAL: Convert to lowercase to match DynamoDB storage
+    const userName = (localStorage.getItem('userName') || '').toLowerCase();
     if (!userName) return;
 
     // Get scans from window.__scanHistory
