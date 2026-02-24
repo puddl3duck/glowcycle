@@ -65,7 +65,7 @@ function displayWellnessMessage(wellness, containerId = 'wellness-message-contai
         container.innerHTML = `
             <div class="wellness-message-card loading">
                 <div class="loading-icon">...</div>
-                <p class="loading-text">Generating your personalized message...</p>
+                <p class="loading-text">Generating your personalised message...</p>
             </div>
         `;
         return;
