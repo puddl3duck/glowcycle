@@ -4001,17 +4001,20 @@ body.dark-theme label {
     font-family: 'Playfair Display', serif;
     font-size: 2.3rem;
     font-weight: 500;
-    color: var(--text-dark);
     margin-bottom: 0.8rem;
     line-height: 1.3;
-}
-
-.welcome-title span {
     background: linear-gradient(135deg, #FF9B9B 0%, #9B7EBD 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+}
+
+.welcome-title span {
     font-weight: 600;
+}
+.welcome-title .emoji {
+    -webkit-text-fill-color: initial;
+    background: none;
 }
 
 .welcome-subtitle {
