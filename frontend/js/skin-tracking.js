@@ -561,7 +561,11 @@ async function saveReport() {
       }),
     });
 
-    if (!resp.ok) throw new Error("Save failed");
+    if (!resp.ok) {
+      const errorText = await resp.text();
+      console.error('Backend error:', resp.status, errorText);
+      throw new Error(`Save failed: ${resp.status} - ${errorText}`);
+    }
 
     if (saveBtn) {
       saveBtn.textContent = "✓ Saved!";
