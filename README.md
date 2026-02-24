@@ -120,7 +120,7 @@ glowcycle/
 
 ## 📄 License
 
-MIT License
+All rights reserved.
 
 ---
 
