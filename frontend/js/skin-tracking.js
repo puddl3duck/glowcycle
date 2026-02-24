@@ -568,10 +568,8 @@ async function saveReport() {
       throw new Error(`Save failed: ${resp.status} - ${errorText}`);
     }
 
-    if (saveBtn) {
-      saveBtn.textContent = "✓ Saved!";
-      saveBtn.style.background = "linear-gradient(135deg, #A8E6CF, #68C9A3)";
-    }
+    // Show success popup and automatically go back
+    showSaveSuccessPopup();
 
     // Reload history so the new entry appears immediately
     await loadScanHistory();
@@ -583,6 +581,41 @@ async function saveReport() {
       saveBtn.disabled = false;
     }
   }
+}
+
+// Show success popup after saving
+function showSaveSuccessPopup() {
+  // Create popup if it doesn't exist
+  let popup = document.getElementById('save-success-popup');
+  if (!popup) {
+    popup = document.createElement('div');
+    popup.id = 'save-success-popup';
+    popup.className = 'save-success-popup';
+    popup.innerHTML = `
+      <div class="save-success-content">
+        <div class="success-icon">✓</div>
+        <h3>Saved Successfully!</h3>
+        <p>Your skin report has been saved to history</p>
+      </div>
+    `;
+    document.body.appendChild(popup);
+  }
+  
+  // Show popup with animation
+  popup.style.display = 'flex';
+  setTimeout(() => {
+    popup.classList.add('show');
+  }, 10);
+  
+  // Hide after 2 seconds and go back to history
+  setTimeout(() => {
+    popup.classList.remove('show');
+    setTimeout(() => {
+      popup.style.display = 'none';
+      // Automatically go back to history
+      closeResultsView();
+    }, 300);
+  }, 2000);
 }
 
 // Runs progress bar + step animations for a guaranteed minimum duration,
@@ -702,6 +735,14 @@ function showResults() {
 
   // Show results
   document.getElementById("results-view").style.display = "block";
+  
+  // Show Save Report button for fresh scans
+  const saveBtn = document.querySelector('.save-btn');
+  if (saveBtn) saveBtn.style.display = 'block';
+  
+  // Hide Back button for fresh scans
+  const backBtn = document.querySelector('.back-to-history-btn');
+  if (backBtn) backBtn.style.display = 'none';
 
   // Update cycle day dynamically
   const { day, phase, emoji } = getCycleDayAndPhase();
@@ -714,6 +755,43 @@ function showResults() {
 
   renderSkinAnalysisResult();
   drawRadarChart();
+}
+
+// Close results view and return to main page
+function closeResultsView() {
+  // Hide results
+  document.getElementById('results-view').style.display = 'none';
+  
+  // Show main content with proper display values
+  const methodSelection = document.querySelector('.method-selection-single');
+  const scanHistory = document.querySelector('.scan-history-section');
+  const pageHeader = document.querySelector('.page-header');
+  const backNav = document.querySelector('.back-navigation');
+  
+  if (methodSelection) methodSelection.style.display = 'flex'; // CRITICAL: Use flex, not block
+  if (scanHistory) scanHistory.style.display = 'block';
+  if (pageHeader) pageHeader.style.display = 'block';
+  if (backNav) backNav.style.display = 'block';
+  
+  // Reset save button
+  const saveBtn = document.querySelector('.save-btn');
+  if (saveBtn) {
+    saveBtn.style.display = 'block';
+    saveBtn.textContent = 'Save Report';
+    saveBtn.disabled = false;
+    saveBtn.style.background = '';
+  }
+  
+  // CRITICAL: Clear and reload history to prevent duplicates
+  const historyList = document.getElementById('history-list');
+  if (historyList) {
+    // Remove all history cards
+    const existingCards = historyList.querySelectorAll('.history-card');
+    existingCards.forEach(card => card.remove());
+    
+    // Reload history fresh
+    loadScanHistory();
+  }
 }
 
 // Toggle for routine step product section 
@@ -1194,6 +1272,10 @@ function displayScanHistory(scans) {
 
     if (!historyList) return;
 
+    // CRITICAL: Clear existing cards (except empty state) to prevent duplicates
+    const existingCards = historyList.querySelectorAll('.history-card');
+    existingCards.forEach(card => card.remove());
+
     if (scans.length === 0) {
         // Show empty state
         if (emptyHistory) {
@@ -1309,6 +1391,10 @@ function viewScanReport(scanIndex) {
 
     // Show results
     document.getElementById('results-view').style.display = 'block';
+    
+    // Hide Save Report button for history views
+    const saveBtn = document.querySelector('.save-btn');
+    if (saveBtn) saveBtn.style.display = 'none';
 }
 
 /**
