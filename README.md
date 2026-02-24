@@ -74,6 +74,11 @@ Pre-configured accounts ready for immediate testing:
 - Provides accessible, personalised wellness guidance
 - Empowers users with knowledge about their bodies
 
+### 🏗️ Architecture
+
+![Architecture Diagram](Architecture%20diagram.png)
+
+Our serverless architecture leverages AWS services for scalability and reliability, with AI-powered analysis at its core.
 
 ## ✨ Core Features
 
