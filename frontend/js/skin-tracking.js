@@ -508,6 +508,10 @@ async function sendCapturedImageToBackend(dataUrl) {
     }
 
     const analysis = await analyzeResp.json();
+    
+    // CRITICAL: Store the captured image with the analysis result
+    analysis.capturedImage = dataUrl;
+    
     window.__skinAnalysisResult = analysis;
 
   } catch (err) {
@@ -1137,11 +1141,23 @@ async function loadScanHistory() {
             metrics: {
                 radiance: entry.metrics?.radiance || 0,
                 texture: entry.metrics?.texture || 0,
-                hydration: entry.metrics?.moisture || 0,
-                spots: entry.metrics?.pores || 0,
-                darkCircles: entry.metrics?.dark_circles || 0,
+                hydration: entry.metrics?.moisture || entry.metrics?.hydration || 0,
+                moisture: entry.metrics?.moisture || entry.metrics?.hydration || 0,
+                spots: entry.metrics?.pores || entry.metrics?.spots || 0,
+                pores: entry.metrics?.pores || entry.metrics?.spots || 0,
+                darkCircles: entry.metrics?.dark_circles || entry.metrics?.darkCircles || 0,
+                dark_circles: entry.metrics?.dark_circles || entry.metrics?.darkCircles || 0,
+                redness: entry.metrics?.redness || 0,
+                oiliness: entry.metrics?.oiliness || 0
             },
-            summary: entry.summary || ''
+            summary: entry.summary || '',
+            am_routine: entry.am_routine || [],
+            pm_routine: entry.pm_routine || [],
+            tips: entry.tips || [],
+            concerns_detected: entry.concerns_detected || [],
+            disclaimer: entry.disclaimer || 'This analysis is for informational purposes only.',
+            capturedImage: entry.capturedImage || entry.captured_image || null,
+            face_data: entry.face_data || null
         }));
 
         const scanCountEl = document.getElementById('scan-count');
@@ -1269,10 +1285,15 @@ function viewScanReport(scanIndex) {
     loadScanIntoResultsView(scan);
 
     // Hide main content
-    document.querySelector('.method-selection-single').style.display = 'none';
-    document.querySelector('.scan-history-section').style.display = 'none';
-    document.querySelector('.page-header').style.display = 'none';
-    document.querySelector('.back-navigation').style.display = 'none';
+    const methodSelection = document.querySelector('.method-selection-single');
+    const scanHistory = document.querySelector('.scan-history-section');
+    const pageHeader = document.querySelector('.page-header');
+    const backNav = document.querySelector('.back-navigation');
+    
+    if (methodSelection) methodSelection.style.display = 'none';
+    if (scanHistory) scanHistory.style.display = 'none';
+    if (pageHeader) pageHeader.style.display = 'none';
+    if (backNav) backNav.style.display = 'none';
 
     // Show results
     document.getElementById('results-view').style.display = 'block';
@@ -1282,7 +1303,33 @@ function viewScanReport(scanIndex) {
  * Load scan data into the results view
  */
 function loadScanIntoResultsView(scan) {
-    // Update report date
+    // Simulate the result structure that renderSkinAnalysisResult expects
+    window.__skinAnalysisResult = {
+        overall_skin_health: scan.overallScore,
+        summary: scan.summary || 'Your skin analysis results',
+        metrics: {
+            radiance: scan.metrics?.radiance || 0,
+            moisture: scan.metrics?.hydration || scan.metrics?.moisture || 0,
+            texture: scan.metrics?.texture || 0,
+            pores: scan.metrics?.spots || scan.metrics?.pores || 0,
+            dark_circles: scan.metrics?.darkCircles || scan.metrics?.dark_circles || 0,
+            redness: scan.metrics?.redness || 0,
+            oiliness: scan.metrics?.oiliness || 0
+        },
+        am_routine: scan.am_routine || [],
+        pm_routine: scan.pm_routine || [],
+        tips: scan.tips || [],
+        concerns_detected: scan.concerns_detected || [],
+        disclaimer: scan.disclaimer || 'This analysis is for informational purposes only.',
+        face_data: scan.face_data || null
+    };
+    
+    // CRITICAL: Set the captured image for the radar chart
+    if (scan.capturedImage) {
+        capturedImageData = scan.capturedImage;
+    }
+
+    // Update report date with cycle info
     const reportDateEl = document.querySelector('.report-date');
     if (reportDateEl) {
         const phaseEmoji = {
@@ -1292,41 +1339,19 @@ function loadScanIntoResultsView(scan) {
             'luteal': '🌺'
         }[scan.cyclePhase] || '🌸';
 
-        reportDateEl.textContent = `Day ${scan.cycleDay} • ${scan.cyclePhase.charAt(0).toUpperCase() + scan.cyclePhase.slice(1)} Phase ${phaseEmoji}`;
-    }
-
-    // Update overall score
-    const scoreNumber = document.querySelector('.score-number');
-    if (scoreNumber) {
-        scoreNumber.textContent = scan.overallScore;
-    }
-
-    // Update score message
-    const scoreMessage = document.querySelector('.score-message');
-    if (scoreMessage) {
-        if (scan.overallScore >= 80) {
-            scoreMessage.textContent = 'Your skin is glowing! ✨';
-        } else if (scan.overallScore >= 60) {
-            scoreMessage.textContent = 'Your skin is doing well! 🌸';
+        if (scan.cycleDay) {
+            reportDateEl.textContent = `Day ${scan.cycleDay} • ${scan.cyclePhase.charAt(0).toUpperCase() + scan.cyclePhase.slice(1)} Phase ${phaseEmoji}`;
         } else {
-            scoreMessage.textContent = 'Let\'s work on improving your skin health 💜';
+            reportDateEl.textContent = `${scan.cyclePhase.charAt(0).toUpperCase() + scan.cyclePhase.slice(1)} Phase ${phaseEmoji}`;
         }
     }
 
-    // Update metrics
-    const metrics = scan.metrics;
-    const metricItems = document.querySelectorAll('.metric-item');
-    if (metricItems.length >= 5) {
-        metricItems[0].querySelector('.metric-value').textContent = metrics.radiance;
-        metricItems[1].querySelector('.metric-value').textContent = metrics.spots;
-        metricItems[2].querySelector('.metric-value').textContent = metrics.wrinkles;
-        metricItems[3].querySelector('.metric-value').textContent = metrics.texture;
-        metricItems[4].querySelector('.metric-value').textContent = metrics.darkCircles;
-    }
-
-    // Update radar chart if it exists
-    if (typeof updateRadarChart === 'function') {
-        updateRadarChart(metrics);
+    // Use the same rendering function as fresh scans
+    renderSkinAnalysisResult();
+    
+    // Update radar chart if available
+    if (typeof drawRadarChart === 'function') {
+        drawRadarChart();
     }
 }
 
