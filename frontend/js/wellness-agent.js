@@ -21,8 +21,8 @@ async function fetchWellnessMessage(userName) {
     try {
         console.log(`Fetching FRESH wellness message from Bedrock for: ${userName}`);
         
-        // CRITICAL: Always get display name from localStorage
-        const displayName = localStorage.getItem('userDisplayName') || userName;
+        // CRITICAL: Always get display name from window.userSession
+        const displayName = window.userSession?.userDisplayName || userName;
         
         console.log(`Using displayName: ${displayName} for wellness message`);
         
@@ -92,9 +92,9 @@ function displayWellnessMessage(wellness, containerId = 'wellness-message-contai
  * Refresh wellness message - ALWAYS calls Bedrock
  */
 async function refreshWellnessMessage() {
-    // CRITICAL: Get userName (normalized) for API call
-    const userName = localStorage.getItem('userName');
-    const userDisplayName = localStorage.getItem('userDisplayName');
+    // CRITICAL: Get userName (normalized) for API call from window.userSession
+    const userName = window.userSession?.userName;
+    const userDisplayName = window.userSession?.userDisplayName;
     
     console.log('🔍 DEBUG refreshWellnessMessage:');
     console.log('  - userName:', userName);

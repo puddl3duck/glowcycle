@@ -308,13 +308,13 @@ function detectFaceInVideo(video, guideOval) {
 
   const faceDetected =
     avgBrightness > 50 && avgBrightness < 210 &&
-    topSkinRatio > 0.2 &&
-    middleSkinRatio > 0.3 &&
-    bottomSkinRatio > 0.25 &&
-    edgeCount > 80 &&
-    symmetryRatio > 0.4 &&
-    Math.abs(topBrightness - middleBrightness) < 60 &&
-    Math.abs(middleBrightness - bottomBrightness) < 60;
+    topSkinRatio > 0.15 &&
+    middleSkinRatio > 0.2 &&
+    bottomSkinRatio > 0.15 &&
+    edgeCount > 60 &&
+    symmetryRatio > 0.3 &&
+    Math.abs(topBrightness - middleBrightness) < 70 &&
+    Math.abs(middleBrightness - bottomBrightness) < 70;
 
   if (faceDetected) {
     guideOval.classList.add("face-detected");
@@ -541,16 +541,23 @@ async function saveReport() {
   try {
     const cycleInfo = getCycleDayAndPhase();
 
+    // CRITICAL: Remove capturedImage before saving to avoid DynamoDB size limit (400KB)
+    // The image is already in S3, we don't need to duplicate it in DynamoDB
+    const analysisToSave = {
+      ...result,
+      cycleDay: cycleInfo.day,
+      cyclePhase: cycleInfo.phase,
+    };
+    
+    // Remove the large capturedImage data URL to avoid exceeding DynamoDB limits
+    delete analysisToSave.capturedImage;
+
     const resp = await fetch(apiConfig.BASE_URL + "/skin/history", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         user,
-        analysis: {
-          ...result,
-          cycleDay: cycleInfo.day,
-          cyclePhase: cycleInfo.phase,
-        }
+        analysis: analysisToSave
       }),
     });
 
@@ -1324,10 +1331,9 @@ function loadScanIntoResultsView(scan) {
         face_data: scan.face_data || null
     };
     
-    // CRITICAL: Set the captured image for the radar chart
-    if (scan.capturedImage) {
-        capturedImageData = scan.capturedImage;
-    }
+    // NOTE: capturedImage is not stored in history to avoid DynamoDB size limits
+    // The radar chart will draw without the background image, showing only the face zones
+    capturedImageData = null;
 
     // Update report date with cycle info
     const reportDateEl = document.querySelector('.report-date');

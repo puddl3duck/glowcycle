@@ -50,7 +50,6 @@ def save_skin_analysis(event):
             "tips": analysis.get("tips", []),
             "cycle_day": analysis.get("cycleDay"),    
             "cycle_phase": analysis.get("cyclePhase"),
-            "capturedImage": analysis.get("capturedImage"),
             "face_data": analysis.get("face_data"),
             "disclaimer": analysis.get("disclaimer", "This analysis is for informational purposes only.")
         }
