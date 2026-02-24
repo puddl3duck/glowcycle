@@ -101,7 +101,7 @@ def get_user_context(user: str, user_name: str = None) -> dict:
         # Get most recent skin analysis
         latest_skin = skin_data[0] if skin_data else {}
         
-        # Analyze recent patterns (last 7 days)
+        # Analyse recent patterns (last 7 days)
         recent_journals = journals[:7] if journals else []
         feelings_count = {}
         energy_levels = []

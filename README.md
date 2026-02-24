@@ -4,7 +4,7 @@ Your AI-powered companion to understand how your hormones affect your skin, mood
 
 ## What is Glow Cycle?
 
-An intelligent web app that uses AI to analyze the connection between your menstrual cycle, skin condition, and emotional wellbeing - giving you personalized insights no other app provides.
+An intelligent web app that uses AI to analyse the connection between your menstrual cycle, skin condition, and emotional wellbeing - giving you personalized insights no other app provides.
 
 ## 🎯 For Judges (60-second overview)
 
