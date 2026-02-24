@@ -1294,7 +1294,7 @@ body {
         padding: 0.6rem 1.2rem;
         font-size: 0.85rem;
     }
-}
+
 
 @media (max-width: 480px) {
     .navbar {
@@ -1670,7 +1670,7 @@ body.dark-theme .footer-copyright {
     .footer-copyright {
         font-size: 0.7rem;
     }
-}
+
         justify-content: center;
     }
     
@@ -1681,7 +1681,7 @@ body.dark-theme .footer-copyright {
     .footer-links a:hover {
         transform: none;
     }
-}
+
 
 /* Dark Mode - Period Days Fix */
 body.dark-theme .calendar-day.period {
