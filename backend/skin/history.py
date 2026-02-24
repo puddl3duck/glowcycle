@@ -61,7 +61,8 @@ def save_skin_analysis(event):
             "cycle_day": convert_floats(analysis.get("cycleDay")),    
             "cycle_phase": analysis.get("cyclePhase"),
             "face_data": convert_floats(analysis.get("face_data")),
-            "disclaimer": analysis.get("disclaimer", "This analysis is for informational purposes only.")
+            "disclaimer": analysis.get("disclaimer", "This analysis is for informational purposes only."),
+            "s3_image_key": analysis.get("s3ImageKey")  # Store S3 key for loading image from history
         }
 
         logger.info(f"Saving skin analysis for user: {user}, sk: {sk}")

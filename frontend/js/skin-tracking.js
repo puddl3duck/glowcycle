@@ -509,8 +509,9 @@ async function sendCapturedImageToBackend(dataUrl) {
 
     const analysis = await analyzeResp.json();
     
-    // CRITICAL: Store the captured image with the analysis result
+    // CRITICAL: Store both the captured image (for immediate view) and S3 key (for history)
     analysis.capturedImage = dataUrl;
+    analysis.s3ImageKey = s3Key; // Store S3 key for loading from history
     
     window.__skinAnalysisResult = analysis;
 
@@ -1167,7 +1168,7 @@ async function loadScanHistory() {
             tips: entry.tips || [],
             concerns_detected: entry.concerns_detected || [],
             disclaimer: entry.disclaimer || 'This analysis is for informational purposes only.',
-            capturedImage: entry.capturedImage || entry.captured_image || null,
+            s3ImageKey: entry.s3_image_key || entry.s3ImageKey || null,
             face_data: entry.face_data || null
         }));
 
@@ -1313,7 +1314,7 @@ function viewScanReport(scanIndex) {
 /**
  * Load scan data into the results view
  */
-function loadScanIntoResultsView(scan) {
+async function loadScanIntoResultsView(scan) {
     // Simulate the result structure that renderSkinAnalysisResult expects
     window.__skinAnalysisResult = {
         overall_skin_health: scan.overallScore,
@@ -1335,9 +1336,39 @@ function loadScanIntoResultsView(scan) {
         face_data: scan.face_data || null
     };
     
-    // NOTE: capturedImage is not stored in history to avoid DynamoDB size limits
-    // The radar chart will draw without the background image, showing only the face zones
-    capturedImageData = null;
+    // CRITICAL: Load image from S3 if available
+    if (scan.s3ImageKey) {
+        try {
+            const apiConfig = typeof API_CONFIG !== "undefined" ? API_CONFIG : window.API_CONFIG;
+            // Construct S3 URL - using the correct bucket name from infrastructure
+            const s3Url = `https://glowcycle-assets.s3.amazonaws.com/${scan.s3ImageKey}`;
+            
+            console.log('Loading image from S3:', s3Url);
+            
+            // Load image and convert to data URL
+            const response = await fetch(s3Url);
+            if (!response.ok) {
+                throw new Error(`Failed to fetch image: ${response.status}`);
+            }
+            const blob = await response.blob();
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                capturedImageData = reader.result;
+                console.log('Image loaded successfully from S3');
+                // Redraw radar chart with the loaded image
+                if (typeof drawRadarChart === 'function') {
+                    drawRadarChart();
+                }
+            };
+            reader.readAsDataURL(blob);
+        } catch (error) {
+            console.error('Error loading image from S3:', error);
+            capturedImageData = null;
+        }
+    } else {
+        console.log('No s3ImageKey found for this scan');
+        capturedImageData = null;
+    }
 
     // Update report date with cycle info
     const reportDateEl = document.querySelector('.report-date');
@@ -1359,7 +1390,7 @@ function loadScanIntoResultsView(scan) {
     // Use the same rendering function as fresh scans
     renderSkinAnalysisResult();
     
-    // Update radar chart if available
+    // Draw radar chart (will use capturedImageData if loaded)
     if (typeof drawRadarChart === 'function') {
         drawRadarChart();
     }
