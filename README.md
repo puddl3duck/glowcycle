@@ -61,7 +61,7 @@ Pre-configured accounts ready for immediate testing:
 
 ### 🏗️ Architecture
 
-![Architecture Diagram](Architecture%20diagram.png)
+![Architecture Diagram](Architecture%20Diagram%20-%20GlowCycle.png)
 
 ### 🏆 Hackathon Alignment
 
