@@ -1125,7 +1125,6 @@ body {
     .back-navigation {
         margin-top: 4rem;
     }
-}
     
     .cycle-container {
         padding: 1.5rem 1rem 3rem;
@@ -1712,9 +1711,6 @@ body.dark-theme .footer-copyright {
     
     .footer-copyright {
         font-size: 0.7rem;
-    }
-}
-        justify-content: center;
     }
     
     .footer-section {
