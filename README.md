@@ -59,7 +59,7 @@ Pre-configured accounts ready for immediate testing:
 6. **Get AI Insights** - visit Wellness Agent for personalised guidance
 7. **Explore Dark Mode** - toggle theme to see accessibility features
 
-### 🏗️ Architecture
+### 🏗️ Architecture Diagram
 
 ![Architecture Diagram](Architecture%20Diagram%20-%20GlowCycle.png)
 
